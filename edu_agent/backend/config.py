@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     OPENAI_TEMPERATURE: float = 0.7
     OPENAI_MAX_TOKENS: int = 4096
 
+    # ─── Serper / SerpApi ────────────────────────────────
+    SERPAPI_API_KEY: Optional[str] = None
+
     # ─── Export ───────────────────────────────────────────
     EXPORT_DIR: str = "exports"
     MAX_UPLOAD_SIZE_MB: int = 10

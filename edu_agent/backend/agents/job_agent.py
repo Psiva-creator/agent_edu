@@ -25,9 +25,11 @@ Supports:
 """
 
 import logging
+import httpx
 from typing import Optional, Union, List, Dict, Any
 
 from services.llm_service import LLMService
+from config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -223,12 +225,28 @@ class JobAgent:
             f"JobAgent: finding jobs for target_role={target_role}, "
             f"skills={len(skills)}, experience={experience_years}yr"
         )
-
-        # ── 2. Force deterministic matching for lightning-fast results ──
-        # Bypass the LLM for JobAgent because the deterministic fallback
-        # provides instant, high-quality, pre-calibrated role matches
-        # without the 10-15 second API latency.
-        logger.info("Performing deterministic job matching (LLM bypassed for speed).")
+        
+        # ── 2. Real-Time Job Search via SerpApi (Google Jobs) ────
+        settings = get_settings()
+        if settings.SERPAPI_API_KEY:
+            logger.info("SerpApi key found. Fetching real-time Google Jobs data...")
+            try:
+                serpapi_results = await self._search_serpapi_jobs(
+                    query=target_role, 
+                    location=preferences.get("location", "")
+                )
+                if serpapi_results and serpapi_results.get("matches"):
+                    logger.info("Successfully fetched real-time jobs from SerpApi.")
+                    # Attach profile info to maintain API contract
+                    serpapi_results.update({
+                        "target_role": target_role,
+                        "current_role": current_role,
+                        "experience_years": experience_years,
+                        "experience_level": self._classify_experience(experience_years),
+                    })
+                    return serpapi_results
+            except Exception as e:
+                logger.error(f"SerpApi search failed: {e}. Falling back to deterministic matches.")
 
         # ── 3. Deterministic fallback ─────────────────────────
         logger.info("Performing deterministic job matching.")
@@ -306,6 +324,74 @@ class JobAgent:
             ).strip()
 
         return result
+
+    # ═══════════════════════════════════════════════════════════
+    # SERPAPI INTEGRATION
+    # ═══════════════════════════════════════════════════════════
+
+    async def _search_serpapi_jobs(self, query: str, location: str) -> Dict[str, Any]:
+        """Fetch live job postings from SerpApi's Google Jobs engine."""
+        settings = get_settings()
+        api_key = settings.SERPAPI_API_KEY
+        
+        if not api_key:
+            return {}
+            
+        params = {
+            "engine": "google_jobs",
+            "q": query,
+            "api_key": api_key,
+            "hl": "en",
+        }
+        
+        if location:
+            params["location"] = location
+            
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get("https://serpapi.com/search", params=params)
+            response.raise_for_status()
+            data = response.json()
+            
+        jobs_results = data.get("jobs_results", [])
+        matches = []
+        
+        for job in jobs_results[:10]:
+            # Extract salary if provided in the snippet
+            salary_str = ""
+            for ext in job.get("extensions", []):
+                if "$" in ext or "₹" in ext or "Salary" in ext or "a year" in ext or "a month" in ext:
+                    salary_str = ext
+                    break
+                    
+            # Try to find an apply link
+            apply_url = ""
+            for link in job.get("related_links", []):
+                if link.get("link"):
+                    apply_url = link["link"]
+                    break
+                    
+            if not apply_url:
+                # Fallback to search query
+                company = job.get("company_name", "")
+                apply_url = f"https://www.google.com/search?q={query.replace(' ', '+')}+jobs+at+{company.replace(' ', '+')}"
+
+            # Create a uniform structure matching what JobsPanel expects
+            matches.append({
+                "title": job.get("title", ""),
+                "hiring_companies": [job.get("company_name", "Unknown")],
+                "company_name": job.get("company_name", "Unknown"),
+                "location": job.get("location", ""),
+                "description": job.get("description", ""),
+                "match_percentage": 95, # Assuming high match for a direct search query
+                "salary_str": salary_str,
+                "url": apply_url,
+                "via": job.get("via", "")
+            })
+            
+        return {
+            "total_matches": len(matches),
+            "matches": matches
+        }
 
     # ═══════════════════════════════════════════════════════════
     # LLM GENERATION

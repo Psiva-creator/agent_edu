@@ -23,28 +23,42 @@ async def search_jobs(
         preferences={"location": location}
     )
     
-    # Map the broad role recommendations from JobAgent into specific "job listings"
-    # for the frontend JobsPanel to render.
+    # Map the broad role recommendations or live job listings from JobAgent 
+    # into specific "job listings" for the frontend JobsPanel to render.
     listings = []
     
     for match in result.get("matches", []):
-        companies = match.get("hiring_companies", ["Tech Corp"])
-        # Create a "job listing" for the top 3 companies for this role
-        for company in companies[:3]:
-            salary_dict = match.get("salary_range", {})
-            min_sal = salary_dict.get("min", 0) // 100000
-            max_sal = salary_dict.get("max", 0) // 100000
-            salary_str = f"₹{min_sal}L - ₹{max_sal}L" if min_sal else "Not Disclosed"
-            
+        # Check if it's a LIVE job from SerpApi
+        if "company_name" in match:
+            # It's a live job
             listings.append({
                 "title": match.get("title", query),
-                "company": company,
-                "location": location or "Remote / Hybrid",
-                "salary": salary_str,
-                "match_percentage": match.get("match_percentage", 80),
-                "required_skills": match.get("required_skills", []),
-                "url": f"https://www.google.com/search?q={query.replace(' ', '+')}+jobs+at+{company}"
+                "company": match.get("company_name", "Unknown"),
+                "location": match.get("location", location or "Remote"),
+                "salary": match.get("salary_str", "Not Disclosed"),
+                "match_percentage": match.get("match_percentage", 95),
+                "url": match.get("url", ""),
+                "description": match.get("description", "")
             })
+        else:
+            # It's a DETERMINISTIC mock role match
+            companies = match.get("hiring_companies", ["Tech Corp"])
+            # Create a "job listing" for the top 3 companies for this role
+            for company in companies[:3]:
+                salary_dict = match.get("salary_range", {})
+                min_sal = salary_dict.get("min", 0) // 100000
+                max_sal = salary_dict.get("max", 0) // 100000
+                salary_str = f"₹{min_sal}L - ₹{max_sal}L" if min_sal else "Not Disclosed"
+                
+                listings.append({
+                    "title": match.get("title", query),
+                    "company": company,
+                    "location": location or "Remote / Hybrid",
+                    "salary": salary_str,
+                    "match_percentage": match.get("match_percentage", 80),
+                    "required_skills": match.get("required_skills", []),
+                    "url": f"https://www.google.com/search?q={query.replace(' ', '+')}+jobs+at+{company.replace(' ', '+')}"
+                })
             
     # Sort listings by match percentage
     listings.sort(key=lambda x: x["match_percentage"], reverse=True)
