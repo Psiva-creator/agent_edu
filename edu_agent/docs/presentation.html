@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Guide AI — Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           RESET & BASE
+           ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-dark: #0a0a1a;
+            --bg-card: rgba(255,255,255,0.04);
+            --bg-card-hover: rgba(255,255,255,0.07);
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99,102,241,0.25);
+            --green: #34d399;
+            --orange: #fb923c;
+            --pink: #f472b6;
+            --cyan: #22d3ee;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border: rgba(255,255,255,0.08);
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           SLIDE SYSTEM
+           ═══════════════════════════════════════════════════════ */
+        .deck {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 80px;
+            opacity: 0;
+            transform: translateX(60px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .slide.prev {
+            opacity: 0;
+            transform: translateX(-60px);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           BACKGROUND EFFECTS
+           ═══════════════════════════════════════════════════════ */
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse 600px 400px at 15% 20%, rgba(99,102,241,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 500px 500px at 85% 80%, rgba(244,114,182,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 400px 300px at 50% 50%, rgba(34,211,238,0.06) 0%, transparent 70%);
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           NAVIGATION
+           ═══════════════════════════════════════════════════════ */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 40px;
+            background: rgba(10,10,26,0.85);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text);
+            border-color: var(--accent);
+        }
+
+        .slide-counter {
+            font-size: 13px;
+            color: var(--text-dim);
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .progress-track {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255,255,255,0.05);
+            z-index: 101;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--pink));
+            transition: width 0.4s ease;
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           TYPOGRAPHY
+           ═══════════════════════════════════════════════════════ */
+        .slide-number {
+            position: absolute;
+            top: 32px;
+            right: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+
+        h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-light) 50%, var(--pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: var(--text);
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        h2 .accent { color: var(--accent-light); }
+
+        h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: var(--text-muted);
+            max-width: 600px;
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        .label {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--accent-light);
+            margin-bottom: 14px;
+            padding: 4px 14px;
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            background: rgba(99,102,241,0.1);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           CARDS & GRID
+           ═══════════════════════════════════════════════════════ */
+        .card-grid {
+            display: grid;
+            gap: 18px;
+            width: 100%;
+            max-width: 1100px;
+        }
+        .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .card-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(99,102,241,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(99,102,241,0.1);
+        }
+
+        .card .icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .card p, .card li {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.65;
+        }
+
+        .card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .card ul li {
+            padding: 3px 0 3px 18px;
+            position: relative;
+        }
+        .card ul li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent-light);
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ARCHITECTURE DIAGRAM
+           ═══════════════════════════════════════════════════════ */
+        .arch-diagram {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .arch-layer {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 22px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s;
+        }
+        .arch-layer:hover {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+        }
+
+        .arch-layer .layer-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--accent-light);
+            width: 90px;
+            flex-shrink: 0;
+        }
+
+        .arch-layer .layer-items {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .arch-chip {
+            background: rgba(99,102,241,0.12);
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(99,102,241,0.2);
+        }
+
+        .arch-arrow {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 14px;
+            margin: 2px 0;
+            letter-spacing: 3px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           FLOW DIAGRAM
+           ═══════════════════════════════════════════════════════ */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1100px;
+        }
+
+        .flow-node {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 22px;
+            text-align: center;
+            min-width: 150px;
+            transition: all 0.3s;
+        }
+        .flow-node:hover {
+            border-color: var(--accent);
+            transform: scale(1.03);
+        }
+        .flow-node .node-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+        .flow-node .node-title { font-size: 13px; font-weight: 600; color: var(--text); }
+        .flow-node .node-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+        .flow-arrow {
+            color: var(--accent-light);
+            font-size: 20px;
+            font-weight: 300;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           TECH PILLS
+           ═══════════════════════════════════════════════════════ */
+        .tech-group {
+            text-align: center;
+            max-width: 800px;
+        }
+        .tech-group h3 {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+        .tech-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .pill {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            transition: all 0.25s;
+        }
+        .pill:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+        .pill.primary { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.3); color: var(--accent-light); }
+        .pill.green { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.25); color: var(--green); }
+        .pill.orange { background: rgba(251,146,60,0.1); border-color: rgba(251,146,60,0.25); color: var(--orange); }
+        .pill.pink { background: rgba(244,114,182,0.1); border-color: rgba(244,114,182,0.25); color: var(--pink); }
+
+        /* ═══════════════════════════════════════════════════════
+           SCREENSHOTS PLACEHOLDER
+           ═══════════════════════════════════════════════════════ */
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .screenshot-box {
+            background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(244,114,182,0.04));
+            border: 1px dashed rgba(99,102,241,0.3);
+            border-radius: 12px;
+            padding: 36px 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .screenshot-box:hover {
+            border-color: var(--accent-light);
+            background: rgba(99,102,241,0.08);
+        }
+        .screenshot-box .ss-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+        .screenshot-box .ss-title { font-size: 14px; font-weight: 600; color: var(--text); }
+        .screenshot-box .ss-desc { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+        /* ═══════════════════════════════════════════════════════
+           RESULTS / STATS
+           ═══════════════════════════════════════════════════════ */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            max-width: 900px;
+            width: 100%;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+        }
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-light), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-weight: 500;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           TEAM
+           ═══════════════════════════════════════════════════════ */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            max-width: 1050px;
+            width: 100%;
+        }
+
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .team-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+        }
+        .team-card .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .team-card .name { font-size: 14px; font-weight: 600; color: var(--text); }
+        .team-card .role { font-size: 11px; color: var(--accent-light); font-weight: 500; margin: 4px 0; }
+        .team-card .tasks { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+
+        /* ═══════════════════════════════════════════════════════
+           QA SECTION
+           ═══════════════════════════════════════════════════════ */
+        .qa-box {
+            margin-top: 28px;
+            padding: 28px 40px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-card);
+            text-align: center;
+            max-width: 500px;
+        }
+        .qa-box h3 { font-size: 1.3rem; margin-bottom: 6px; }
+        .qa-box p { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* ═══════════════════════════════════════════════════════
+           WIDE CONTENT
+           ═══════════════════════════════════════════════════════ */
+        .wide { width: 100%; max-width: 1100px; }
+
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+        }
+        .bullet-list li {
+            padding: 6px 0 6px 22px;
+            position: relative;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        .bullet-list li::before {
+            content: "▹";
+            position: absolute;
+            left: 0;
+            color: var(--accent-light);
+            font-size: 1.1rem;
+        }
+
+        .highlight {
+            color: var(--accent-light);
+            font-weight: 600;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════════════ */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .float { animation: float 4s ease-in-out infinite; }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+            50% { box-shadow: 0 0 40px var(--accent-glow); }
+        }
+
+        .slide.active .card,
+        .slide.active .arch-layer,
+        .slide.active .flow-node,
+        .slide.active .stat-card,
+        .slide.active .team-card,
+        .slide.active .screenshot-box {
+            animation: fadeUp 0.5s ease forwards;
+            opacity: 0;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .slide.active *:nth-child(1) { animation-delay: 0.05s; }
+        .slide.active *:nth-child(2) { animation-delay: 0.1s; }
+        .slide.active *:nth-child(3) { animation-delay: 0.15s; }
+        .slide.active *:nth-child(4) { animation-delay: 0.2s; }
+        .slide.active *:nth-child(5) { animation-delay: 0.25s; }
+        .slide.active *:nth-child(6) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="grid-overlay"></div>
+
+<!-- ─── Progress Bar ──────────────────────────────────────── -->
+<div class="progress-track">
+    <div class="progress-fill" id="progress" style="width: 10%"></div>
+</div>
+
+<div class="deck" id="deck">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 1 — TITLE
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide active" data-slide="1">
+        <div class="label">Multi-Agent AI Platform</div>
+        <h1 class="float">Career Guide AI</h1>
+        <p class="subtitle">
+            An intelligent career guidance system powered by multi-agent architecture.
+            Analyze resumes, generate roadmaps, and build career intelligence — all with AI.
+        </p>
+        <div style="margin-top: 36px; display: flex; gap: 12px;">
+            <span class="pill primary">FastAPI</span>
+            <span class="pill green">OpenAI GPT-4</span>
+            <span class="pill orange">Multi-Agent</span>
+            <span class="pill pink">AI-Powered</span>
+        </div>
+        <p style="margin-top: 40px; font-size: 13px; color: var(--text-dim);">
+            Press <kbd style="background: var(--bg-card); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; font-size: 12px;">→</kbd> or click <strong>Next</strong> to navigate
+        </p>
+        <span class="slide-number">01 / 10</span>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 2 — PROBLEM STATEMENT
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="2">
+        <span class="slide-number">02 / 10</span>
+        <h2>The <span class="accent">Problem</span></h2>
+
+        <div class="card-grid cols-2" style="max-width: 960px;">
+            <div class="card">
+                <span class="icon">🎓</span>
+                <h3>Graduates Are Lost</h3>
+                <p>Students and fresh graduates lack structured career guidance. They don't know which skills to learn, what roles to target, or how to plan their journey.</p>
+            </div>
+            <div class="card">
+                <span class="icon">📄</span>
+                <h3>Resumes Are Weak</h3>
+                <p>Most resumes fail ATS screening. Candidates don't know their skill gaps, miss keywords, and lack quantified achievements.</p>
+            </div>
+            <div class="card">
+                <span class="icon">🗺️</span>
+                <h3>No Clear Roadmap</h3>
+                <p>Generic "learn Python" advice doesn't work. Students need personalized, week-by-week plans with resources, projects, and milestones.</p>
+            </div>
+            <div class="card">
+                <span class="icon">💰</span>
+                <h3>Salary & Market Blind Spots</h3>
+                <p>Students can't assess their market readiness, expected salary, or which companies are hiring for their target role.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 3 — SOLUTION
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="3">
+        <span class="slide-number">03 / 10</span>
+        <h2>Our <span class="accent">Solution</span></h2>
+
+        <div class="card-grid cols-4" style="max-width: 1100px;">
+            <div class="card" style="text-align: center;">
+                <span class="icon">🔍</span>
+                <h3>Resume Agent</h3>
+                <ul>
+                    <li>Extract 60+ skills</li>
+                    <li>Readiness scoring</li>
+                    <li>ATS optimization</li>
+                    <li>Career matching</li>
+                    <li>PDF export</li>
+                </ul>
+            </div>
+            <div class="card" style="text-align: center;">
+                <span class="icon">🗺️</span>
+                <h3>Roadmap Agent</h3>
+                <ul>
+                    <li>10-week plans</li>
+                    <li>4 learning phases</li>
+                    <li>Tasks & resources</li>
+                    <li>Mini projects</li>
+                    <li>Weekly milestones</li>
+                </ul>
+            </div>
+            <div class="card" style="text-align: center;">
+                <span class="icon">📚</span>
+                <h3>Resource Library</h3>
+                <ul>
+                    <li>18 curated skills</li>
+                    <li>Official docs</li>
+                    <li>YouTube playlists</li>
+                    <li>Free courses</li>
+                    <li>Practice sites</li>
+                </ul>
+            </div>
+            <div class="card" style="text-align: center;">
+                <span class="icon">📊</span>
+                <h3>Career Report</h3>
+                <ul>
+                    <li>12-section report</li>
+                    <li>Salary estimates</li>
+                    <li>Hiring companies</li>
+                    <li>Certifications</li>
+                    <li>Mentor advice</li>
+                </ul>
+            </div>
+        </div>
+
+        <p style="margin-top: 24px; font-size: 14px; color: var(--green); font-weight: 500;">
+            ✦ Works with or without OpenAI — every agent has an intelligent fallback engine
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 4 — SYSTEM ARCHITECTURE
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="4">
+        <span class="slide-number">04 / 10</span>
+        <h2>System <span class="accent">Architecture</span></h2>
+
+        <div class="arch-diagram">
+            <div class="arch-layer">
+                <span class="layer-label">Client</span>
+                <div class="layer-items">
+                    <span class="arch-chip">Browser</span>
+                    <span class="arch-chip">Swagger UI</span>
+                    <span class="arch-chip">Postman</span>
+                    <span class="arch-chip">Frontend App</span>
+                </div>
+            </div>
+            <div class="arch-arrow">▼</div>
+
+            <div class="arch-layer">
+                <span class="layer-label">API Layer</span>
+                <div class="layer-items">
+                    <span class="arch-chip">FastAPI App</span>
+                    <span class="arch-chip">CORS</span>
+                    <span class="arch-chip">API v1 Prefix</span>
+                    <span class="arch-chip">Exception Handlers</span>
+                </div>
+            </div>
+            <div class="arch-arrow">▼</div>
+
+            <div class="arch-layer">
+                <span class="layer-label">Routers</span>
+                <div class="layer-items">
+                    <span class="arch-chip">resume.py</span>
+                    <span class="arch-chip">roadmap.py</span>
+                    <span class="arch-chip">resources.py</span>
+                    <span class="arch-chip">report.py</span>
+                </div>
+            </div>
+            <div class="arch-arrow">▼</div>
+
+            <div class="arch-layer">
+                <span class="layer-label">Agents</span>
+                <div class="layer-items">
+                    <span class="arch-chip">ResumeAgent</span>
+                    <span class="arch-chip">RoadmapAgent</span>
+                </div>
+            </div>
+            <div class="arch-arrow">▼</div>
+
+            <div class="arch-layer">
+                <span class="layer-label">Services</span>
+                <div class="layer-items">
+                    <span class="arch-chip">LLMService</span>
+                    <span class="arch-chip">ResourceService</span>
+                    <span class="arch-chip">ReportService</span>
+                </div>
+            </div>
+            <div class="arch-arrow">▼</div>
+
+            <div class="arch-layer">
+                <span class="layer-label">Data</span>
+                <div class="layer-items">
+                    <span class="arch-chip">Pydantic Schemas</span>
+                    <span class="arch-chip">resources.json</span>
+                    <span class="arch-chip">Jinja2 Templates</span>
+                    <span class="arch-chip">Prompt Templates</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 5 — MULTI-AGENT WORKFLOW
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="5">
+        <span class="slide-number">05 / 10</span>
+        <h2>Multi-Agent <span class="accent">Workflow</span></h2>
+
+        <div class="flow-container" style="margin-bottom: 28px;">
+            <div class="flow-node">
+                <span class="node-icon">👤</span>
+                <div class="node-title">User Input</div>
+                <div class="node-sub">Resume + Target Role</div>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node">
+                <span class="node-icon">🔍</span>
+                <div class="node-title">Resume Agent</div>
+                <div class="node-sub">Extract Skills, Score</div>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node">
+                <span class="node-icon">📚</span>
+                <div class="node-title">Resource Service</div>
+                <div class="node-sub">Map Skill → Resources</div>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node">
+                <span class="node-icon">🗺️</span>
+                <div class="node-title">Roadmap Agent</div>
+                <div class="node-sub">10-Week Plan</div>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-node">
+                <span class="node-icon">📊</span>
+                <div class="node-title">Report Service</div>
+                <div class="node-sub">Career Intelligence</div>
+            </div>
+        </div>
+
+        <div class="card-grid cols-3" style="max-width: 900px;">
+            <div class="card" style="text-align: center;">
+                <h3 style="color: var(--green);">LLM Path</h3>
+                <p>When OpenAI API key is configured, agents use GPT-4 for intelligent analysis and generation.</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 style="color: var(--orange);">Fallback Path</h3>
+                <p>Without an API key, agents use regex extraction, heuristic scoring, and template-based generation.</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 style="color: var(--cyan);">Export Pipeline</h3>
+                <p>Data → Markdown → HTML (Jinja2) → PDF (xhtml2pdf). Professional outputs every time.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 6 — TECH STACK
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="6">
+        <span class="slide-number">06 / 10</span>
+        <h2>Tech <span class="accent">Stack</span></h2>
+
+        <div class="tech-group">
+            <h3>Core Framework</h3>
+            <div class="tech-pills">
+                <span class="pill primary">Python 3.11+</span>
+                <span class="pill primary">FastAPI</span>
+                <span class="pill primary">Pydantic v2</span>
+                <span class="pill primary">Uvicorn</span>
+            </div>
+        </div>
+
+        <div class="tech-group">
+            <h3>AI & LLM</h3>
+            <div class="tech-pills">
+                <span class="pill green">OpenAI GPT-4</span>
+                <span class="pill green">Prompt Engineering</span>
+                <span class="pill green">JSON Extraction</span>
+                <span class="pill green">Retry + Cache</span>
+            </div>
+        </div>
+
+        <div class="tech-group">
+            <h3>Export & Templates</h3>
+            <div class="tech-pills">
+                <span class="pill orange">Jinja2</span>
+                <span class="pill orange">xhtml2pdf</span>
+                <span class="pill orange">Markdown</span>
+                <span class="pill orange">HTML/CSS</span>
+            </div>
+        </div>
+
+        <div class="tech-group">
+            <h3>Infrastructure & Tools</h3>
+            <div class="tech-pills">
+                <span class="pill pink">pydantic-settings</span>
+                <span class="pill pink">python-dotenv</span>
+                <span class="pill pink">httpx</span>
+                <span class="pill pink">Swagger/OpenAPI</span>
+                <span class="pill pink">Docker</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 7 — DEMO SCREENSHOTS
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="7">
+        <span class="slide-number">07 / 10</span>
+        <h2>Demo <span class="accent">Screenshots</span></h2>
+
+        <div class="screenshot-grid">
+            <div class="screenshot-box">
+                <span class="ss-icon">📋</span>
+                <div class="ss-title">Swagger API Documentation</div>
+                <div class="ss-desc">Interactive API explorer at /docs with all 18 endpoints</div>
+            </div>
+            <div class="screenshot-box">
+                <span class="ss-icon">🔍</span>
+                <div class="ss-title">Resume Analysis</div>
+                <div class="ss-desc">Skills extraction, readiness score, career path matching</div>
+            </div>
+            <div class="screenshot-box">
+                <span class="ss-icon">🗺️</span>
+                <div class="ss-title">Career Roadmap</div>
+                <div class="ss-desc">10-week personalized plan with tasks, resources, milestones</div>
+            </div>
+            <div class="screenshot-box">
+                <span class="ss-icon">📊</span>
+                <div class="ss-title">Career Intelligence Report</div>
+                <div class="ss-desc">One-page report with salary, companies, certifications</div>
+            </div>
+            <div class="screenshot-box">
+                <span class="ss-icon">📄</span>
+                <div class="ss-title">PDF Resume Export</div>
+                <div class="ss-desc">Professional PDF generated via Jinja2 + xhtml2pdf</div>
+            </div>
+            <div class="screenshot-box">
+                <span class="ss-icon">📚</span>
+                <div class="ss-title">Resource Library</div>
+                <div class="ss-desc">18 skills with docs, YouTube, courses, projects</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 8 — RESULTS
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="8">
+        <span class="slide-number">08 / 10</span>
+        <h2>Key <span class="accent">Results</span></h2>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-value">18</div>
+                <div class="stat-label">API Endpoints</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">18</div>
+                <div class="stat-label">Curated Skills</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">60+</div>
+                <div class="stat-label">Skills Recognized</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Report Sections</div>
+            </div>
+        </div>
+
+        <div class="card-grid cols-2" style="max-width: 800px;">
+            <div class="card">
+                <h3>✅ Achievements</h3>
+                <ul>
+                    <li>Full multi-agent architecture with DI</li>
+                    <li>Works without OpenAI (intelligent fallback)</li>
+                    <li>Professional PDF export pipeline</li>
+                    <li>5-factor weighted readiness scoring</li>
+                    <li>Production-grade error handling & logging</li>
+                    <li>Complete Swagger documentation</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>📈 Performance</h3>
+                <ul>
+                    <li>LLM response caching (LRU, 128 slots)</li>
+                    <li>Exponential backoff retry (3 attempts)</li>
+                    <li>Async request handling (FastAPI)</li>
+                    <li>Singleton services (shared state)</li>
+                    <li>JSON parsed via 4-strategy engine</li>
+                    <li>Configurable timeout per request</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 9 — FUTURE SCOPE
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="9">
+        <span class="slide-number">09 / 10</span>
+        <h2>Future <span class="accent">Scope</span></h2>
+
+        <div class="card-grid cols-3" style="max-width: 1050px;">
+            <div class="card">
+                <span class="icon">🖥️</span>
+                <h3>React Frontend</h3>
+                <p>Interactive dashboard with charts, visualizations, and dark mode UI for a premium experience.</p>
+            </div>
+            <div class="card">
+                <span class="icon">🧠</span>
+                <h3>LangChain Agents</h3>
+                <p>Advanced multi-agent orchestration with memory, planning, and autonomous task execution.</p>
+            </div>
+            <div class="card">
+                <span class="icon">🔐</span>
+                <h3>User Authentication</h3>
+                <p>JWT-based auth with user profiles, saved reports, and progress tracking over time.</p>
+            </div>
+            <div class="card">
+                <span class="icon">💾</span>
+                <h3>Database Layer</h3>
+                <p>PostgreSQL for persistent user data, career history, and analytics dashboards.</p>
+            </div>
+            <div class="card">
+                <span class="icon">🌐</span>
+                <h3>Job Board API</h3>
+                <p>Real-time job listings integration from LinkedIn, Indeed, and Naukri APIs.</p>
+            </div>
+            <div class="card">
+                <span class="icon">📱</span>
+                <h3>Mobile App</h3>
+                <p>React Native mobile application for on-the-go career guidance and learning tracking.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SLIDE 10 — TEAM & Q&A
+         ═══════════════════════════════════════════════════════ -->
+    <div class="slide" data-slide="10">
+        <span class="slide-number">10 / 10</span>
+        <h2>Team <span class="accent">Contributions</span></h2>
+
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">1</div>
+                <div class="name">Member 1</div>
+                <div class="role">Research & Analysis</div>
+                <div class="tasks">Market research, skill gap data, career analysis</div>
+            </div>
+            <div class="team-card">
+                <div class="avatar" style="background: linear-gradient(135deg, #22d3ee, #06b6d4);">2</div>
+                <div class="name">Member 2</div>
+                <div class="role">Backend Core</div>
+                <div class="tasks">FastAPI setup, config, middleware, DI, error handling</div>
+            </div>
+            <div class="team-card">
+                <div class="avatar" style="background: linear-gradient(135deg, #34d399, #10b981);">3</div>
+                <div class="name">Member 3</div>
+                <div class="role">AI Agents</div>
+                <div class="tasks">ResumeAgent, RoadmapAgent, LLM integration, prompts</div>
+            </div>
+            <div class="team-card">
+                <div class="avatar" style="background: linear-gradient(135deg, #fb923c, #f97316);">4</div>
+                <div class="name">Member 4</div>
+                <div class="role">Services & Data</div>
+                <div class="tasks">ResourceService, ReportService, PDF export, resources.json</div>
+            </div>
+            <div class="team-card">
+                <div class="avatar" style="background: linear-gradient(135deg, #f472b6, #ec4899);">5</div>
+                <div class="name">Member 5</div>
+                <div class="role">Docs & Presentation</div>
+                <div class="tasks">README, architecture, API docs, demo guide, slides</div>
+            </div>
+        </div>
+
+        <div class="qa-box">
+            <h3>Questions & Answers</h3>
+            <p style="margin-top: 6px;">Thank you! We're happy to answer your questions.</p>
+            <div style="margin-top: 14px; display: flex; gap: 10px; justify-content: center;">
+                <span class="pill primary" style="font-size: 12px;">github.com/career-guide-ai</span>
+                <span class="pill green" style="font-size: 12px;">localhost:8000/docs</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ─── Navigation Bar ────────────────────────────────────── -->
+<div class="nav-bar">
+    <button class="nav-btn" id="prevBtn" onclick="prev()">← Previous</button>
+    <span class="slide-counter" id="counter">1 / 10</span>
+    <button class="nav-btn" id="nextBtn" onclick="next()">Next →</button>
+</div>
+
+<!-- ─── Script ────────────────────────────────────────────── -->
+<script>
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    const progress = document.getElementById('progress');
+    const counter = document.getElementById('counter');
+
+    function goTo(index) {
+        if (index < 0 || index >= total) return;
+
+        slides[current].classList.remove('active');
+        slides[current].classList.add(index > current ? 'prev' : '');
+
+        current = index;
+
+        slides.forEach((s, i) => {
+            s.classList.remove('active', 'prev');
+            if (i === current) s.classList.add('active');
+            else if (i < current) s.classList.add('prev');
+        });
+
+        progress.style.width = ((current + 1) / total * 100) + '%';
+        counter.textContent = (current + 1) + ' / ' + total;
+    }
+
+    function next() { goTo(current + 1); }
+    function prev() { goTo(current - 1); }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+        if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+        if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+    });
+
+    // Touch support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', e => {
+        const diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) { diff > 0 ? next() : prev(); }
+    });
+</script>
+
+</body>
+</html>

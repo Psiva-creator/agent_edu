@@ -1,0 +1,559 @@
+{
+  "python": {
+    "name": "Python",
+    "category": "Programming Language",
+    "difficulty": "beginner",
+    "estimated_hours": 60,
+    "official_docs": {
+      "title": "Python Official Documentation",
+      "url": "https://docs.python.org/3/"
+    },
+    "youtube_playlist": {
+      "title": "Python for Beginners — Programming with Mosh",
+      "url": "https://www.youtube.com/watch?v=_uQrJ0TkZlc",
+      "channel": "Programming with Mosh"
+    },
+    "free_course": {
+      "title": "Python for Everybody — Coursera (Audit Free)",
+      "url": "https://www.coursera.org/specializations/python",
+      "platform": "Coursera"
+    },
+    "practice_website": {
+      "title": "HackerRank — Python Practice",
+      "url": "https://www.hackerrank.com/domains/python"
+    },
+    "mini_project": {
+      "title": "CLI Task Manager",
+      "description": "Build a command-line to-do app with file persistence, categories, priority sorting, and colored output.",
+      "skills_practiced": ["file I/O", "OOP", "CLI arguments", "JSON handling"],
+      "estimated_hours": 8
+    }
+  },
+
+  "javascript": {
+    "name": "JavaScript",
+    "category": "Programming Language",
+    "difficulty": "beginner",
+    "estimated_hours": 70,
+    "official_docs": {
+      "title": "MDN JavaScript Guide",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide"
+    },
+    "youtube_playlist": {
+      "title": "JavaScript Full Course — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=PkZNo7MFNFg",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "JavaScript Algorithms and Data Structures — freeCodeCamp",
+      "url": "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/",
+      "platform": "freeCodeCamp"
+    },
+    "practice_website": {
+      "title": "Exercism — JavaScript Track",
+      "url": "https://exercism.org/tracks/javascript"
+    },
+    "mini_project": {
+      "title": "Interactive Quiz App",
+      "description": "Build a timed quiz with score tracking, local storage persistence, dynamic question loading, and a leaderboard.",
+      "skills_practiced": ["DOM manipulation", "async/await", "local storage", "event handling"],
+      "estimated_hours": 10
+    }
+  },
+
+  "react": {
+    "name": "React",
+    "category": "Frontend Framework",
+    "difficulty": "intermediate",
+    "estimated_hours": 80,
+    "official_docs": {
+      "title": "React Official Documentation",
+      "url": "https://react.dev/"
+    },
+    "youtube_playlist": {
+      "title": "React Course for Beginners — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=bMknfKXIFA8",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Full Stack Open — React (University of Helsinki)",
+      "url": "https://fullstackopen.com/en/",
+      "platform": "Full Stack Open"
+    },
+    "practice_website": {
+      "title": "React Tutorial — Official Interactive",
+      "url": "https://react.dev/learn/tutorial-tic-tac-toe"
+    },
+    "mini_project": {
+      "title": "Personal Portfolio Website",
+      "description": "Build a responsive portfolio with React Router, dynamic project cards, dark mode toggle, and a contact form.",
+      "skills_practiced": ["components", "hooks", "routing", "state management"],
+      "estimated_hours": 12
+    }
+  },
+
+  "typescript": {
+    "name": "TypeScript",
+    "category": "Programming Language",
+    "difficulty": "intermediate",
+    "estimated_hours": 50,
+    "official_docs": {
+      "title": "TypeScript Handbook",
+      "url": "https://www.typescriptlang.org/docs/handbook/"
+    },
+    "youtube_playlist": {
+      "title": "TypeScript Full Course — Net Ninja",
+      "url": "https://www.youtube.com/playlist?list=PL4cUxeGkcC9gUgr39Q_yD6v-bSyMwKPUI",
+      "channel": "The Net Ninja"
+    },
+    "free_course": {
+      "title": "TypeScript for JavaScript Programmers — TypeScript Docs",
+      "url": "https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html",
+      "platform": "TypeScript Official"
+    },
+    "practice_website": {
+      "title": "Type Challenges — GitHub",
+      "url": "https://github.com/type-challenges/type-challenges"
+    },
+    "mini_project": {
+      "title": "Type-Safe REST Client Library",
+      "description": "Build a strongly-typed HTTP client with generics, interfaces, interceptors, and error handling.",
+      "skills_practiced": ["generics", "interfaces", "type guards", "utility types"],
+      "estimated_hours": 10
+    }
+  },
+
+  "nodejs": {
+    "name": "Node.js",
+    "category": "Backend Runtime",
+    "difficulty": "intermediate",
+    "estimated_hours": 65,
+    "official_docs": {
+      "title": "Node.js Official Documentation",
+      "url": "https://nodejs.org/en/docs"
+    },
+    "youtube_playlist": {
+      "title": "Node.js Full Course — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=Oe421EPjeBE",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Introduction to Node.js — OpenJS Foundation",
+      "url": "https://openjsf.org/blog/2023/09/12/introducing-a-new-free-node-js-training/",
+      "platform": "OpenJS"
+    },
+    "practice_website": {
+      "title": "NodeSchool — Interactive Workshops",
+      "url": "https://nodeschool.io/"
+    },
+    "mini_project": {
+      "title": "Real-Time Chat Application",
+      "description": "Build a real-time chat with Express, Socket.IO, rooms, user nicknames, and typing indicators.",
+      "skills_practiced": ["Express", "WebSockets", "middleware", "event-driven architecture"],
+      "estimated_hours": 12
+    }
+  },
+
+  "fastapi": {
+    "name": "FastAPI",
+    "category": "Backend Framework",
+    "difficulty": "intermediate",
+    "estimated_hours": 45,
+    "official_docs": {
+      "title": "FastAPI Official Documentation",
+      "url": "https://fastapi.tiangolo.com/"
+    },
+    "youtube_playlist": {
+      "title": "FastAPI Full Course — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=7t2alSnE2-I",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "FastAPI Tutorial — Official Docs (Free)",
+      "url": "https://fastapi.tiangolo.com/tutorial/",
+      "platform": "FastAPI Official"
+    },
+    "practice_website": {
+      "title": "TestDriven.io — FastAPI Articles",
+      "url": "https://testdriven.io/blog/topics/fastapi/"
+    },
+    "mini_project": {
+      "title": "REST API with JWT Authentication",
+      "description": "Build a full REST API with user registration, JWT auth, CRUD operations, and database integration.",
+      "skills_practiced": ["path operations", "Pydantic models", "dependency injection", "JWT auth"],
+      "estimated_hours": 10
+    }
+  },
+
+  "sql": {
+    "name": "SQL",
+    "category": "Database",
+    "difficulty": "beginner",
+    "estimated_hours": 40,
+    "official_docs": {
+      "title": "PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/"
+    },
+    "youtube_playlist": {
+      "title": "SQL Full Course — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=HXV3zeQKqGY",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "SQL for Data Science — Coursera (Audit Free)",
+      "url": "https://www.coursera.org/learn/sql-for-data-science",
+      "platform": "Coursera"
+    },
+    "practice_website": {
+      "title": "SQLBolt — Interactive SQL Lessons",
+      "url": "https://sqlbolt.com/"
+    },
+    "mini_project": {
+      "title": "E-Commerce Database Design",
+      "description": "Design and query a normalized e-commerce database with products, orders, users, reviews, and analytics queries.",
+      "skills_practiced": ["JOINs", "subqueries", "indexing", "normalization", "aggregation"],
+      "estimated_hours": 8
+    }
+  },
+
+  "docker": {
+    "name": "Docker",
+    "category": "DevOps",
+    "difficulty": "intermediate",
+    "estimated_hours": 35,
+    "official_docs": {
+      "title": "Docker Official Documentation",
+      "url": "https://docs.docker.com/"
+    },
+    "youtube_playlist": {
+      "title": "Docker Tutorial — TechWorld with Nana",
+      "url": "https://www.youtube.com/watch?v=3c-iBn73dDE",
+      "channel": "TechWorld with Nana"
+    },
+    "free_course": {
+      "title": "Docker Getting Started — Docker Docs",
+      "url": "https://docs.docker.com/get-started/",
+      "platform": "Docker Official"
+    },
+    "practice_website": {
+      "title": "Play with Docker — Interactive Lab",
+      "url": "https://labs.play-with-docker.com/"
+    },
+    "mini_project": {
+      "title": "Containerize a Full-Stack App",
+      "description": "Dockerize a web app with separate frontend, backend, and database containers using Docker Compose with health checks.",
+      "skills_practiced": ["Dockerfile", "docker-compose", "volumes", "networking", "multi-stage builds"],
+      "estimated_hours": 8
+    }
+  },
+
+  "kubernetes": {
+    "name": "Kubernetes",
+    "category": "DevOps",
+    "difficulty": "advanced",
+    "estimated_hours": 80,
+    "official_docs": {
+      "title": "Kubernetes Official Documentation",
+      "url": "https://kubernetes.io/docs/home/"
+    },
+    "youtube_playlist": {
+      "title": "Kubernetes Tutorial — TechWorld with Nana",
+      "url": "https://www.youtube.com/watch?v=X48VuDVv0do",
+      "channel": "TechWorld with Nana"
+    },
+    "free_course": {
+      "title": "Introduction to Kubernetes — edX (Free)",
+      "url": "https://www.edx.org/learn/kubernetes/the-linux-foundation-introduction-to-kubernetes",
+      "platform": "edX"
+    },
+    "practice_website": {
+      "title": "Killercoda — Interactive K8s Labs",
+      "url": "https://killercoda.com/playgrounds/scenario/kubernetes"
+    },
+    "mini_project": {
+      "title": "Deploy Microservices on K8s",
+      "description": "Deploy a multi-container application with services, deployments, ingress, ConfigMaps, and Helm charts on Minikube.",
+      "skills_practiced": ["pods", "services", "deployments", "ConfigMaps", "Helm", "ingress"],
+      "estimated_hours": 15
+    }
+  },
+
+  "aws": {
+    "name": "AWS",
+    "category": "Cloud Computing",
+    "difficulty": "intermediate",
+    "estimated_hours": 90,
+    "official_docs": {
+      "title": "AWS Documentation",
+      "url": "https://docs.aws.amazon.com/"
+    },
+    "youtube_playlist": {
+      "title": "AWS Certified Cloud Practitioner — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=SOTamWNgDKc",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "AWS Cloud Practitioner Essentials — AWS Skill Builder",
+      "url": "https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials",
+      "platform": "AWS Skill Builder"
+    },
+    "practice_website": {
+      "title": "AWS Free Tier — Hands-On Labs",
+      "url": "https://aws.amazon.com/free/"
+    },
+    "mini_project": {
+      "title": "Serverless REST API",
+      "description": "Build and deploy a REST API using AWS Lambda, API Gateway, DynamoDB, and S3 with CI/CD pipeline.",
+      "skills_practiced": ["Lambda", "API Gateway", "DynamoDB", "IAM", "CloudFormation"],
+      "estimated_hours": 12
+    }
+  },
+
+  "git": {
+    "name": "Git & GitHub",
+    "category": "Version Control",
+    "difficulty": "beginner",
+    "estimated_hours": 20,
+    "official_docs": {
+      "title": "Pro Git Book (Free)",
+      "url": "https://git-scm.com/book/en/v2"
+    },
+    "youtube_playlist": {
+      "title": "Git and GitHub for Beginners — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=RGOj5yH7evk",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Introduction to Git and GitHub — Google (Coursera)",
+      "url": "https://www.coursera.org/learn/introduction-git-github",
+      "platform": "Coursera"
+    },
+    "practice_website": {
+      "title": "Learn Git Branching — Interactive",
+      "url": "https://learngitbranching.js.org/"
+    },
+    "mini_project": {
+      "title": "Open Source Contribution",
+      "description": "Fork a repository, fix an issue or add a feature, write proper commit messages, and submit a pull request.",
+      "skills_practiced": ["branching", "merging", "rebasing", "pull requests", "code review"],
+      "estimated_hours": 5
+    }
+  },
+
+  "machine_learning": {
+    "name": "Machine Learning",
+    "category": "Data Science",
+    "difficulty": "intermediate",
+    "estimated_hours": 100,
+    "official_docs": {
+      "title": "scikit-learn Documentation",
+      "url": "https://scikit-learn.org/stable/user_guide.html"
+    },
+    "youtube_playlist": {
+      "title": "Machine Learning Course — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=NWONeJKn6kc",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Machine Learning — Andrew Ng (Coursera, Audit Free)",
+      "url": "https://www.coursera.org/learn/machine-learning",
+      "platform": "Coursera"
+    },
+    "practice_website": {
+      "title": "Kaggle Learn — Intro to Machine Learning",
+      "url": "https://www.kaggle.com/learn/intro-to-machine-learning"
+    },
+    "mini_project": {
+      "title": "House Price Predictor",
+      "description": "Build a regression model to predict house prices using feature engineering, model comparison, and cross-validation.",
+      "skills_practiced": ["data preprocessing", "feature engineering", "model selection", "evaluation metrics"],
+      "estimated_hours": 12
+    }
+  },
+
+  "pytorch": {
+    "name": "PyTorch",
+    "category": "Deep Learning",
+    "difficulty": "advanced",
+    "estimated_hours": 80,
+    "official_docs": {
+      "title": "PyTorch Official Documentation",
+      "url": "https://pytorch.org/docs/stable/"
+    },
+    "youtube_playlist": {
+      "title": "PyTorch for Deep Learning — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=V_xro1bcAuA",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Deep Learning with PyTorch — Udacity (Free)",
+      "url": "https://www.udacity.com/course/deep-learning-pytorch--ud188",
+      "platform": "Udacity"
+    },
+    "practice_website": {
+      "title": "PyTorch Tutorials — Official",
+      "url": "https://pytorch.org/tutorials/"
+    },
+    "mini_project": {
+      "title": "Image Classifier with CNN",
+      "description": "Build a convolutional neural network to classify CIFAR-10 images with data augmentation, training curves, and model saving.",
+      "skills_practiced": ["CNN architecture", "data loaders", "training loops", "model evaluation", "GPU usage"],
+      "estimated_hours": 15
+    }
+  },
+
+  "tensorflow": {
+    "name": "TensorFlow",
+    "category": "Deep Learning",
+    "difficulty": "advanced",
+    "estimated_hours": 80,
+    "official_docs": {
+      "title": "TensorFlow Documentation",
+      "url": "https://www.tensorflow.org/learn"
+    },
+    "youtube_playlist": {
+      "title": "TensorFlow 2.0 Complete Course — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=tPYj3fFJGjk",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Intro to TensorFlow — Coursera (Audit Free)",
+      "url": "https://www.coursera.org/learn/introduction-tensorflow",
+      "platform": "Coursera"
+    },
+    "practice_website": {
+      "title": "TensorFlow Playground — Interactive Neural Net",
+      "url": "https://playground.tensorflow.org/"
+    },
+    "mini_project": {
+      "title": "Sentiment Analysis Model",
+      "description": "Train an NLP model for movie review sentiment analysis using embeddings, LSTM, and TF Serving for deployment.",
+      "skills_practiced": ["text preprocessing", "embedding layers", "LSTM/GRU", "model export", "TF Serving"],
+      "estimated_hours": 15
+    }
+  },
+
+  "data_analysis": {
+    "name": "Data Analysis",
+    "category": "Data Science",
+    "difficulty": "beginner",
+    "estimated_hours": 50,
+    "official_docs": {
+      "title": "pandas Documentation",
+      "url": "https://pandas.pydata.org/docs/user_guide/index.html"
+    },
+    "youtube_playlist": {
+      "title": "Data Analysis with Python — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=r-uOLxNrNk8",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Google Data Analytics Certificate — Coursera (Audit Free)",
+      "url": "https://www.coursera.org/professional-certificates/google-data-analytics",
+      "platform": "Coursera"
+    },
+    "practice_website": {
+      "title": "Kaggle — Datasets & Notebooks",
+      "url": "https://www.kaggle.com/datasets"
+    },
+    "mini_project": {
+      "title": "Sales Dashboard Analysis",
+      "description": "Analyze a sales dataset with pandas, create visualizations with matplotlib/seaborn, and generate an insights report.",
+      "skills_practiced": ["pandas", "matplotlib", "seaborn", "data cleaning", "statistical analysis"],
+      "estimated_hours": 10
+    }
+  },
+
+  "system_design": {
+    "name": "System Design",
+    "category": "Architecture",
+    "difficulty": "advanced",
+    "estimated_hours": 60,
+    "official_docs": {
+      "title": "System Design Primer — GitHub",
+      "url": "https://github.com/donnemartin/system-design-primer"
+    },
+    "youtube_playlist": {
+      "title": "System Design Interview — Gaurav Sen",
+      "url": "https://www.youtube.com/playlist?list=PLMCXHnjXnTnvo6alSjVkgxV-VH6EPyvoX",
+      "channel": "Gaurav Sen"
+    },
+    "free_course": {
+      "title": "Grokking System Design (Free Notes) — GitHub",
+      "url": "https://github.com/sharanyaa/grok_sdi_educative",
+      "platform": "GitHub"
+    },
+    "practice_website": {
+      "title": "HighScalability.com — Case Studies",
+      "url": "http://highscalability.com/all-time-favorites/"
+    },
+    "mini_project": {
+      "title": "Design a URL Shortener",
+      "description": "Design and implement a URL shortener service with database schema, API design, caching, and analytics.",
+      "skills_practiced": ["API design", "database schema", "caching", "load balancing", "hashing"],
+      "estimated_hours": 10
+    }
+  },
+
+  "data_structures": {
+    "name": "Data Structures & Algorithms",
+    "category": "Computer Science",
+    "difficulty": "intermediate",
+    "estimated_hours": 120,
+    "official_docs": {
+      "title": "GeeksforGeeks — DSA Guide",
+      "url": "https://www.geeksforgeeks.org/data-structures/"
+    },
+    "youtube_playlist": {
+      "title": "Data Structures Easy to Advanced — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=RBSGKlAvoiM",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Algorithms Specialization — Stanford (Coursera, Audit Free)",
+      "url": "https://www.coursera.org/specializations/algorithms",
+      "platform": "Coursera"
+    },
+    "practice_website": {
+      "title": "LeetCode — Problem Practice",
+      "url": "https://leetcode.com/problemset/"
+    },
+    "mini_project": {
+      "title": "Algorithm Visualizer",
+      "description": "Build a web app that visually demonstrates sorting and graph algorithms step-by-step with animations.",
+      "skills_practiced": ["sorting algorithms", "graph algorithms", "recursion", "time complexity", "visualization"],
+      "estimated_hours": 15
+    }
+  },
+
+  "css": {
+    "name": "CSS & Responsive Design",
+    "category": "Frontend",
+    "difficulty": "beginner",
+    "estimated_hours": 40,
+    "official_docs": {
+      "title": "MDN CSS Reference",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/CSS"
+    },
+    "youtube_playlist": {
+      "title": "CSS Full Course — freeCodeCamp",
+      "url": "https://www.youtube.com/watch?v=1Rs2ND1ryYc",
+      "channel": "freeCodeCamp"
+    },
+    "free_course": {
+      "title": "Responsive Web Design — freeCodeCamp",
+      "url": "https://www.freecodecamp.org/learn/2022/responsive-web-design/",
+      "platform": "freeCodeCamp"
+    },
+    "practice_website": {
+      "title": "CSS Battle — Interactive CSS Challenges",
+      "url": "https://cssbattle.dev/"
+    },
+    "mini_project": {
+      "title": "Responsive Landing Page",
+      "description": "Build a pixel-perfect responsive landing page with CSS Grid, Flexbox, animations, and a dark/light theme toggle.",
+      "skills_practiced": ["Flexbox", "CSS Grid", "media queries", "animations", "variables"],
+      "estimated_hours": 8
+    }
+  }
+}

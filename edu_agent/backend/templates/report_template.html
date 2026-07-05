@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Career Intelligence Report — {{ name }}</title>
+    <style>
+        @page { size: A4; margin: 12mm 16mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 10pt;
+            line-height: 1.45;
+            color: #1e293b;
+            background: #ffffff;
+        }
+
+        /* ─── Header ───────────────────────────────────── */
+        .report-header {
+            text-align: center;
+            border-bottom: 3px solid #4f46e5;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .report-header h1 {
+            font-size: 20pt;
+            color: #4f46e5;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .report-header .name {
+            font-size: 14pt;
+            color: #334155;
+            font-weight: 600;
+        }
+        .report-header .transition {
+            font-size: 9pt;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        /* ─── Two-Column Layout ────────────────────────── */
+        .cols {
+            display: block;
+            width: 100%;
+        }
+        .col-left {
+            width: 48%;
+            float: left;
+        }
+        .col-right {
+            width: 48%;
+            float: right;
+        }
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* ─── Cards ────────────────────────────────────── */
+        .card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+        .card-title {
+            font-size: 8pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 3px;
+        }
+
+        /* ─── Score ────────────────────────────────────── */
+        .score-value {
+            font-size: 32pt;
+            font-weight: 800;
+            color: #4f46e5;
+            line-height: 1;
+        }
+        .score-label {
+            font-size: 11pt;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* ─── Salary ───────────────────────────────────── */
+        .salary-value {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #059669;
+        }
+        .salary-sub {
+            font-size: 9pt;
+            color: #64748b;
+        }
+
+        /* ─── Lists ────────────────────────────────────── */
+        .tag-list {
+            list-style: none;
+            padding: 0;
+        }
+        .tag-list li {
+            display: inline-block;
+            background: #eef2ff;
+            color: #4338ca;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 8.5pt;
+            font-weight: 500;
+            margin: 2px 2px;
+        }
+
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+        }
+        .bullet-list li {
+            font-size: 9.5pt;
+            color: #334155;
+            padding: 2px 0 2px 12px;
+            position: relative;
+        }
+        .bullet-list li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #818cf8;
+            font-size: 9pt;
+        }
+
+        .green-list li::before { color: #059669; content: "✓"; }
+        .red-list li::before { color: #dc2626; content: "✗"; }
+
+        /* ─── Table ────────────────────────────────────── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+        th {
+            text-align: left;
+            padding: 4px 8px;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        td {
+            padding: 4px 8px;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        /* ─── Advice Box ───────────────────────────────── */
+        .advice-box {
+            background: #f0f9ff;
+            border-left: 3px solid #4f46e5;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 9pt;
+            line-height: 1.5;
+            color: #1e40af;
+        }
+
+        /* ─── Summary / Recommendation ─────────────────── */
+        .summary-text {
+            font-size: 9.5pt;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .recommendation-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .recommendation-box .label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #059669;
+            font-weight: 700;
+        }
+        .recommendation-box .text {
+            font-size: 10pt;
+            color: #065f46;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* ─── Footer ───────────────────────────────────── */
+        .report-footer {
+            text-align: center;
+            font-size: 7.5pt;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 6px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── Header ──────────────────────────────────── -->
+    <div class="report-header">
+        <h1>Career Intelligence Report</h1>
+        <div class="name">{{ name }}</div>
+        <div class="transition">{{ current_role }} → {{ target_role }}</div>
+    </div>
+
+    <!-- ─── Candidate Summary ───────────────────────── -->
+    <div class="card">
+        <div class="card-title">Candidate Summary</div>
+        <p class="summary-text">{{ candidate_summary }}</p>
+    </div>
+
+    <!-- ─── Two Column: Score + Salary ──────────────── -->
+    <div class="cols clearfix">
+        <div class="col-left">
+            <div class="card">
+                <div class="card-title">Readiness Score</div>
+                <span class="score-value">{{ readiness_score }}</span>
+                <span class="score-label"> / 100 — {{ readiness_label }}</span>
+            </div>
+        </div>
+        <div class="col-right">
+            <div class="card">
+                <div class="card-title">Expected Salary Range</div>
+                <div class="salary-value">₹{{ salary_min }} — ₹{{ salary_max }}</div>
+                <div class="salary-sub">Median: ₹{{ salary_median }} / year</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Two Column: Strengths + Weaknesses ──────── -->
+    <div class="cols clearfix">
+        <div class="col-left">
+            <div class="card">
+                <div class="card-title">Strengths</div>
+                <ul class="bullet-list green-list">
+                    {% for s in strengths %}
+                    <li>{{ s }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-right">
+            <div class="card">
+                <div class="card-title">Weaknesses / Areas to Improve</div>
+                <ul class="bullet-list red-list">
+                    {% for w in weaknesses %}
+                    <li>{{ w }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Skill Gaps ──────────────────────────────── -->
+    <div class="card">
+        <div class="card-title">Skill Gaps to Address</div>
+        <ul class="tag-list">
+            {% for gap in skill_gaps %}
+            <li>{{ gap }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- ─── Two Column: Target Roles + Certifications ─ -->
+    <div class="cols clearfix">
+        <div class="col-left">
+            <div class="card">
+                <div class="card-title">Target Roles</div>
+                <table>
+                    <tr><th>Role</th><th>Match</th></tr>
+                    {% for role in target_roles %}
+                    <tr><td>{{ role.title }}</td><td>{{ role.match }}%</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div class="col-right">
+            <div class="card">
+                <div class="card-title">Recommended Certifications</div>
+                <ul class="bullet-list">
+                    {% for cert in certifications %}
+                    <li>{{ cert }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Roadmap Summary ─────────────────────────── -->
+    <div class="card">
+        <div class="card-title">Learning Roadmap Summary</div>
+        <p class="summary-text">{{ roadmap_summary }}</p>
+    </div>
+
+    <!-- ─── Hiring Companies ────────────────────────── -->
+    <div class="card">
+        <div class="card-title">Companies Hiring for {{ target_role }}</div>
+        <ul class="tag-list">
+            {% for company in hiring_companies %}
+            <li>{{ company }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- ─── Mentor Advice ───────────────────────────── -->
+    <div class="card">
+        <div class="card-title">Mentor Advice</div>
+        <div class="advice-box">{{ mentor_advice }}</div>
+    </div>
+
+    <!-- ─── Overall Recommendation ──────────────────── -->
+    <div class="recommendation-box">
+        <div class="label">Overall Recommendation</div>
+        <div class="text">{{ overall_recommendation }}</div>
+    </div>
+
+    <!-- ─── Footer ──────────────────────────────────── -->
+    <div class="report-footer">
+        Generated by Career Guide AI • {{ generated_at }}
+    </div>
+
+</body>
+</html>
