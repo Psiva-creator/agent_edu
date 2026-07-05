@@ -98,15 +98,51 @@ export default function ResumePanel({ data: existingData, formData }) {
               value={targetRole}
               onChange={(e) => setTargetRole(e.target.value)}
             />
-            <Button
-              variant="primary"
-              icon={Sparkles}
-              loading={loading}
-              disabled={!resumeText.trim()}
-              onClick={handleAnalyze}
-            >
-              Analyze Resume
-            </Button>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <Button
+                variant="primary"
+                icon={Sparkles}
+                loading={loading}
+                disabled={!resumeText.trim()}
+                onClick={handleAnalyze}
+              >
+                Analyze Resume
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setTargetRole('Full Stack Developer');
+                  setResumeText(`John Doe
+johndoe@email.com | (555) 123-4567 | San Francisco, CA
+
+SUMMARY
+Passionate Full Stack Developer with 4 years of experience building scalable web applications. Proficient in modern JavaScript frameworks and cloud infrastructure.
+
+EXPERIENCE
+Software Engineer | Tech Solutions Inc. | 2020 - Present
+- Developed and maintained responsive web applications using React.js and Node.js
+- Implemented RESTful APIs serving 10k+ daily active users
+- Reduced database query latency by 40% through index optimization
+
+Junior Web Developer | StartUp Corp | 2018 - 2020
+- Built interactive frontend components using Vue.js
+- Collaborated with design team to implement pixel-perfect UI/UX
+- Wrote unit tests using Jest, achieving 85% code coverage
+
+SKILLS
+Languages: JavaScript (ES6+), TypeScript, Python, HTML5, CSS3
+Frameworks: React, Node.js, Express, Vue.js, Tailwind CSS
+Database: PostgreSQL, MongoDB
+Tools: Git, Docker, AWS (EC2, S3), CI/CD
+
+EDUCATION
+B.S. in Computer Science
+University of Technology | 2014 - 2018`);
+                }}
+              >
+                Load Sample Resume
+              </Button>
+            </div>
           </div>
         </Card>
       </motion.div>
