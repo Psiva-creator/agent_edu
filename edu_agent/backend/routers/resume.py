@@ -57,6 +57,35 @@ async def analyze_resume(
 
     return result
 
+import io
+from pypdf import PdfReader
+
+# ─── POST /resume/upload ─────────────────────────────────────
+@router.post(
+    "/upload",
+    status_code=status.HTTP_200_OK,
+    summary="Extract text from an uploaded resume (PDF/TXT)",
+)
+async def upload_resume(file: UploadFile = File(...)):
+    if not file.filename:
+        return Response(content='{"error": "No file uploaded"}', status_code=400, media_type="application/json")
+    
+    try:
+        content = await file.read()
+        text = ""
+        
+        if file.filename.lower().endswith(".pdf"):
+            pdf = PdfReader(io.BytesIO(content))
+            for page in pdf.pages:
+                text += page.extract_text() + "\n"
+        else:
+            # Assume text/plain
+            text = content.decode("utf-8", errors="replace")
+            
+        return {"text": text.strip()}
+    except Exception as e:
+        return Response(content=f'{{"error": "Failed to parse file: {str(e)}"}}', status_code=400, media_type="application/json")
+
 
 # ─── POST /resume/export/markdown ────────────────────────────
 

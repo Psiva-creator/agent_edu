@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, FileText, Sparkles } from 'lucide-react'
+import { Upload, FileText, Sparkles, Paperclip } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
-import { analyzeResumeText } from '../../services/api'
+import { analyzeResumeText, uploadResume } from '../../services/api'
 import Button from '../ui/Button'
 import TextArea from '../ui/TextArea'
 import Input from '../ui/Input'
@@ -17,6 +17,9 @@ import './ResumePanel.css'
 export default function ResumePanel({ data: existingData, formData }) {
   const [resumeText, setResumeText] = useState('')
   const [targetRole, setTargetRole] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef(null)
+  
   const { data, loading, error, execute, reset } = useApi(analyzeResumeText)
 
   const result = data || existingData
@@ -24,6 +27,28 @@ export default function ResumePanel({ data: existingData, formData }) {
   const handleAnalyze = async () => {
     if (!resumeText.trim()) return
     await execute({ resume_text: resumeText, target_role: targetRole || null })
+  }
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await uploadResume(formData)
+      if (res.text) {
+        setResumeText(res.text)
+      }
+    } catch (err) {
+      console.error('File upload failed:', err)
+      // Optionally show a toast or error message here
+    } finally {
+      setIsUploading(false)
+      // Reset input so the same file can be selected again if needed
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   return (
@@ -35,14 +60,34 @@ export default function ResumePanel({ data: existingData, formData }) {
         transition={{ duration: 0.3 }}
       >
         <Card padding="md">
-          <div className="resume-panel__header">
-            <FileText size={20} style={{ color: 'var(--accent-primary)' }} />
-            <h3>Paste Your Resume</h3>
+          <div className="resume-panel__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={20} style={{ color: 'var(--accent-primary)' }} />
+              <h3 style={{ margin: 0 }}>Paste or Upload Resume</h3>
+            </div>
+            <div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                accept=".pdf,.txt" 
+                style={{ display: 'none' }} 
+              />
+              <Button 
+                variant="secondary" 
+                size="sm"
+                icon={Paperclip} 
+                loading={isUploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Upload File (PDF/TXT)
+              </Button>
+            </div>
           </div>
           <div className="resume-panel__form">
             <TextArea
               label="Resume Content"
-              placeholder="Paste your resume text here..."
+              placeholder="Paste your resume text here or use the upload button above..."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               rows={6}

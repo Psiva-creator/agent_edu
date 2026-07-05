@@ -53,8 +53,8 @@ export const analyzeResumeText = async (data) => {
 }
 
 // ── Resume File Upload ──
-export const analyzeResume = async (formData) => {
-  const res = await api.post('/resume/analyze', formData, {
+export const uploadResume = async (formData) => {
+  const res = await api.post('/resume/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
   return res.data
