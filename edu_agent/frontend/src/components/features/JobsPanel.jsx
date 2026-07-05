@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Briefcase, Search, MapPin, Sparkles, ExternalLink } from 'lucide-react'
+import { Briefcase, Search, MapPin, Sparkles, ExternalLink, Info } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { searchJobs } from '../../services/api'
 import Button from '../ui/Button'
@@ -10,11 +10,13 @@ import Badge from '../ui/Badge'
 import EmptyState from '../ui/EmptyState'
 import ErrorState from '../ui/ErrorState'
 import { SkeletonCard } from '../ui/Skeleton'
+import Dialog from '../ui/Dialog'
 import './JobsPanel.css'
 
 export default function JobsPanel({ data: existingData, formData }) {
   const [query, setQuery] = useState('')
   const [location, setLocation] = useState('')
+  const [selectedJob, setSelectedJob] = useState(null)
   const { data, loading, error, execute } = useApi(searchJobs)
   const result = data || existingData
 
@@ -62,9 +64,17 @@ export default function JobsPanel({ data: existingData, formData }) {
                       {job.description && <p className="jobs-panel__desc">{job.description}</p>}
                     </div>
                     {job.url && (
-                      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', textAlign: 'right' }}>
+                      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                         <Button 
                           variant="outline" 
+                          size="sm" 
+                          icon={Info} 
+                          onClick={() => setSelectedJob(job)}
+                        >
+                          View More
+                        </Button>
+                        <Button 
+                          variant="primary" 
                           size="sm" 
                           icon={ExternalLink} 
                           onClick={() => window.open(job.url, '_blank')}
@@ -84,6 +94,47 @@ export default function JobsPanel({ data: existingData, formData }) {
       )}
 
       {!result && !loading && !error && <EmptyState icon={Briefcase} title="Search for jobs" description="Enter a job title or keyword above to find matching opportunities." />}
+      
+      {/* Job Details Dialog */}
+      <Dialog 
+        open={!!selectedJob} 
+        onClose={() => setSelectedJob(null)}
+        title={selectedJob?.title || 'Job Details'}
+      >
+        {selectedJob && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '18px' }}>{selectedJob.company}</h4>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                <MapPin size={14}/> {selectedJob.location || 'Remote'}
+              </p>
+            </div>
+            
+            {selectedJob.salary && (
+              <div>
+                <Badge variant="success">{selectedJob.salary}</Badge>
+              </div>
+            )}
+            
+            <div style={{ padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
+              <h5 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Job Description</h5>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                {selectedJob.description || 'No detailed description provided.'}
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+              <Button 
+                variant="primary" 
+                icon={ExternalLink} 
+                onClick={() => window.open(selectedJob.url, '_blank')}
+              >
+                Apply on LinkedIn
+              </Button>
+            </div>
+          </div>
+        )}
+      </Dialog>
     </div>
   )
 }

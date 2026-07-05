@@ -7,4 +7,14 @@
 .jobs-panel__card h4 { font-size: var(--text-base); font-weight: var(--weight-semibold); margin-bottom: var(--space-1); }
 .jobs-panel__company { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
 .jobs-panel__loc { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--text-tertiary); margin-bottom: var(--space-2); }
-.jobs-panel__desc { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-relaxed); margin-top: var(--space-2); }
+.jobs-panel__desc { 
+  font-size: var(--text-sm); 
+  color: var(--text-secondary); 
+  line-height: var(--leading-relaxed); 
+  margin-top: var(--space-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
