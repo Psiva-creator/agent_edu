@@ -37,6 +37,24 @@ class MarketAnalysisResponse(BaseModel):
     growth_prediction: str = Field(..., description="Description or rate of growth prediction")
     emerging_technologies: List[str] = Field(default_factory=list, description="Emerging technologies to watch")
     in_demand_skills: List[str] = Field(default_factory=list, description="Top in-demand skills in the sector")
+    
+    # New optional premium fields
+    market_health: Optional[str] = Field(None, description="Growing, Stable, or Declining")
+    salary_insights: Optional[Dict[str, Any]] = Field(None, description="Detailed salary percentiles")
+    hiring_demand: Optional[Dict[str, Any]] = Field(None, description="Hiring velocity and activity")
+    top_companies: Optional[List[Dict[str, Any]]] = Field(None, description="Companies hiring")
+    skill_metrics: Optional[List[Dict[str, Any]]] = Field(None, description="Skills with demand and salary impact")
+    technology_trends: Optional[List[Dict[str, Any]]] = Field(None, description="Tech trends and adoption")
+    location_insights: Optional[List[Dict[str, Any]]] = Field(None, description="City by city breakdown")
+    competition_metrics: Optional[Dict[str, Any]] = Field(None, description="Hiring ratio and interview probability")
+    industry_timeline: Optional[List[Dict[str, Any]]] = Field(None, description="Timeline of industry changes")
+    career_ladder: Optional[List[str]] = Field(None, description="Career progression ladder")
+    learning_roi: Optional[List[Dict[str, Any]]] = Field(None, description="ROI for learning new skills")
+    role_compatibility: Optional[List[Dict[str, Any]]] = Field(None, description="Compatibility with other roles")
+    remote_outlook: Optional[Dict[str, Any]] = Field(None, description="Remote work breakdown")
+    recruiter_insights: Optional[Dict[str, Any]] = Field(None, description="Recruiter keywords and time")
+    recommendations: Optional[List[Dict[str, Any]]] = Field(None, description="Actionable AI recommendations")
+    executive_summary: Optional[Dict[str, Any]] = Field(None, description="Summary with strengths and weaknesses")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -497,22 +515,7 @@ class MarketAgent:
 
     async def _analyze_with_llm(self, industry: str, location: str) -> Dict[str, Any]:
         """Query the LLM to get structured market intelligence."""
-        base_prompt = MARKET_ANALYSIS_PROMPT.format(industry=industry, location=location)
-        prompt = f"""\
-{base_prompt}
-
-You MUST return your answer as a valid JSON object matching this schema:
-{{
-  "trends": ["<industry trend 1>", "<industry trend 2>", ...],
-  "future_opportunities": ["<opportunity 1>", "<opportunity 2>", ...],
-  "demand_score": <float between 0.0 and 100.0>,
-  "growth_prediction": "<growth prediction description or rate, e.g., +15.5% YoY growth over the next 5 years>",
-  "emerging_technologies": ["<technology 1>", "<technology 2>", ...],
-  "in_demand_skills": ["<skill 1>", "<skill 2>", ...]
-}}
-
-Ensure all JSON keys and formats match exactly. Keep explanations and text concise.
-"""
+        prompt = MARKET_ANALYSIS_PROMPT.format(industry=industry, location=location)
         system_message = (
             "You are a career market research analyst. Return ONLY a valid JSON object matching the requested schema. "
             "Do not include any wrapper text, explanations, or markdown code blocks outside the JSON."
@@ -523,8 +526,8 @@ Ensure all JSON keys and formats match exactly. Keep explanations and text conci
         if not data or not isinstance(data, dict):
             return {}
 
-        # Validate and return cleaned data
-        return {
+        # Validate and return cleaned data along with all optional keys
+        result = {
             "industry": industry,
             "location": location,
             "trends": [str(x) for x in data.get("trends", [])],
@@ -534,6 +537,21 @@ Ensure all JSON keys and formats match exactly. Keep explanations and text conci
             "emerging_technologies": [str(x) for x in data.get("emerging_technologies", [])],
             "in_demand_skills": [str(x) for x in data.get("in_demand_skills", [])],
         }
+        
+        # Merge all other optional fields if they exist in the LLM response
+        optional_fields = [
+            "market_health", "salary_insights", "hiring_demand", "top_companies", 
+            "skill_metrics", "technology_trends", "location_insights", 
+            "competition_metrics", "industry_timeline", "career_ladder", 
+            "learning_roi", "role_compatibility", "remote_outlook", 
+            "recruiter_insights", "recommendations", "executive_summary"
+        ]
+        
+        for field in optional_fields:
+            if field in data and data[field]:
+                result[field] = data[field]
+                
+        return result
 
     # ═══════════════════════════════════════════════════════════
     # Predefined Fallback Logic
@@ -584,7 +602,25 @@ Ensure all JSON keys and formats match exactly. Keep explanations and text conci
             "demand_score": data["demand_score"],
             "growth_prediction": data["growth_prediction"],
             "emerging_technologies": data["emerging_technologies"][:6],
-            "in_demand_skills": data["in_demand_skills"][:8]
+            "in_demand_skills": data["in_demand_skills"][:8],
+            
+            # Missing optional fields will gracefully degrade to None for the frontend
+            "market_health": None,
+            "salary_insights": None,
+            "hiring_demand": None,
+            "top_companies": None,
+            "skill_metrics": None,
+            "technology_trends": None,
+            "location_insights": None,
+            "competition_metrics": None,
+            "industry_timeline": None,
+            "career_ladder": None,
+            "learning_roi": None,
+            "role_compatibility": None,
+            "remote_outlook": None,
+            "recruiter_insights": None,
+            "recommendations": None,
+            "executive_summary": None
         }
 
     # ═══════════════════════════════════════════════════════════

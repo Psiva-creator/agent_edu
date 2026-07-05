@@ -335,6 +335,7 @@ class CareerReportResponse(BaseModel):
     hiring_companies: list[str] = []
     overall_recommendation: str = ""
     next_steps: list[str] = []
+    market_data: dict = {}
 
 
 # ═══════════════════════════════════════════════════════════════

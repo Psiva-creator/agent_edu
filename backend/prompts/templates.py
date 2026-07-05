@@ -13,11 +13,85 @@ You are an expert career market research analyst. Analyze the current job market
 for the following industry/role: {industry}
 Location: {location}
 
-Provide a highly comprehensive and detailed analysis covering:
-1. Current demand trends (highlighting structural shifts, hiring velocity, remote adoption)
-2. Realistic compensation ranges (base, bonuses, equity, and market percentiles)
-3. Growth projections over the next 3-5 years (CAGR, sector expansion)
-4. Top technical and soft skills in high demand
+Provide a highly comprehensive and detailed analysis.
+
+You MUST return your answer as a valid JSON object matching this schema.
+Include as much detailed, accurate intelligence as possible.
+If reliable data is completely unavailable for an optional field, return null or [].
+Do NOT fabricate statistics. Explicitly label any estimates as "AI Estimates".
+
+{{
+  "trends": ["<industry trend 1>", "<industry trend 2>", ...],
+  "future_opportunities": ["<opportunity 1>", ...],
+  "demand_score": <float 0-100>,
+  "growth_prediction": "<growth prediction description>",
+  "emerging_technologies": ["<technology 1>", ...],
+  "in_demand_skills": ["<skill 1>", ...],
+  
+  "market_health": "Growing|Stable|Declining",
+  "salary_insights": {{
+    "entry": <int>,
+    "junior": <int>,
+    "mid": <int>,
+    "senior": <int>,
+    "lead": <int>,
+    "average": <int>,
+    "highest": <int>,
+    "top_10_percent": <int>,
+    "currency": "<USD/INR/etc>",
+    "growth_percent": <float>
+  }},
+  "hiring_demand": {{
+    "hiring_velocity": "High|Medium|Low",
+    "recruiter_activity": "High|Medium|Low",
+    "growth_percent": <float>
+  }},
+  "top_companies": [
+    {{"name": "<company>", "hiring_status": "Actively Hiring|Stable", "remote_percent": <int>, "tech_stack": ["<tech1>", ...]}}
+  ],
+  "skill_metrics": [
+    {{"skill": "<skill>", "demand_percent": <int>, "salary_impact": "<impact>", "difficulty": "<difficulty>"}}
+  ],
+  "technology_trends": [
+    {{"technology": "<tech>", "trend": "Up|Down|Stable", "growth_percent": <float>, "adoption": "<stage>"}}
+  ],
+  "location_insights": [
+    {{"city": "<city>", "demand_score": <int>, "average_salary": <int>, "remote_percent": <int>}}
+  ],
+  "competition_metrics": {{
+    "hiring_ratio": <float>,
+    "interview_probability": <float>,
+    "hiring_difficulty": "High|Medium|Low"
+  }},
+  "industry_timeline": [
+    {{"timeframe": "Current|6 Months|1 Year|3 Years", "prediction": "<prediction>"}}
+  ],
+  "career_ladder": ["Student", "Intern", "Junior", "Mid", "Senior", "Lead", "Architect"],
+  "learning_roi": [
+    {{"skill": "<skill>", "learning_hours": <int>, "salary_increase": "<increase>", "roi_score": <int>}}
+  ],
+  "role_compatibility": [
+    {{"role": "<role>", "compatibility_percent": <int>, "salary": <int>, "demand": "High|Medium|Low"}}
+  ],
+  "remote_outlook": {{
+    "remote_percent": <int>,
+    "hybrid_percent": <int>,
+    "office_percent": <int>
+  }},
+  "recruiter_insights": {{
+    "top_keywords": ["<keyword1>", ...],
+    "average_hiring_time": "<time>"
+  }},
+  "recommendations": [
+    {{"action": "<learn X>", "priority": "High|Medium|Low", "expected_gain": "<gain>", "time_estimate": "<time>"}}
+  ],
+  "executive_summary": {{
+    "strengths": ["<strength1>", ...],
+    "weaknesses": ["<weakness1>", ...],
+    "future_outlook": "<outlook>",
+    "best_next_step": "<step>"
+  }}
+}}
 """
 
 # ═══════════════════════════════════════════════════════════════

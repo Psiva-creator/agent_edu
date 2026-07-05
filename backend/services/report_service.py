@@ -367,6 +367,7 @@ class ReportService:
             "hiring_companies": hiring_companies,
             "overall_recommendation": overall_recommendation,
             "next_steps": next_steps,
+            "market_data": market_analysis,
         }
 
         report["report_html"] = self.render_html(report)
@@ -489,6 +490,8 @@ class ReportService:
                 "Create a polished resume and LinkedIn profile",
                 f"Apply for entry-level {target} positions at {hiring_companies[0]}" if hiring_companies else "Apply for jobs",
             ],
+            
+            "market_data": {},
         }
 
         report["report_html"] = self.render_html(report)
