@@ -224,21 +224,11 @@ class JobAgent:
             f"skills={len(skills)}, experience={experience_years}yr"
         )
 
-        # ── 2. Try LLM-based generation ──────────────────────
-        if self.llm.is_available:
-            try:
-                result = await self._find_with_llm(
-                    skills, target_role, experience_years,
-                    current_role, preferences,
-                )
-                if result and result.get("matches"):
-                    logger.info("Job matching completed via LLM.")
-                    return result
-            except Exception as e:
-                logger.warning(
-                    f"LLM job matching failed: {e}. "
-                    f"Falling back to deterministic analysis."
-                )
+        # ── 2. Force deterministic matching for lightning-fast results ──
+        # Bypass the LLM for JobAgent because the deterministic fallback
+        # provides instant, high-quality, pre-calibrated role matches
+        # without the 10-15 second API latency.
+        logger.info("Performing deterministic job matching (LLM bypassed for speed).")
 
         # ── 3. Deterministic fallback ─────────────────────────
         logger.info("Performing deterministic job matching.")
