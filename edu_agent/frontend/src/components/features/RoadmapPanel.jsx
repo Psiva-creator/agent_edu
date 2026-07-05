@@ -24,7 +24,7 @@ export default function RoadmapPanel({ data: existingData, formData }) {
     await execute({
       current_role: currentRole,
       target_role: targetRole,
-      timeline_months: parseInt(timeline) || 12,
+      deadline_weeks: parseInt(timeline) || 12,
     })
   }
 
@@ -52,10 +52,10 @@ export default function RoadmapPanel({ data: existingData, formData }) {
                 onChange={(e) => setTargetRole(e.target.value)}
               />
               <Input
-                label="Timeline (months)"
+                label="Timeline (weeks)"
                 type="number"
                 min="1"
-                max="60"
+                max="52"
                 value={timeline}
                 onChange={(e) => setTimeline(e.target.value)}
               />
@@ -84,17 +84,23 @@ export default function RoadmapPanel({ data: existingData, formData }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          {result.estimated_timeline && (
+          {result.total_weeks && (
             <div className="roadmap-panel__timeline-badge">
               <Clock size={14} />
-              <span>Estimated: {result.estimated_timeline}</span>
+              <span>Estimated Timeline: {result.total_weeks} weeks ({result.hours_per_week} hrs/week)</span>
+            </div>
+          )}
+          
+          {result.summary && (
+            <div style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+              {result.summary}
             </div>
           )}
 
-          {/* Milestones */}
-          {result.milestones?.length > 0 && (
+          {/* Milestones / Weeks */}
+          {result.weeks?.length > 0 && (
             <div className="roadmap-timeline">
-              {result.milestones.map((milestone, i) => (
+              {result.weeks.map((week, i) => (
                 <motion.div
                   key={i}
                   className="roadmap-timeline__item"
@@ -104,40 +110,31 @@ export default function RoadmapPanel({ data: existingData, formData }) {
                 >
                   <div className="roadmap-timeline__marker">
                     <div className="roadmap-timeline__dot" />
-                    {i < result.milestones.length - 1 && <div className="roadmap-timeline__line" />}
+                    {i < result.weeks.length - 1 && <div className="roadmap-timeline__line" />}
                   </div>
                   <Card padding="sm" hover className="roadmap-timeline__card">
-                    <h4>{milestone.title || milestone.name || `Milestone ${i + 1}`}</h4>
-                    <p>{milestone.description || milestone.details || JSON.stringify(milestone)}</p>
-                    {milestone.duration && (
+                    <h4>Week {week.week_number}: {week.theme}</h4>
+                    <p style={{ marginTop: '4px', marginBottom: '12px' }}>
+                      {week.milestone?.description || week.phase}
+                    </p>
+                    
+                    {week.tasks?.length > 0 && (
+                      <ul style={{ paddingLeft: '20px', marginBottom: '12px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        {week.tasks.slice(0, 3).map((task, j) => (
+                          <li key={j} style={{ marginBottom: '4px' }}>{task.title}</li>
+                        ))}
+                      </ul>
+                    )}
+                    
+                    {week.estimated_hours && (
                       <span className="roadmap-timeline__duration">
-                        <Clock size={12} /> {milestone.duration}
+                        <Clock size={12} /> {week.estimated_hours} hrs
                       </span>
                     )}
                   </Card>
                 </motion.div>
               ))}
             </div>
-          )}
-
-          {/* Resources */}
-          {result.resources?.length > 0 && (
-            <Card padding="md">
-              <div className="roadmap-panel__header">
-                <BookOpen size={18} style={{ color: 'var(--success)' }} />
-                <h3>Recommended Resources</h3>
-              </div>
-              <div className="roadmap-panel__resources">
-                {result.resources.map((r, i) => (
-                  <div key={i} className="roadmap-panel__resource">
-                    <span>{r.title || r.name || JSON.stringify(r)}</span>
-                    {r.url && (
-                      <a href={r.url} target="_blank" rel="noopener noreferrer">Visit →</a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
           )}
         </motion.div>
       )}
