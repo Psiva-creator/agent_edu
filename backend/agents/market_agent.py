@@ -55,6 +55,20 @@ class MarketAnalysisResponse(BaseModel):
     recruiter_insights: Optional[Dict[str, Any]] = Field(None, description="Recruiter keywords and time")
     recommendations: Optional[List[Dict[str, Any]]] = Field(None, description="Actionable AI recommendations")
     executive_summary: Optional[Dict[str, Any]] = Field(None, description="Summary with strengths and weaknesses")
+    
+    # Premium AI Visualizer Fields
+    ai_career_gps: Optional[Dict[str, Any]] = Field(None, description="Current position to destination tracking")
+    opportunity_radar: Optional[List[Dict[str, Any]]] = Field(None, description="Radar mapping of opportunities")
+    future_simulator: Optional[List[Dict[str, Any]]] = Field(None, description="What-if career scenarios")
+    investment_calculator: Optional[List[Dict[str, Any]]] = Field(None, description="ROI calculation for learning")
+    decision_assistant: Optional[Dict[str, Any]] = Field(None, description="A/B career decision comparison")
+    market_pulse: Optional[str] = Field(None, description="Live heartbeat status")
+    career_weather: Optional[str] = Field(None, description="Market weather condition")
+    opportunity_timeline: Optional[List[Dict[str, Any]]] = Field(None, description="Timeline predictions")
+    ai_risk_detector: Optional[List[Dict[str, Any]]] = Field(None, description="List of market warnings")
+    hidden_opportunities: Optional[List[Dict[str, Any]]] = Field(None, description="Hidden career pivots")
+    recruiter_perspective: Optional[Dict[str, Any]] = Field(None, description="Recruiter point of view narrative")
+    market_story: Optional[Dict[str, Any]] = Field(None, description="Narrative market overview")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -544,7 +558,11 @@ class MarketAgent:
             "skill_metrics", "technology_trends", "location_insights", 
             "competition_metrics", "industry_timeline", "career_ladder", 
             "learning_roi", "role_compatibility", "remote_outlook", 
-            "recruiter_insights", "recommendations", "executive_summary"
+            "recruiter_insights", "recommendations", "executive_summary",
+            "ai_career_gps", "opportunity_radar", "future_simulator", 
+            "investment_calculator", "decision_assistant", "market_pulse", 
+            "career_weather", "opportunity_timeline", "ai_risk_detector", 
+            "hidden_opportunities", "recruiter_perspective", "market_story"
         ]
         
         for field in optional_fields:
@@ -620,7 +638,21 @@ class MarketAgent:
             "remote_outlook": None,
             "recruiter_insights": None,
             "recommendations": None,
-            "executive_summary": None
+            "executive_summary": None,
+            
+            # Premium Visualizers Fallbacks
+            "ai_career_gps": None,
+            "opportunity_radar": None,
+            "future_simulator": None,
+            "investment_calculator": None,
+            "decision_assistant": None,
+            "market_pulse": "Healthy",
+            "career_weather": "Sunny",
+            "opportunity_timeline": None,
+            "ai_risk_detector": None,
+            "hidden_opportunities": None,
+            "recruiter_perspective": None,
+            "market_story": None
         }
 
     # ═══════════════════════════════════════════════════════════

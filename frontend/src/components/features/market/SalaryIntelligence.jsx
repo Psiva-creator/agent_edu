@@ -30,8 +30,15 @@ export default function SalaryIntelligence({ data }) {
             {['entry', 'junior', 'mid', 'senior', 'lead'].map((level) => {
               if (!data[level]) return null;
               // Calculate width relative to highest salary for visualization
-              const maxSal = data.highest || Math.max(data.senior, data.lead, data.mid);
-              const width = Math.max(15, (data[level] / maxSal) * 100);
+              const maxSal = data.highest || Math.max(
+                data.lead || 0, 
+                data.senior || 0, 
+                data.mid || 0, 
+                data.junior || 0, 
+                data.entry || 0
+              );
+              const safeMax = maxSal > 0 ? maxSal : 1;
+              const width = Math.max(15, (data[level] / safeMax) * 100);
               
               return (
                 <div key={level} className="salary-bar-item">

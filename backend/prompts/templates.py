@@ -89,7 +89,53 @@ Do NOT fabricate statistics. Explicitly label any estimates as "AI Estimates".
     "strengths": ["<strength1>", ...],
     "weaknesses": ["<weakness1>", ...],
     "future_outlook": "<outlook>",
-    "best_next_step": "<step>"
+    "best_next_step": "<step>",
+    "opportunities": ["<opp1>", ...],
+    "threats": ["<threat1>", ...],
+    "best_cities": ["<city1>", ...],
+    "learning_focus": "<focus>"
+  }},
+  
+  "ai_career_gps": {{
+    "current_position": "<string>",
+    "destination": "<string>",
+    "distance_remaining": "<string>",
+    "estimated_time": "<string>",
+    "confidence_percentage": <int>
+  }},
+  "opportunity_radar": [
+    {{"category": "High|Medium|Emerging|Declining", "opportunity_name": "<string>"}}
+  ],
+  "future_simulator": [
+    {{"action": "<string, e.g. Learn Kubernetes>", "expected_salary": <int>, "hiring_probability": <int>, "career_growth": "<string>"}}
+  ],
+  "investment_calculator": [
+    {{"hours_invested": <int>, "salary_increase": <int>, "roi_percentage": <int>, "career_score_increase": <int>}}
+  ],
+  "decision_assistant": {{
+    "career_a": "<string>",
+    "career_b": "<string>",
+    "comparison": [
+      {{"metric": "Salary|Stress|Demand|Remote|Growth|Competition|Learning Curve", "winner": "Career A|Career B|Tie", "details": "<string>"}}
+    ],
+    "recommendation": "<string>"
+  }},
+  "market_pulse": "Healthy|Growing|Cooling|Hot",
+  "career_weather": "Sunny|Cloudy|Storm|Booming",
+  "opportunity_timeline": [
+    {{"timeframe": "Today", "prediction": "<string>"}, {"timeframe": "6 Months", "prediction": "<string>"}, {"timeframe": "1 Year", "prediction": "<string>"}, {"timeframe": "3 Years", "prediction": "<string>"}, {"timeframe": "5 Years", "prediction": "<string>"}}
+  ],
+  "ai_risk_detector": [
+    {{"risk_type": "High Competition|Skill Obsolete|Low Hiring|Automation Risk|Industry Slowdown", "description": "<string>", "severity": "High|Medium|Low"}}
+  ],
+  "hidden_opportunities": [
+    {{"role": "<string>", "reason": "<string>", "match_score": <int>}}
+  ],
+  "recruiter_perspective": {{
+    "perspective": "<first person narrative starting with 'If I were a recruiter...'>"
+  }},
+  "market_story": {{
+    "narrative": "<A well-written narrative paragraph about the current state of the market>"
   }}
 }}
 """

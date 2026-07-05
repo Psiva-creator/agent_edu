@@ -44,8 +44,22 @@
 
 @media (min-width: 768px) {
   .market-grid-timeline {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
+}
+
+@media (min-width: 1024px) {
+  .market-grid-timeline {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.market-grid-ai,
+.market-grid-ai-secondary,
+.market-grid-narrative {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.5rem;
 }
 
 .bento-col-left, .bento-col-right, .market-col {

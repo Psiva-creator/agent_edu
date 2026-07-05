@@ -18,6 +18,17 @@ import CareerGrowth from './market/CareerGrowth';
 import RecommendationCenter from './market/RecommendationCenter';
 import ExecutiveSummary from './market/ExecutiveSummary';
 
+// New Premium Visualizers
+import AICareerGPS from './market/AICareerGPS';
+import OpportunityRadar from './market/OpportunityRadar';
+import FutureSimulator from './market/FutureSimulator';
+import AIDecisionAssistant from './market/AIDecisionAssistant';
+import OpportunityTimeline from './market/OpportunityTimeline';
+import AIRiskDetector from './market/AIRiskDetector';
+import HiddenOpportunities from './market/HiddenOpportunities';
+import RecruiterPerspective from './market/RecruiterPerspective';
+import MarketStory from './market/MarketStory';
+
 import './MarketPanel.css';
 
 export default function MarketPanel({ data, formData }) {
@@ -50,8 +61,8 @@ export default function MarketPanel({ data, formData }) {
         </div>
       )}
 
+      {/* Row 1: Core Metrics */}
       <div className="market-grid-main">
-        {/* Row 1: Core Metrics */}
         <div className="market-col">
           <SalaryIntelligence data={salary} />
         </div>
@@ -63,6 +74,30 @@ export default function MarketPanel({ data, formData }) {
         </div>
       </div>
 
+      {/* Row 2: Premium AI Features (New) */}
+      <div className="market-grid-ai">
+        <div className="col-span-12 lg:col-span-4">
+          <AICareerGPS data={marketData.ai_career_gps} />
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 flex flex-col gap-6">
+          <OpportunityRadar data={marketData.opportunity_radar} />
+        </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-4">
+          <FutureSimulator scenarios={marketData.future_simulator} />
+        </div>
+      </div>
+
+      {/* Row 3: AI Decisions & Risk */}
+      <div className="market-grid-ai-secondary">
+        <div className="col-span-12 lg:col-span-8">
+          <AIDecisionAssistant decision={marketData.decision_assistant} />
+        </div>
+        <div className="col-span-12 lg:col-span-4">
+          <AIRiskDetector risks={marketData.ai_risk_detector} />
+        </div>
+      </div>
+
+      {/* Row 4: Bento Box (Skills, Tech, Companies, Competition) */}
       <div className="market-grid-bento">
         {/* Left Column: Skills & Tech */}
         <div className="bento-col-left">
@@ -78,11 +113,25 @@ export default function MarketPanel({ data, formData }) {
         </div>
       </div>
 
+      {/* Row 5: Timelines & Forecasts */}
       <div className="market-grid-timeline">
         <CareerGrowth ladder={marketData.career_ladder} roi={marketData.learning_roi} />
+        <OpportunityTimeline timeline={marketData.opportunity_timeline} />
         <IndustryTimeline timeline={marketData.industry_timeline} />
       </div>
 
+      {/* Row 6: Narrative & Hidden Opportunities */}
+      <div className="market-grid-narrative">
+        <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+          <RecruiterPerspective data={marketData.recruiter_perspective} />
+          <MarketStory data={marketData.market_story} />
+        </div>
+        <div className="col-span-12 lg:col-span-4">
+          <HiddenOpportunities opportunities={marketData.hidden_opportunities} />
+        </div>
+      </div>
+
+      {/* Row 7: Actionable Recommendations */}
       {marketData.recommendations && (
         <div className="market-grid-full mt-6">
           <RecommendationCenter recommendations={marketData.recommendations} />

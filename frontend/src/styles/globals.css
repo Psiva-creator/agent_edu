@@ -4,6 +4,8 @@
    CSS reset, base styles, scrollbar, focus, utilities.
    ============================================================ */
 
+@import "tailwindcss";
+
 @import './design-tokens.css';
 @import './animations.css';
 
