@@ -1,129 +1,102 @@
 import axios from 'axios'
-import {
-  mockCareerAnalysis,
-  mockRoadmap,
-  mockJobs,
-  mockResume,
-} from './mockData'
 
-// Base API client for communicating with the FastAPI backend
 const api = axios.create({
   baseURL: '/api/v1',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 30000,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 120000,
 })
 
-/**
- * Helper: try the real API first, fall back to mock data on error.
- */
-async function withMockFallback(apiCall, mockData) {
-  try {
-    return await apiCall()
-  } catch (err) {
-    console.warn('[API] Backend unavailable, using mock data:', err.message)
-    // Simulate network delay for realistic UX
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    return mockData
-  }
-}
-
-// --- Career Report (main analysis endpoint) ---
+// ── Career Intelligence Report (main analysis endpoint) ──
 // Backend: POST /api/v1/report → CareerReportRequest → CareerReportResponse
-export const analyzeCareer = async (data) => {
-  return withMockFallback(async () => {
-    const response = await api.post('/report', {
-      name: data.name || data.current_role || 'User',
-      current_role: data.current_role,
-      target_role: data.target_role,
-      skills: data.skills || [],
-      experience_years: data.experience_years || 0,
-      education: data.education || null,
-      location: data.location || null,
-    })
-    return response.data
-  }, mockCareerAnalysis)
+export const analyzeProfile = async (profile) => {
+  const res = await api.post('/report', {
+    name: profile.name || 'User',
+    current_role: profile.current_role || profile.degree || 'Student',
+    target_role: profile.target_role || profile.career_goal || 'Software Engineer',
+    skills: profile.skills || [],
+    experience_years: parseInt(profile.experience_years || profile.experience) || 0,
+    education: profile.education || (profile.degree ? `${profile.degree} ${profile.branch || ''}`.trim() : null),
+    location: profile.location || null,
+  })
+  return res.data
 }
 
-// --- Job Search ---
+// ── Job Search (query params) ──
 // Backend: GET /api/v1/jobs?query=...&location=...
-export const searchJobs = async (params) => {
-  return withMockFallback(async () => {
-    const response = await api.get('/jobs', { params })
-    return response.data
-  }, mockJobs)
+export const searchJobs = async (query = '', location = '') => {
+  const res = await api.get('/jobs', { params: { query, location } })
+  return res.data
 }
 
-// --- Roadmap ---
+// ── Career Roadmap ──
 // Backend: POST /api/v1/roadmap → RoadmapRequest → RoadmapResponse
-export const getRoadmap = async (data) => {
-  return withMockFallback(async () => {
-    const response = await api.post('/roadmap', {
-      current_role: data.current_role || 'Student',
-      target_role: data.target_role || 'Software Engineer',
-      skill_gaps: data.skill_gaps || [],
-      hours_per_week: data.hours_per_week || 10,
-      deadline_weeks: data.deadline_weeks || 10,
-      skills: data.skills || [],
-    })
-    return response.data
-  }, mockRoadmap)
+export const generateRoadmap = async (data) => {
+  const res = await api.post('/roadmap', {
+    current_role: data.current_role || 'Student',
+    target_role: data.target_role || 'Software Engineer',
+    skill_gaps: data.skill_gaps || [],
+    hours_per_week: data.hours_per_week || 10,
+    deadline_weeks: data.deadline_weeks || 10,
+    skills: data.skills || [],
+  })
+  return res.data
 }
 
-// --- Resume Analysis ---
-// Backend: POST /api/v1/resume/analyze → ResumeAnalysisRequest (JSON) → ResumeAnalysisResponse
-export const analyzeResume = async (data) => {
-  return withMockFallback(async () => {
-    const response = await api.post('/resume/analyze', {
-      resume_text: data.resume_text,
-      target_role: data.target_role || 'Software Engineer',
-    })
-    return response.data
-  }, mockResume)
+// ── Resume Analysis (JSON body) ──
+// Backend: POST /api/v1/resume/analyze → ResumeAnalysisRequest → ResumeAnalysisResponse
+export const analyzeResumeText = async (data) => {
+  const res = await api.post('/resume/analyze', {
+    resume_text: data.resume_text,
+    target_role: data.target_role || 'Software Engineer',
+  })
+  return res.data
 }
 
-// --- Resources ---
-// Backend: GET /api/v1/resources → ResourceListResponse
-export const getResources = async () => {
-  return withMockFallback(async () => {
-    const response = await api.get('/resources')
-    return response.data
-  }, { skills: [], total: 0 })
+// ── Resume File Upload ──
+export const analyzeResume = async (formData) => {
+  const res = await api.post('/resume/analyze', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data
 }
 
-// Backend: GET /api/v1/resources/{skill} → ResourceSearchResponse
-export const getSkillResources = async (skill) => {
-  return withMockFallback(async () => {
-    const response = await api.get(`/resources/${encodeURIComponent(skill)}`)
-    return response.data
-  }, { found: false, query: skill })
-}
-
-// --- Report HTML/PDF ---
-// Backend: GET /api/v1/report/html
-export const getReportHtml = async () => {
-  const response = await api.get('/report/html', { responseType: 'text' })
-  return response.data
-}
-
-// Backend: GET /api/v1/report/pdf
-export const getReportPdf = async () => {
-  const response = await api.get('/report/pdf', { responseType: 'blob' })
-  return response.data
-}
-
-// --- Mentor Q&A ---
+// ── Mentor Advice ──
 // Backend: POST /api/v1/mentor → MentorQuestionRequest → MentorQuestionResponse
-export const askMentor = async (question, careerContext = null) => {
-  return withMockFallback(async () => {
-    const response = await api.post('/mentor', {
-      question,
-      career_context: careerContext,
-    })
-    return response.data
-  }, { answer: "Consistency is key to mastering new technologies! Keep practicing daily." })
+export const askMentor = async (data) => {
+  const res = await api.post('/mentor', {
+    question: data.question || data,
+    career_context: data.context || data.career_context || null,
+  })
+  return res.data
+}
+
+// ── Resources ──
+export const getResources = async () => {
+  const res = await api.get('/resources')
+  return res.data
+}
+
+export const getSkillResources = async (skill) => {
+  const res = await api.get(`/resources/${encodeURIComponent(skill)}`)
+  return res.data
+}
+
+// ── Report PDF ──
+export const getReportPdf = async () => {
+  const res = await api.get('/report/pdf', { responseType: 'blob' })
+  return res.data
+}
+
+// ── Report HTML ──
+export const getReportHtml = async () => {
+  const res = await api.get('/report/html', { responseType: 'text' })
+  return res.data
+}
+
+// ── Health Check ──
+export const healthCheck = async () => {
+  const res = await axios.get('/health')
+  return res.data
 }
 
 export default api
-

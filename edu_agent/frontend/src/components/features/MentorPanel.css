@@ -1,0 +1,27 @@
+.mentor-panel { display: flex; flex-direction: column; height: calc(100vh - var(--topbar-height) - var(--space-12)); min-height: 400px; }
+.mentor-panel__card { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+.mentor-panel__header { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--border-default); }
+.mentor-panel__header h3 { font-size: var(--text-md); font-weight: var(--weight-semibold); }
+.mentor-panel__header p { font-size: var(--text-xs); color: var(--text-tertiary); }
+.mentor-panel__avatar { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--accent-gradient); border-radius: var(--radius-lg); color: white; }
+.mentor-panel__messages { flex: 1; overflow-y: auto; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+.mentor-panel__welcome { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-4); padding: var(--space-10) var(--space-4); }
+.mentor-panel__welcome p { font-size: var(--text-sm); color: var(--text-secondary); max-width: 400px; }
+.mentor-panel__suggestions, .mentor-panel__follow-ups { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center; }
+.mentor-panel__suggestion-btn { padding: var(--space-2) var(--space-3); background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: var(--radius-full); font-size: var(--text-xs); color: var(--text-secondary); cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+.mentor-panel__suggestion-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); background: rgba(99, 102, 241, 0.05); }
+.mentor-panel__msg { display: flex; gap: var(--space-3); max-width: 85%; }
+.mentor-panel__msg--user { align-self: flex-end; flex-direction: row-reverse; }
+.mentor-panel__msg-icon { width: 28px; height: 28px; min-width: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--bg-elevated); color: var(--text-tertiary); }
+.mentor-panel__msg--user .mentor-panel__msg-icon { background: var(--accent-primary); color: white; }
+.mentor-panel__msg-content { padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+.mentor-panel__msg--assistant .mentor-panel__msg-content { background: var(--bg-elevated); color: var(--text-secondary); }
+.mentor-panel__msg--user .mentor-panel__msg-content { background: var(--accent-primary); color: white; }
+.mentor-panel__typing { display: flex; gap: 4px; padding: var(--space-3) var(--space-4); background: var(--bg-elevated); border-radius: var(--radius-lg); }
+.mentor-panel__typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); animation: pulse 1.4s infinite ease-in-out; }
+.mentor-panel__typing span:nth-child(2) { animation-delay: 0.2s; }
+.mentor-panel__typing span:nth-child(3) { animation-delay: 0.4s; }
+.mentor-panel__input-area { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border-default); }
+.mentor-panel__input { flex: 1; height: 38px; padding: 0 var(--space-3); background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: var(--radius-md); color: var(--text-primary); font-size: var(--text-sm); }
+.mentor-panel__input:focus { outline: none; border-color: var(--accent-primary); }
+.mentor-panel__input::placeholder { color: var(--text-tertiary); }

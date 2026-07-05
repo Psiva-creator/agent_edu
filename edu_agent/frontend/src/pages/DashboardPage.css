@@ -1,0 +1,2 @@
+.dashboard-page { display: flex; flex-direction: column; gap: var(--space-6); }
+.dashboard-page__content { flex: 1; min-height: 0; }

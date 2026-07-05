@@ -1,15 +1,18 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 
 /**
- * Custom hook for making API calls with loading/error state management.
- * Usage: const { data, loading, error, execute } = useApi(apiFn)
+ * Custom hook for API calls with loading/error/data state management.
+ * 
+ * Usage:
+ *   const { data, loading, error, execute, reset } = useApi(apiFunction)
+ *   const result = await execute(arg1, arg2)
  */
 export function useApi(apiFn) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const execute = async (...args) => {
+  const execute = useCallback(async (...args) => {
     try {
       setLoading(true)
       setError(null)
@@ -17,12 +20,23 @@ export function useApi(apiFn) {
       setData(result)
       return result
     } catch (err) {
-      setError(err.response?.data?.detail || err.message)
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.error ||
+        err.message ||
+        'An unexpected error occurred'
+      setError(message)
       throw err
     } finally {
       setLoading(false)
     }
-  }
+  }, [apiFn])
 
-  return { data, loading, error, execute }
+  const reset = useCallback(() => {
+    setData(null)
+    setLoading(false)
+    setError(null)
+  }, [])
+
+  return { data, loading, error, execute, reset }
 }

@@ -1,0 +1,19 @@
+.analyze-page { min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--bg-root); }
+.analyze-page__container { width: 100%; max-width: 680px; display: flex; flex-direction: column; gap: var(--space-6); }
+.analyze-page__header { margin-bottom: var(--space-2); }
+.analyze-page__back { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-tertiary); margin-bottom: var(--space-4); cursor: pointer; transition: color var(--duration-fast); }
+.analyze-page__back:hover { color: var(--text-primary); }
+.analyze-page__header h1 { font-size: var(--text-3xl); font-weight: var(--weight-bold); margin-bottom: var(--space-2); }
+.analyze-page__header p { font-size: var(--text-sm); color: var(--text-secondary); }
+.analyze-page__card { min-height: 360px; display: flex; flex-direction: column; }
+.analyze-page__fields { display: flex; flex-direction: column; gap: var(--space-5); flex: 1; }
+.analyze-page__icon-title { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.analyze-page__icon-title h3 { font-size: var(--text-lg); font-weight: var(--weight-semibold); }
+.analyze-page__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.analyze-page__tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.analyze-page__review { display: flex; flex-direction: column; gap: var(--space-1); }
+.analyze-page__review-row { display: flex; justify-content: space-between; align-items: flex-start; padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); font-size: var(--text-sm); }
+.analyze-page__review-row > span:first-child { color: var(--text-tertiary); min-width: 100px; }
+.analyze-page__review-row > span:last-child, .analyze-page__review-row > div { color: var(--text-primary); text-align: right; }
+.analyze-page__nav { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle); }
+@media (max-width: 640px) { .analyze-page__grid { grid-template-columns: 1fr; } }

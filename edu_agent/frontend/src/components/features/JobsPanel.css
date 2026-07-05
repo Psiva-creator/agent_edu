@@ -1,0 +1,10 @@
+.jobs-panel { display: flex; flex-direction: column; gap: var(--space-6); }
+.jobs-panel__header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
+.jobs-panel__header h3 { font-size: var(--text-md); font-weight: var(--weight-semibold); }
+.jobs-panel__form { display: flex; flex-direction: column; gap: var(--space-4); }
+.jobs-panel__count { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
+.jobs-panel__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-4); }
+.jobs-panel__card h4 { font-size: var(--text-base); font-weight: var(--weight-semibold); margin-bottom: var(--space-1); }
+.jobs-panel__company { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
+.jobs-panel__loc { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--text-tertiary); margin-bottom: var(--space-2); }
+.jobs-panel__desc { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-relaxed); margin-top: var(--space-2); }

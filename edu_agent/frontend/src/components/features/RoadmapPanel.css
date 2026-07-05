@@ -1,0 +1,19 @@
+.roadmap-panel { display: flex; flex-direction: column; gap: var(--space-6); }
+.roadmap-panel__header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
+.roadmap-panel__header h3 { font-size: var(--text-md); font-weight: var(--weight-semibold); }
+.roadmap-panel__form { display: flex; flex-direction: column; gap: var(--space-4); }
+.roadmap-panel__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); }
+.roadmap-panel__results { display: flex; flex-direction: column; gap: var(--space-4); }
+.roadmap-panel__timeline-badge { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3); background: var(--info-bg); color: var(--info); border: 1px solid var(--info-border); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: var(--weight-medium); align-self: flex-start; }
+.roadmap-timeline { display: flex; flex-direction: column; }
+.roadmap-timeline__item { display: flex; gap: var(--space-4); }
+.roadmap-timeline__marker { display: flex; flex-direction: column; align-items: center; min-width: 20px; }
+.roadmap-timeline__dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-gradient); margin-top: var(--space-4); flex-shrink: 0; }
+.roadmap-timeline__line { width: 2px; flex: 1; background: var(--border-default); margin: var(--space-1) 0; }
+.roadmap-timeline__card { flex: 1; margin-bottom: var(--space-3); }
+.roadmap-timeline__card h4 { font-size: var(--text-base); font-weight: var(--weight-semibold); margin-bottom: var(--space-1); }
+.roadmap-timeline__card p { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-relaxed); }
+.roadmap-timeline__duration { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-2); }
+.roadmap-panel__resources { display: flex; flex-direction: column; gap: var(--space-2); }
+.roadmap-panel__resource { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: var(--bg-elevated); border-radius: var(--radius-md); font-size: var(--text-sm); }
+.roadmap-panel__resource a { font-size: var(--text-xs); color: var(--accent-primary); }

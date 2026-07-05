@@ -1,0 +1,99 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-out);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Sizes ── */
+.btn--sm  { height: 32px; padding: 0 var(--space-3); font-size: var(--text-sm); }
+.btn--md  { height: 38px; padding: 0 var(--space-4); font-size: var(--text-base); }
+.btn--lg  { height: 44px; padding: 0 var(--space-6); font-size: var(--text-md); }
+.btn--xl  { height: 52px; padding: 0 var(--space-8); font-size: var(--text-lg); border-radius: var(--radius-lg); }
+
+/* ── Full Width ── */
+.btn--full { width: 100%; }
+
+/* ── Primary ── */
+.btn--primary {
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-sm);
+}
+.btn--primary:hover:not(:disabled) {
+  box-shadow: var(--accent-glow), var(--shadow-md);
+  transform: translateY(-1px);
+}
+.btn--primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ── Secondary ── */
+.btn--secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-accent);
+}
+
+/* ── Ghost ── */
+.btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ── Danger ── */
+.btn--danger {
+  background: var(--error);
+  color: white;
+}
+.btn--danger:hover:not(:disabled) {
+  background: #dc2626;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+}
+
+/* ── Outline ── */
+.btn--outline {
+  background: transparent;
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+.btn--outline:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* ── Loading Spinner ── */
+.btn__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.btn--loading {
+  pointer-events: none;
+}
