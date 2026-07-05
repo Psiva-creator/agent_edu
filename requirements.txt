@@ -1,0 +1,29 @@
+# ═══════════════════════════════════════════════════════════════
+# Career Guide AI — Python Dependencies
+# ═══════════════════════════════════════════════════════════════
+# Install: pip install -r requirements.txt
+# ═══════════════════════════════════════════════════════════════
+
+# ─── Core Framework ───────────────────────────────────────────
+fastapi==0.139.0
+uvicorn==0.50.0
+pydantic==2.12.5
+pydantic-settings==2.14.2
+
+# ─── HTTP & Networking ───────────────────────────────────────
+httpx==0.28.1
+python-multipart==0.0.32
+
+# ─── Configuration ───────────────────────────────────────────
+python-dotenv==1.2.2
+
+# ─── AI / LLM ────────────────────────────────────────────────
+openai==2.26.0
+
+# ─── Templates & Export ──────────────────────────────────────
+Jinja2==3.1.6
+xhtml2pdf==0.2.17
+
+# ─── Development & Testing (install separately) ─────────────
+# pip install pytest pytest-asyncio pytest-cov flake8
+google-generativeai
