@@ -1,0 +1,417 @@
+/* Resume Intelligence Dashboard - Premium SaaS Design System */
+
+.resume-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-4) 0;
+  width: 100%;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/* HEADER AREA */
+/* ───────────────────────────────────────────────────────── */
+
+.resume-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--space-2);
+}
+
+.resume-header__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.resume-header__title h1 {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.resume-header__title p {
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  margin: 0;
+}
+
+.resume-header__actions {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/* INPUT SECTION (Glassmorphism) */
+/* ───────────────────────────────────────────────────────── */
+
+.resume-input-card {
+  background: rgba(var(--bg-secondary-rgb), 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  transition: all 0.3s ease;
+}
+
+.resume-input-card:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.1);
+}
+
+.resume-input__row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-end;
+}
+
+.resume-input__row > div {
+  flex: 1;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/* DASHBOARD GRIDS */
+/* ───────────────────────────────────────────────────────── */
+
+.dashboard-row {
+  display: grid;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.dashboard-row--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.dashboard-row--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.dashboard-row--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.dashboard-row--2-1 {
+  grid-template-columns: 2fr 1fr;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-row--4 { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-row--3 { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-row--2-1 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .dashboard-row--4, .dashboard-row--3, .dashboard-row--2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ───────────────────────────────────────────────────────── */
+/* PREMIUM CARDS */
+/* ───────────────────────────────────────────────────────── */
+
+.premium-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-hover);
+}
+
+.premium-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.premium-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.premium-card__icon--primary { background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); }
+.premium-card__icon--success { background: rgba(var(--accent-success-rgb), 0.1); color: var(--accent-success); }
+.premium-card__icon--warning { background: rgba(var(--accent-warning-rgb), 0.1); color: var(--accent-warning); }
+
+.premium-card__value {
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  margin-top: var(--space-2);
+}
+
+.premium-card__subtext {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-top: var(--space-1);
+}
+
+/* ───────────────────────────────────────────────────────── */
+/* PROGRESS BARS & HEATMAPS */
+/* ───────────────────────────────────────────────────────── */
+
+.progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.progress-item__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Heatmap Specific */
+.heatmap-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.heatmap-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.heatmap-label {
+  width: 100px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.heatmap-blocks {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.heatmap-block {
+  height: 24px;
+  flex: 1;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  opacity: 0.2;
+}
+
+.heatmap-block.active {
+  background: var(--accent-primary);
+  opacity: 1;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/* BADGES (Strengths / Weaknesses / Missing) */
+/* ───────────────────────────────────────────────────────── */
+
+.badge-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.dashboard-badge {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+}
+
+.dashboard-badge--strength {
+  background: rgba(var(--accent-success-rgb), 0.1);
+  color: var(--accent-success);
+  border-color: rgba(var(--accent-success-rgb), 0.2);
+}
+
+.dashboard-badge--weakness {
+  background: rgba(var(--accent-danger-rgb), 0.1);
+  color: var(--accent-danger);
+  border-color: rgba(var(--accent-danger-rgb), 0.2);
+}
+
+.dashboard-badge--missing {
+  background: rgba(var(--accent-warning-rgb), 0.1);
+  color: var(--accent-warning);
+  border-color: rgba(var(--accent-warning-rgb), 0.2);
+}
+
+/* ───────────────────────────────────────────────────────── */
+/* AI REWRITE COMPARISON */
+/* ───────────────────────────────────────────────────────── */
+
+.rewrite-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rewrite-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.rewrite-text {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.rewrite-text--original {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+.rewrite-text--improved {
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+}
+
+.rewrite-arrow {
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(var(--accent-primary-rgb), 0.1);
+  border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+  .rewrite-card {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+  .rewrite-arrow {
+    transform: rotate(90deg);
+    margin: 0 auto;
+  }
+}
+
+/* ───────────────────────────────────────────────────────── */
+/* SECTION CHECKLIST */
+/* ───────────────────────────────────────────────────────── */
+
+.checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.checklist-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checklist-icon--done { color: var(--accent-success); }
+.checklist-icon--missing { color: var(--text-tertiary); opacity: 0.5; }
+
+/* ───────────────────────────────────────────────────────── */
+/* INTERVIEW QUESTIONS */
+/* ───────────────────────────────────────────────────────── */
+
+.interview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.interview-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.interview-column h5 {
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-2);
+}
+
+.interview-q {
+  background: var(--bg-secondary);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  border-left: 3px solid transparent;
+}
+
+.interview-q--easy { border-left-color: var(--accent-success); }
+.interview-q--medium { border-left-color: var(--accent-warning); }
+.interview-q--hard { border-left-color: var(--accent-danger); }
+
+@media (max-width: 768px) {
+  .interview-grid { grid-template-columns: 1fr; }
+}

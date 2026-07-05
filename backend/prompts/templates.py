@@ -112,16 +112,48 @@ Perform a detailed ATS and skill gap evaluation. Return a JSON object with these
   "improvements": ["<improvement1>", ...],
   "score": <float 0-100>,
   "summary": "<detailed summary of the resume analysis>",
-  "ats_suggestions": ["<suggestion1>", ...]
+  "ats_suggestions": ["<suggestion1>", ...],
+  "ats_breakdown": {{
+    "keywords": <int 0-100>,
+    "projects": <int 0-100>,
+    "achievements": <int 0-100>,
+    "experience": <int 0-100>,
+    "education": <int 0-100>,
+    "grammar": <int 0-100>,
+    "readability": <int 0-100>
+  }},
+  "recruiter_verdict": {{
+    "verdict": "Would Shortlist|Needs Improvement|Excellent Candidate|Borderline",
+    "interview_probability": <int 0-100>,
+    "hiring_probability": <int 0-100>
+  }},
+  "ai_rewrites": [
+    {{"original": "<weak bullet point>", "improved": "<strong quantified ATS-friendly bullet point>"}}
+  ],
+  "interview_questions": {{
+    "easy": ["<q1>", "<q2>"],
+    "medium": ["<q1>", "<q2>"],
+    "hard": ["<q1>", "<q2>"]
+  }},
+  "section_checklist": {{
+    "education": <bool>,
+    "skills": <bool>,
+    "experience": <bool>,
+    "projects": <bool>,
+    "achievements": <bool>,
+    "certifications": <bool>,
+    "github": <bool>,
+    "linkedin": <bool>
+  }}
 }}
 
 Evaluate:
 1. Skills relevance to '{target_role}'
 2. Missing critical skills for the target role
-3. Career readiness percentage
-4. Resume structure and formatting
-5. ATS optimization suggestions
-6. Recommended career paths based on current skills
+3. Career readiness percentage and detailed ATS category breakdown
+4. Provide rewritten bullet points for weak sections
+5. Generate AI interview questions based strictly on their provided experience
+6. Provide a simulated recruiter verdict and probabilities
 """
 
 # ═══════════════════════════════════════════════════════════════
