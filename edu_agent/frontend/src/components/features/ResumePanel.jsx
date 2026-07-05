@@ -23,7 +23,7 @@ export default function ResumePanel({ data: existingData, formData }) {
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef(null)
   
-  const { data, loading, error, execute } = useApi(analyzeResumeText)
+  const { data, loading, error, execute, reset } = useApi(analyzeResumeText)
 
   const result = data || existingData
 
@@ -36,6 +36,7 @@ export default function ResumePanel({ data: existingData, formData }) {
     const file = e.target.files?.[0]
     if (!file) return
     setIsUploading(true)
+    if (reset) reset()
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -326,6 +327,16 @@ University of Technology | 2014 - 2018`)
             accept=".pdf,.txt" 
             style={{ display: 'none' }} 
           />
+          {result && (
+            <Button 
+              variant="primary" 
+              icon={Paperclip} 
+              loading={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload New Resume
+            </Button>
+          )}
           <Button 
             variant="outline" 
             icon={Download} 
@@ -373,7 +384,7 @@ University of Technology | 2014 - 2018`)
               loading={isUploading}
               onClick={() => fileInputRef.current?.click()}
             >
-              Upload PDF
+              Upload Resume
             </Button>
             <Button variant="secondary" onClick={loadSample}>
               Load Sample Resume
