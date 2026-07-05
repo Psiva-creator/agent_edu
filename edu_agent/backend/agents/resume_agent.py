@@ -234,6 +234,54 @@ class ResumeAgent:
             target_role, readiness_score,
         )
 
+        # ── 9. Fallback rich dashboard data ──────────────────────
+        base_score = int(readiness_score)
+        ats_breakdown = {
+            "keywords": min(base_score + 5, 100),
+            "projects": 85 if "project" in text_lower else 40,
+            "achievements": 75 if re.search(r'\d+%|\d+x', text_lower) else 35,
+            "experience": min(base_score + 10, 100),
+            "education": 90 if "education" in text_lower else 20,
+            "grammar": 88,
+            "readability": 85
+        }
+        
+        verdict = "Needs Improvement"
+        if base_score > 85:
+            verdict = "Excellent Candidate"
+        elif base_score > 70:
+            verdict = "Would Shortlist"
+        elif base_score > 55:
+            verdict = "Borderline"
+            
+        recruiter_verdict = {
+            "verdict": verdict,
+            "interview_probability": max(10, base_score - 10),
+            "hiring_probability": max(5, base_score - 25)
+        }
+        
+        ai_rewrites = [
+            {"original": "Worked on a web application.", "improved": "Engineered a scalable web application using modern JavaScript frameworks, serving 10,000+ daily active users."},
+            {"original": "Improved database speed.", "improved": "Optimized PostgreSQL database queries, reducing average response latency by 40%."}
+        ]
+        
+        interview_questions = {
+            "easy": [f"Can you tell me about your experience with {extracted_skills[0] if extracted_skills else 'your primary skills'}?", "Walk me through your resume."],
+            "medium": ["Describe a challenging technical problem you solved recently.", "How do you ensure code quality in your projects?"],
+            "hard": ["Explain a time when you had to architect a system from scratch.", "How would you scale an application to handle a sudden 10x spike in traffic?"]
+        }
+        
+        section_checklist = {
+            "education": "education" in text_lower,
+            "skills": "skills" in text_lower,
+            "experience": "experience" in text_lower,
+            "projects": "project" in text_lower,
+            "achievements": re.search(r'\d+%|\d+x', text_lower) is not None,
+            "certifications": "certific" in text_lower,
+            "github": "github" in text_lower,
+            "linkedin": "linkedin" in text_lower
+        }
+
         return {
             "target_role": target_role,
             "extracted_skills": extracted_skills,
@@ -247,6 +295,11 @@ class ResumeAgent:
             "ats_suggestions": ats_suggestions,
             "summary": summary,
             "score": round(readiness_score, 1),  # Alias for compatibility
+            "ats_breakdown": ats_breakdown,
+            "recruiter_verdict": recruiter_verdict,
+            "ai_rewrites": ai_rewrites,
+            "interview_questions": interview_questions,
+            "section_checklist": section_checklist
         }
 
     # ─── Extraction Helpers ───────────────────────────────────
