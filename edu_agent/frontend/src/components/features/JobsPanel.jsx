@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Briefcase, Search, MapPin, Sparkles } from 'lucide-react'
+import { Briefcase, Search, MapPin, Sparkles, ExternalLink } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { searchJobs } from '../../services/api'
 import Button from '../ui/Button'
@@ -53,12 +53,26 @@ export default function JobsPanel({ data: existingData, formData }) {
             <div className="jobs-panel__grid">
               {result.matches.map((job, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-                  <Card hover padding="md" className="jobs-panel__card">
-                    <h4>{job.title || job.role || 'Job Opportunity'}</h4>
-                    <p className="jobs-panel__company">{job.company || 'Company'}</p>
-                    {job.location && <div className="jobs-panel__loc"><MapPin size={12}/>{job.location}</div>}
-                    {job.salary && <Badge variant="success" size="sm">{job.salary}</Badge>}
-                    {job.description && <p className="jobs-panel__desc">{job.description}</p>}
+                  <Card hover padding="md" className="jobs-panel__card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div style={{ flex: 1 }}>
+                      <h4>{job.title || job.role || 'Job Opportunity'}</h4>
+                      <p className="jobs-panel__company">{job.company || 'Company'}</p>
+                      {job.location && <div className="jobs-panel__loc"><MapPin size={12}/>{job.location}</div>}
+                      {job.salary && <Badge variant="success" size="sm">{job.salary}</Badge>}
+                      {job.description && <p className="jobs-panel__desc">{job.description}</p>}
+                    </div>
+                    {job.url && (
+                      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', textAlign: 'right' }}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          icon={ExternalLink} 
+                          onClick={() => window.open(job.url, '_blank')}
+                        >
+                          Apply Now
+                        </Button>
+                      </div>
+                    )}
                   </Card>
                 </motion.div>
               ))}
