@@ -70,3 +70,8 @@ def get_mentor_agent():
     from agents.mentor_agent import MentorAgent
     return MentorAgent(llm_service=get_llm())
 
+def get_job_agent():
+    """Inject Job agent with shared LLM service."""
+    from agents.job_agent import JobAgent
+    return JobAgent(llm_service=get_llm())
+
