@@ -337,9 +337,10 @@ class JobAgent:
         if not api_key:
             return {}
             
+        # Append linkedin to force google to prioritize linkedin jobs
         params = {
             "engine": "google_jobs",
-            "q": query,
+            "q": f"{query} linkedin",
             "api_key": api_key,
             "hl": "en",
         }
@@ -348,14 +349,15 @@ class JobAgent:
             params["location"] = location
             
         async with httpx.AsyncClient(timeout=15.0) as client:
-            response = await client.get("https://serpapi.com/search", params=params)
+            response = await client.get("https://serpapi.com/search.json", params=params)
             response.raise_for_status()
             data = response.json()
             
         jobs_results = data.get("jobs_results", [])
         matches = []
         
-        for job in jobs_results[:10]:
+        # Increase the limit to return more jobs (up to 20)
+        for job in jobs_results[:20]:
             # Extract salary if provided in the snippet
             salary_str = ""
             for ext in job.get("extensions", []):
@@ -363,12 +365,25 @@ class JobAgent:
                     salary_str = ext
                     break
                     
-            # Try to find an apply link
+            # Try to find an apply link, specifically prioritizing LinkedIn
             apply_url = ""
-            for link in job.get("related_links", []):
-                if link.get("link"):
-                    apply_url = link["link"]
+            
+            # Check apply_options first for LinkedIn
+            for option in job.get("apply_options", []):
+                if option.get("title", "").lower() == "linkedin":
+                    apply_url = option.get("link", "")
                     break
+            
+            # If no LinkedIn specific link, just take the first apply option
+            if not apply_url and job.get("apply_options"):
+                apply_url = job["apply_options"][0].get("link", "")
+                
+            # Fallback to related links
+            if not apply_url:
+                for link in job.get("related_links", []):
+                    if link.get("link"):
+                        apply_url = link["link"]
+                        break
                     
             if not apply_url:
                 # Fallback to search query
