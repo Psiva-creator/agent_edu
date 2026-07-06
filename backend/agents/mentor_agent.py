@@ -321,7 +321,8 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
                     "Provide specific, actionable, and practical guidance based on the candidate's background. "
                     "CRITICAL: You MUST use rich Markdown formatting in your response. "
                     "Use Markdown tables for comparing options or structured data. "
-                    "Use Mermaid.js code blocks (```mermaid) to draw flowcharts, timelines, or diagrams when explaining processes, architectures, or career steps."
+                    "Use Mermaid.js code blocks (```mermaid) to draw flowcharts, timelines, or diagrams when explaining processes, architectures, or career steps. "
+                    "CRITICAL MERMAID SYNTAX: Always wrap node text in double quotes to prevent syntax errors (e.g., A[\"Text with spaces or special chars!\"]). Do NOT use unescaped single quotes or parentheses in node labels without double quotes."
                 )
                 prompt = (
                     f"Candidate Background Context:\n{context_str}\n\n"
