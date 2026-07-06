@@ -78,3 +78,4 @@ exports/
 .gemini/
 test_results.txt
 .vercel
+.env*

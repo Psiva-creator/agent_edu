@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Briefcase, Search, MapPin, Sparkles, ExternalLink, Info } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { searchJobs } from '../../services/api'
+import { useCareerMemory } from '../../hooks/useCareerMemory'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Card from '../ui/Card'
@@ -14,11 +15,21 @@ import Dialog from '../ui/Dialog'
 import './JobsPanel.css'
 
 export default function JobsPanel({ data: existingData, formData }) {
-  const [query, setQuery] = useState('')
-  const [location, setLocation] = useState('')
+  const { memory } = useCareerMemory()
+  
+  const [query, setQuery] = useState(memory?.personal_info?.target_role || formData?.target_role || '')
+  const [location, setLocation] = useState(memory?.personal_info?.location || formData?.location || '')
   const [selectedJob, setSelectedJob] = useState(null)
+  
   const { data, loading, error, execute } = useApi(searchJobs)
   const result = data || existingData
+
+  useEffect(() => {
+    // Auto-search if we have a query from memory and haven't searched yet
+    if (query && !data && !existingData?.matches) {
+      execute(query, location)
+    }
+  }, [memory.isActive])
 
   const handleSearch = async () => {
     if (!query.trim()) return

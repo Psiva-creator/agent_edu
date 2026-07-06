@@ -80,7 +80,14 @@ export default function MentorPanel({ data: existingData, formData }) {
     setMessages(prev => [...prev.filter(m => m.role !== 'suggestion'), { role: 'user', content: question }])
 
     try {
-      const result = await execute({ question, context: null })
+      const memoryContextData = {
+        name: existingData?.name,
+        target_role: existingData?.target_role,
+        skills: existingData?.skills,
+        experience_years: existingData?.experience_years,
+        roadmap_summary: existingData?.roadmap_summary
+      };
+      const result = await execute({ question, context: memoryContextData })
       // Backend returns MentorQuestionResponse { answer: "..." }
       setMessages(prev => [
         ...prev,

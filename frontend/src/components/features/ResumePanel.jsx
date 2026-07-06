@@ -302,7 +302,12 @@ University of Technology | 2014 - 2018`)
 
         {/* ROW 8: Export Center */}
         <div style={{ display: 'flex', justifyContent: 'center', margin: 'var(--space-8) 0' }}>
-          <Button variant="primary" icon={Download} size="lg">
+          <Button 
+            variant="primary" 
+            icon={Download} 
+            size="lg"
+            onClick={() => window.open(`${import.meta.env.VITE_API_URL || '/api/v1'}/report/pdf`, '_blank')}
+          >
             Download Full Analysis Report (PDF)
           </Button>
         </div>
@@ -341,6 +346,7 @@ University of Technology | 2014 - 2018`)
             variant="outline" 
             icon={Download} 
             disabled={!result}
+            onClick={() => window.open(`${import.meta.env.VITE_API_URL || '/api/v1'}/report/pdf`, '_blank')}
           >
             Export Report
           </Button>

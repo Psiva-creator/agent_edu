@@ -143,6 +143,6 @@ async def get_report_pdf(
         media_type="application/pdf",
         status_code=status.HTTP_200_OK,
         headers={
-            "Content-Disposition": f'attachment; filename="{name}_career_report.pdf"'
+            "Content-Disposition": f'inline; filename="{name}_career_report.pdf"'
         },
     )

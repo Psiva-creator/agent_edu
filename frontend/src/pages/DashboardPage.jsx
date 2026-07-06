@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle,
+  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock
 } from 'lucide-react'
 import Tabs from '../components/ui/Tabs'
 import EmptyState from '../components/ui/EmptyState'
@@ -12,6 +12,7 @@ import RoadmapPanel from '../components/features/RoadmapPanel'
 import JobsPanel from '../components/features/JobsPanel'
 import MarketPanel from '../components/features/MarketPanel'
 import MentorPanel from '../components/features/MentorPanel'
+import { useCareerMemory } from '../hooks/useCareerMemory'
 import './DashboardPage.css'
 
 const TAB_LIST = [
@@ -27,20 +28,12 @@ export default function DashboardPage() {
   const { tab } = useParams()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState(tab || 'overview')
-  const [data, setData] = useState(null)
-  const [formData, setFormData] = useState(null)
+  const { memory } = useCareerMemory()
 
-  useEffect(() => {
-    // Load analysis results from session storage
-    const storedResult = sessionStorage.getItem('analysisResult')
-    const storedForm = sessionStorage.getItem('analysisFormData')
-    if (storedResult) {
-      try { setData(JSON.parse(storedResult)) } catch { setData(null) }
-    }
-    if (storedForm) {
-      try { setFormData(JSON.parse(storedForm)) } catch { setFormData(null) }
-    }
-  }, [])
+  // We no longer rely on sessionStorage directly in the page.
+  // The context handles all state.
+  const data = memory.raw_report
+  const formData = memory.personal_info
 
   useEffect(() => {
     if (tab && tab !== activeTab) setActiveTab(tab)
@@ -70,8 +63,47 @@ export default function DashboardPage() {
     }
   }
 
+  const calculateCompletion = () => {
+    if (!memory.isActive) return 0;
+    let score = 50; // Base score for having active memory
+    if (memory.resume_intelligence?.skills?.length > 0) score += 20;
+    if (memory.personal_info?.experience_years > 0) score += 10;
+    if (memory.personal_info?.target_role) score += 10;
+    if (memory.resume_intelligence?.resume_score > 0) score += 10;
+    return score;
+  }
+
   return (
     <div className="dashboard-page">
+      {memory.isActive && (
+        <motion.div 
+          className="dashboard-page__memory-banner"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="memory-banner__header">
+            <ShieldCheck className="memory-banner__icon" size={20} />
+            <span className="memory-banner__title">Global Career Memory Active</span>
+            <div className="memory-banner__badge">Profile Completion: {calculateCompletion()}%</div>
+          </div>
+          <div className="memory-banner__details">
+            <div className="memory-banner__stat">
+              <Clock size={14} />
+              <span>Synced {new Date(memory.lastUpdated || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            </div>
+            <div className="memory-banner__agents">
+              <span className="agents-label">Shared Intelligence Across:</span>
+              <span className="agent-tag"><CheckCircle2 size={12}/> Career</span>
+              <span className="agent-tag"><CheckCircle2 size={12}/> Resume</span>
+              <span className="agent-tag"><CheckCircle2 size={12}/> Roadmap</span>
+              <span className="agent-tag"><CheckCircle2 size={12}/> Jobs</span>
+              <span className="agent-tag"><CheckCircle2 size={12}/> Market</span>
+              <span className="agent-tag"><CheckCircle2 size={12}/> Mentor</span>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <Tabs
         tabs={TAB_LIST}
         activeTab={activeTab}

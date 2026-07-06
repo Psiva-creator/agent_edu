@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { generateRoadmap } from '../../services/api'
+import { useCareerMemory } from '../../hooks/useCareerMemory'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Card from '../ui/Card'
@@ -16,13 +17,21 @@ import { SkeletonCard } from '../ui/Skeleton'
 import './RoadmapPanel.css'
 
 export default function RoadmapPanel({ data: existingData, formData }) {
+  const { memory } = useCareerMemory()
+  
   // Pre-fill form data if available
-  const [currentRole, setCurrentRole] = useState(formData?.current_role || '')
-  const [targetRole, setTargetRole] = useState(formData?.target_role || '')
+  const [currentRole, setCurrentRole] = useState(memory?.personal_info?.current_role || formData?.current_role || '')
+  const [targetRole, setTargetRole] = useState(memory?.personal_info?.target_role || formData?.target_role || '')
   const [timeline, setTimeline] = useState('12')
   
   const { data, loading, error, execute } = useApi(generateRoadmap)
-  const result = data || (existingData?.weeks ? existingData : null)
+  const result = data || memory?.career_analysis?.roadmap || (existingData?.weeks ? existingData : null)
+
+  useEffect(() => {
+    if (memory?.isActive && currentRole && targetRole && !result?.weeks && !loading && !error) {
+      handleGenerate()
+    }
+  }, [memory?.isActive])
 
   // Interactive States
   const [completedTasks, setCompletedTasks] = useState({})
