@@ -318,7 +318,10 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
             try:
                 system_message = (
                     "You are a friendly, encouraging, and experienced AI Career Mentor. "
-                    "Provide specific, actionable, and practical guidance based on the candidate's background."
+                    "Provide specific, actionable, and practical guidance based on the candidate's background. "
+                    "CRITICAL: You MUST use rich Markdown formatting in your response. "
+                    "Use Markdown tables for comparing options or structured data. "
+                    "Use Mermaid.js code blocks (```mermaid) to draw flowcharts, timelines, or diagrams when explaining processes, architectures, or career steps."
                 )
                 prompt = (
                     f"Candidate Background Context:\n{context_str}\n\n"
@@ -326,8 +329,8 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
                     f"Respond in a supportive tone, providing concrete next steps."
                 )
                 answer = await self.llm.generate(prompt, system_message=system_message)
-                if answer:
-                    return {"answer": answer}
+                if answer and not answer.is_empty:
+                    return {"answer": answer.content}
             except Exception as e:
                 logger.warning(f"LLM question answering failed: {e}")
 

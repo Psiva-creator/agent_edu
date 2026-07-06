@@ -37,6 +37,13 @@ from pydantic import BaseModel
 
 from config import get_settings
 
+try:
+    import google.generativeai as genai
+    from google.api_core.exceptions import GoogleAPIError
+except ImportError:
+    genai = None
+    GoogleAPIError = Exception
+
 logger = logging.getLogger(__name__)
 
 # Type variable for Pydantic model generics
@@ -199,23 +206,42 @@ class LLMService:
         self.timeout = timeout_seconds
         self.retry_config = retry_config or RetryConfig()
 
-        # ── OpenAI Client ────────────────────────────────────
         self.client = None
-        if settings.is_llm_available:
+        self.gemini_model = None
+        self.provider = None
+
+        if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "your_api_key_here":
+            if genai:
+                try:
+                    genai.configure(api_key=settings.GEMINI_API_KEY)
+                    self.gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
+                    self.provider = "gemini"
+                    self.model = settings.GEMINI_MODEL
+                    logger.info(
+                        f"Gemini async client initialized — model={self.model}, "
+                        f"temp={self.temperature}, timeout={self.timeout}s"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to initialize Gemini async client: {e}")
+            else:
+                logger.error("google-generativeai package not installed, cannot use Gemini.")
+        
+        if not self.provider and settings.OPENAI_API_KEY and settings.OPENAI_API_KEY != "your_api_key_here":
             try:
                 from openai import AsyncOpenAI
                 self.client = AsyncOpenAI(
                     api_key=settings.OPENAI_API_KEY,
                     timeout=self.timeout,
                 )
+                self.provider = "openai"
                 logger.info(
                     f"OpenAI async client initialized — model={self.model}, "
                     f"temp={self.temperature}, timeout={self.timeout}s"
                 )
             except Exception as e:
                 logger.error(f"Failed to initialize OpenAI async client: {e}")
-                self.client = None
-        else:
+
+        if not self.provider:
             logger.info(
                 "LLM Service: No API key configured. "
                 "All agents will use intelligent fallback mode."
@@ -234,7 +260,7 @@ class LLMService:
     @property
     def is_available(self) -> bool:
         """Check if the LLM is available for real inference."""
-        return self.client is not None
+        return self.provider is not None
 
     # ═══════════════════════════════════════════════════════════
     # GENERATE — Raw text
@@ -449,28 +475,33 @@ class LLMService:
                 start_time = time.perf_counter()
 
                 # ── API Call ─────────────────────────────────
-                completion = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    timeout=self.timeout,
-                )
+                if self.provider == "gemini":
+                    response = await self._call_gemini(messages, temperature, max_tokens)
+                else:
+                    completion = await self.client.chat.completions.create(
+                        model=self.model,
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        timeout=self.timeout,
+                    )
+                    elapsed_ms = (time.perf_counter() - start_time) * 1000
+                    content = completion.choices[0].message.content or ""
+                    usage = completion.usage
 
+                    response = LLMResponse(
+                        content=content,
+                        model=completion.model,
+                        prompt_tokens=usage.prompt_tokens if usage else 0,
+                        completion_tokens=usage.completion_tokens if usage else 0,
+                        total_tokens=usage.total_tokens if usage else 0,
+                        latency_ms=round(elapsed_ms, 1),
+                    )
+
+                # Ensure elapsed_ms is captured if it was Gemini
                 elapsed_ms = (time.perf_counter() - start_time) * 1000
-
-                # ── Extract response ────────────────────────
-                content = completion.choices[0].message.content or ""
-                usage = completion.usage
-
-                response = LLMResponse(
-                    content=content,
-                    model=completion.model,
-                    prompt_tokens=usage.prompt_tokens if usage else 0,
-                    completion_tokens=usage.completion_tokens if usage else 0,
-                    total_tokens=usage.total_tokens if usage else 0,
-                    latency_ms=round(elapsed_ms, 1),
-                )
+                if response.latency_ms == 0.0:
+                    response.latency_ms = round(elapsed_ms, 1)
 
                 # ── Update stats ────────────────────────────
                 self.stats.total_tokens_used += response.total_tokens
@@ -525,11 +556,70 @@ class LLMService:
             status = getattr(error, "status_code", 0)
             return status in self.retry_config.retryable_status_codes
 
+        # Gemini / Google API errors
+        if "GoogleAPIError" in error_name or "InternalServerError" in error_name or "ResourceExhausted" in error_name:
+            return True
+
         # Connection errors
         if "APIConnectionError" in error_name or "ConnectionError" in error_name:
             return True
 
         return False
+
+    async def _call_gemini(
+        self,
+        messages: list[dict],
+        temperature: float,
+        max_tokens: int,
+    ) -> LLMResponse:
+        """Call the Gemini API using google-generativeai."""
+        import google.generativeai as genai
+        
+        # Convert OpenAI messages format to Gemini format
+        system_instruction = None
+        gemini_messages = []
+        
+        for msg in messages:
+            if msg["role"] == "system":
+                system_instruction = msg["content"]
+            elif msg["role"] == "user":
+                gemini_messages.append({"role": "user", "parts": [msg["content"]]})
+            elif msg["role"] == "assistant":
+                gemini_messages.append({"role": "model", "parts": [msg["content"]]})
+
+        generation_config = genai.GenerationConfig(
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+        )
+
+        model = genai.GenerativeModel(
+            model_name=self.model,
+            system_instruction=system_instruction,
+            generation_config=generation_config
+        )
+
+        # Handle async call - if SDK doesn't natively support full async for chat, we run in executor
+        # We'll use the native generate_content_async
+        completion = await model.generate_content_async(gemini_messages)
+
+        content = completion.text if completion.parts else ""
+        
+        # Extract token usage if available
+        prompt_tokens = 0
+        completion_tokens = 0
+        total_tokens = 0
+        if hasattr(completion, "usage_metadata") and completion.usage_metadata:
+            prompt_tokens = completion.usage_metadata.prompt_token_count
+            completion_tokens = completion.usage_metadata.candidates_token_count
+            total_tokens = completion.usage_metadata.total_token_count
+
+        return LLMResponse(
+            content=content,
+            model=self.model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
+        )
 
     # ═══════════════════════════════════════════════════════════
     # JSON PARSER

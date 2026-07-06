@@ -1,11 +1,57 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { MessageCircle, Send, Bot, User } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import mermaid from 'mermaid'
 import { useApi } from '../../hooks/useApi'
 import { askMentor } from '../../services/api'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
 import './MentorPanel.css'
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  securityLevel: 'loose',
+  suppressErrorRendering: true,
+})
+
+function MermaidBlock({ code }) {
+  const [svg, setSvg] = useState('');
+  const id = useMemo(() => `mermaid-${Math.random().toString(36).substr(2, 9)}`, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const renderChart = async () => {
+      try {
+        const { svg: renderedSvg } = await mermaid.render(id, code);
+        if (isMounted) setSvg(renderedSvg);
+      } catch (err) {
+        console.error('Mermaid rendering error:', err);
+        if (isMounted) {
+          setSvg(`<div style="color: var(--status-error); padding: var(--space-2); border: 1px dashed var(--status-error); border-radius: var(--radius-md);">[Diagram could not be rendered: Syntax Error]</div>`);
+        }
+      }
+    };
+    renderChart();
+    return () => { isMounted = false; };
+  }, [code, id]);
+
+  return <div className="mentor-mermaid-container" dangerouslySetInnerHTML={{ __html: svg }} />;
+}
+
+// Define markdown components outside to prevent unmounting on every keystroke
+const markdownComponents = {
+  code(props) {
+    const {children, className, node, ...rest} = props
+    const match = /language-(\w+)/.exec(className || '')
+    if (match && match[1] === 'mermaid') {
+      return <MermaidBlock code={String(children).replace(/\n$/, '')} />
+    }
+    return <code {...rest} className={className}>{children}</code>
+  }
+}
 
 export default function MentorPanel({ data: existingData, formData }) {
   const [messages, setMessages] = useState(() => {
@@ -91,7 +137,18 @@ export default function MentorPanel({ data: existingData, formData }) {
               <div className="mentor-panel__msg-icon">
                 {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
               </div>
-              <div className="mentor-panel__msg-content">{msg.content}</div>
+              <div className="mentor-panel__msg-content markdown-body">
+                {msg.role === 'assistant' ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                ) : (
+                  msg.content
+                )}
+              </div>
             </motion.div>
           ))}
 

@@ -19,6 +19,11 @@
       "dest": "/api/index.py"
     },
     {
+      "src": "/(health|metrics|docs|redoc|openapi.json)",
+      "dest": "/api/index.py"
+    },
+    { "handle": "filesystem" },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }

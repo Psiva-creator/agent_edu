@@ -4,6 +4,7 @@ Centralized settings management using pydantic-settings.
 All configuration is loaded from environment variables with sensible defaults.
 """
 
+import os
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from functools import lru_cache
@@ -37,6 +38,10 @@ class Settings(BaseSettings):
     OPENAI_TEMPERATURE: float = 0.7
     OPENAI_MAX_TOKENS: int = 4096
 
+    # ─── Gemini ──────────────────────────────────────────
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
     # ─── Serper / SerpApi ────────────────────────────────
     SERPAPI_API_KEY: Optional[str] = None
 
@@ -45,7 +50,7 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 10
 
     model_config = {
-        "env_file": ".env",
+        "env_file": os.path.join(os.path.dirname(__file__), ".env"),
         "env_file_encoding": "utf-8",
         "case_sensitive": True,
         "extra": "ignore",
@@ -53,8 +58,10 @@ class Settings(BaseSettings):
 
     @property
     def is_llm_available(self) -> bool:
-        """Check if a valid LLM API key is configured."""
-        return bool(self.OPENAI_API_KEY and self.OPENAI_API_KEY != "your_api_key_here")
+        """Check if a valid LLM API key (OpenAI or Gemini) is configured."""
+        has_openai = bool(self.OPENAI_API_KEY and self.OPENAI_API_KEY != "your_api_key_here")
+        has_gemini = bool(self.GEMINI_API_KEY and self.GEMINI_API_KEY != "your_api_key_here")
+        return has_openai or has_gemini
 
 
 @lru_cache()
