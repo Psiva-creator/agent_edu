@@ -79,7 +79,7 @@ export default function JobsPanel({ data: existingData, formData }) {
                           icon={ExternalLink} 
                           onClick={() => window.open(job.url, '_blank')}
                         >
-                          Apply Now
+                          {job.url?.includes('linkedin.com') ? 'Apply on LinkedIn' : 'Apply Now'}
                         </Button>
                       </div>
                     )}
@@ -129,7 +129,7 @@ export default function JobsPanel({ data: existingData, formData }) {
                 icon={ExternalLink} 
                 onClick={() => window.open(selectedJob.url, '_blank')}
               >
-                Apply on LinkedIn
+                {selectedJob.url?.includes('linkedin.com') ? 'Apply on LinkedIn' : 'Apply Now'}
               </Button>
             </div>
           </div>

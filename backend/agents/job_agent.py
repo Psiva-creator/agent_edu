@@ -388,7 +388,7 @@ class JobAgent:
             if not apply_url:
                 # Fallback to search query
                 company = job.get("company_name", "")
-                apply_url = f"https://www.google.com/search?q={query.replace(' ', '+')}+jobs+at+{company.replace(' ', '+')}"
+                apply_url = f"https://www.linkedin.com/jobs/search/?keywords={query.replace(' ', '%20')}%20{company.replace(' ', '%20')}"
 
             # Create a uniform structure matching what JobsPanel expects
             matches.append({

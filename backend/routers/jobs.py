@@ -57,7 +57,7 @@ async def search_jobs(
                     "salary": salary_str,
                     "match_percentage": match.get("match_percentage", 80),
                     "required_skills": match.get("required_skills", []),
-                    "url": f"https://www.google.com/search?q={query.replace(' ', '+')}+jobs+at+{company.replace(' ', '+')}"
+                    "url": f"https://www.linkedin.com/jobs/search/?keywords={query.replace(' ', '%20')}%20{company.replace(' ', '%20')}"
                 })
             
     # Sort listings by match percentage
