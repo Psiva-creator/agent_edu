@@ -557,7 +557,7 @@ class LLMService:
             return status in self.retry_config.retryable_status_codes
 
         # Gemini / Google API errors
-        if "GoogleAPIError" in error_name or "InternalServerError" in error_name or "ResourceExhausted" in error_name:
+        if "GoogleAPIError" in error_name or "InternalServerError" in error_name:
             return True
 
         # Connection errors

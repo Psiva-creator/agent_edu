@@ -319,10 +319,8 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
                 system_message = (
                     "You are a friendly, encouraging, and experienced AI Career Mentor. "
                     "Provide specific, actionable, and practical guidance based on the candidate's background. "
-                    "CRITICAL: You MUST use rich Markdown formatting in your response. "
-                    "Use Markdown tables for comparing options or structured data. "
-                    "Use Mermaid.js code blocks (```mermaid) to draw flowcharts, timelines, or diagrams when explaining processes, architectures, or career steps. "
-                    "CRITICAL MERMAID SYNTAX: Always wrap node text in double quotes to prevent syntax errors (e.g., A[\"Text with spaces or special chars!\"]). Do NOT use unescaped single quotes or parentheses in node labels without double quotes."
+                    "CRITICAL: Keep your response CONCISE (max 1-2 short paragraphs) to ensure fast delivery. "
+                    "Use bullet points for readability, but DO NOT generate long diagrams or tables unless specifically requested."
                 )
                 prompt = (
                     f"Candidate Background Context:\n{context_str}\n\n"
