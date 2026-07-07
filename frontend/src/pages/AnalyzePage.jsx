@@ -110,7 +110,7 @@ export default function AnalyzePage() {
       formData.append('file', file)
       
       // 1. Upload and extract text
-      const uploadRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api/v1'}/resume/upload`, formData)
+      const uploadRes = await axios.post('/api/v1/resume/upload', formData)
       const text = uploadRes.data.text
 
       // 2. We don't have explicit inputs for target_role in upload mode, so let's default or extract
@@ -118,7 +118,7 @@ export default function AnalyzePage() {
       // or let the backend infer them. Actually, the backend API requires these fields.
       // Let's pass the text to /analyze first to extract details, OR just pass defaults and the text as summary.
       // Wait, the backend /resume/analyze is better for this.
-      const analyzeRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api/v1'}/resume/analyze`, {
+      const analyzeRes = await axios.post('/api/v1/resume/analyze', {
         resume_text: text,
         target_role: "Software Engineer" // Fallback
       })
