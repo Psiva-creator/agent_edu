@@ -26,12 +26,12 @@ export const capitalize = (str) => {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-/** Get a color for a numeric score (0-100) */
+/** Get a color for a numeric score (0-100) — matches Career Match Score zones */
 export const getScoreColor = (score) => {
-  if (score >= 80) return 'var(--success)'
-  if (score >= 60) return 'var(--accent-primary)'
-  if (score >= 40) return 'var(--warning)'
-  return 'var(--error)'
+  if (score >= 86) return '#22c55e'   // Green
+  if (score >= 71) return '#6366f1'   // Blue
+  if (score >= 41) return '#f59e0b'   // Orange
+  return '#ef4444'                     // Red
 }
 
 /** Get a label for a numeric score (0-100) */

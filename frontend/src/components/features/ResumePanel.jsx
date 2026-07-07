@@ -25,10 +25,20 @@ export default function ResumePanel({ data: existingData, formData }) {
   const [targetRole, setTargetRole] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [activeTab, setActiveTab] = useState('analysis')
+  const [uploadError, setUploadError] = useState(null)
   const fileInputRef = useRef(null)
   
+  const [localResumeData, setLocalResumeData] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem('resumeAnalysis')
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  })
+
   const { data, loading, error, execute, reset } = useApi(analyzeResumeText)
-  const result = data || existingData
+  const result = data || localResumeData || existingData
 
   // Builder States
   const { syncing, lastSynced, fetchPlatformData } = usePlatformSync()
@@ -46,23 +56,50 @@ export default function ResumePanel({ data: existingData, formData }) {
 
   const handleAnalyze = async () => {
     if (!resumeText.trim()) return
-    await execute({ resume_text: resumeText, target_role: targetRole || null })
+    const analysisResult = await execute({ resume_text: resumeText, target_role: targetRole || null })
+    // Store in sessionStorage and dispatch event → CareerScoreEngine auto-updates
+    if (analysisResult) {
+      try {
+        sessionStorage.setItem('resumeAnalysis', JSON.stringify(analysisResult))
+        setLocalResumeData(analysisResult)
+        window.dispatchEvent(new CustomEvent('career-score-update', { detail: analysisResult }))
+      } catch {}
+    }
   }
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     setIsUploading(true)
+    setUploadError(null)
     if (reset) reset()
     try {
       const fd = new FormData()
       fd.append('file', file)
       const res = await uploadResume(fd)
-      if (res.text) {
+      if (res.text && res.text.trim()) {
         setResumeText(res.text)
+        
+        // Auto-run analysis
+        const analysisResult = await execute({ 
+          resume_text: res.text, 
+          target_role: targetRole || null 
+        })
+        
+        if (analysisResult) {
+          try {
+            sessionStorage.setItem('resumeAnalysis', JSON.stringify(analysisResult))
+            setLocalResumeData(analysisResult)
+            window.dispatchEvent(new CustomEvent('career-score-update', { detail: analysisResult }))
+          } catch {}
+        }
+      } else {
+        setUploadError("Could not extract any text from the PDF. Please make sure the file is not scanned or upload a text file.")
       }
     } catch (err) {
       console.error('File upload failed:', err)
+      const errMsg = err.response?.data?.error || err.message || "Failed to upload and parse file."
+      setUploadError(errMsg)
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -374,6 +411,35 @@ University of Technology | 2014 - 2018`)
   return (
     <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       
+      {uploadError && (
+        <div className="upload-error-banner" style={{
+          padding: 'var(--space-4)',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid #ef4444',
+          borderRadius: 'var(--radius-md)',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-3)',
+          fontSize: 'var(--text-sm)'
+        }}>
+          <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>{uploadError}</div>
+          <button 
+            onClick={() => setUploadError(null)} 
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: 'inherit', 
+              cursor: 'pointer', 
+              fontWeight: 'bold'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="resume-header">
         <div className="resume-header__title">
           <h1>Resume Studio</h1>

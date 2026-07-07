@@ -1,0 +1,4 @@
+John Doe
+johndoe@email.com
+Experience: 3 years as a React engineer.
+Skills: React, HTML, CSS, JavaScript.

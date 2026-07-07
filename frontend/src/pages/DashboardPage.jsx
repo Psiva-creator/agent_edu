@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain, Target
+  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain, Target, GitCompare,
 } from 'lucide-react'
 import Tabs from '../components/ui/Tabs'
 import EmptyState from '../components/ui/EmptyState'
@@ -14,6 +14,7 @@ import MarketPanel from '../components/features/MarketPanel'
 import MentorPanel from '../components/features/MentorPanel'
 import InterviewPanel from '../components/features/InterviewPanel'
 import SkillPanel from '../components/features/SkillPanel'
+import ComparePanel from '../components/features/ComparePanel'
 import { useCareerMemory } from '../hooks/useCareerMemory'
 import './DashboardPage.css'
 
@@ -22,6 +23,7 @@ const TAB_LIST = [
   { id: 'resume',    label: 'Resume',    icon: FileText },
   { id: 'roadmap',   label: 'Roadmap',   icon: Map },
   { id: 'jobs',      label: 'Jobs',      icon: Briefcase },
+  { id: 'compare',   label: 'Compare',   icon: GitCompare },
   { id: 'market',    label: 'Market',    icon: TrendingUp },
   { id: 'skills',    label: 'Skills',    icon: Target },
   { id: 'mentor',    label: 'Mentor',    icon: MessageCircle },
@@ -43,6 +45,19 @@ export default function DashboardPage() {
     if (tab && tab !== activeTab) setActiveTab(tab)
   }, [tab])
 
+  // Listen for programmatic tab navigation (e.g. from CareerScoreEngine tip)
+  useEffect(() => {
+    const handler = (e) => {
+      const targetTab = e.detail
+      if (targetTab) {
+        setActiveTab(targetTab)
+        navigate(`/dashboard/${targetTab}`, { replace: true })
+      }
+    }
+    window.addEventListener('dashboard-navigate', handler)
+    return () => window.removeEventListener('dashboard-navigate', handler)
+  }, [navigate])
+
   const handleTabChange = (tabId) => {
     setActiveTab(tabId)
     navigate(`/dashboard/${tabId}`, { replace: true })
@@ -58,6 +73,8 @@ export default function DashboardPage() {
         return <RoadmapPanel data={data} formData={formData} />
       case 'jobs':
         return <JobsPanel data={data} formData={formData} />
+      case 'compare':
+        return <ComparePanel data={data} formData={formData} />
       case 'market':
         return <MarketPanel data={data} formData={formData} />
       case 'skills':

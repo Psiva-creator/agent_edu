@@ -139,7 +139,7 @@ async def request_logging_middleware(request: Request, call_next):
 
     # Log request
     logger.info(
-        f"{request.method} {path} → {response.status_code} ({elapsed_ms:.0f}ms)"
+        f"{request.method} {path} -> {response.status_code} ({elapsed_ms:.0f}ms)"
     )
 
     # Add timing header
@@ -172,7 +172,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # ─── Register Routers (API v1) ───────────────────────────────
 
-from routers import career, jobs, roadmap, resume, report, resources, interview, skills
+from routers import career, jobs, roadmap, resume, report, resources, interview, skills, compare
 
 API_PREFIX = settings.API_V1_PREFIX  # /api/v1
 
@@ -184,6 +184,7 @@ app.include_router(career.router,    prefix=API_PREFIX)
 app.include_router(jobs.router,      prefix=API_PREFIX)
 app.include_router(interview.router, prefix=API_PREFIX)
 app.include_router(skills.router,    prefix=API_PREFIX)
+app.include_router(compare.router,   prefix=API_PREFIX)
 
 # ─── Root Endpoints ──────────────────────────────────────────
 

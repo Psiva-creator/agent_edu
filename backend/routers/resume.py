@@ -79,7 +79,9 @@ async def upload_resume(file: UploadFile = File(...)):
         if file.filename.lower().endswith(".pdf"):
             pdf = PdfReader(io.BytesIO(content))
             for page in pdf.pages:
-                text += page.extract_text() + "\n"
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
         else:
             # Assume text/plain
             text = content.decode("utf-8", errors="replace")

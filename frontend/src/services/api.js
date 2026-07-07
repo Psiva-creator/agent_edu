@@ -55,7 +55,7 @@ export const analyzeResumeText = async (data) => {
 // ── Resume File Upload ──
 export const uploadResume = async (formData) => {
   const res = await api.post('/resume/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': undefined },
   })
   return res.data
 }
@@ -132,6 +132,13 @@ export const getInterviewFinalScore = async (data) => {
 // ── Skills Dashboard ──
 export const analyzeSkills = async (data) => {
   const res = await api.post('/skills/analyze', data)
+  return res.data
+}
+
+// ── Resume vs Job Comparison ──
+// Backend: POST /api/v1/compare → CompareRequest → CompareResponse
+export const compareResumeToJob = async (data) => {
+  const res = await api.post('/compare', data)
   return res.data
 }
 
