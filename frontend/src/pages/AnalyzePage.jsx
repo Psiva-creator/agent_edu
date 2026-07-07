@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Sparkles, User, Code, Compass, CheckCircle, Upload, FileText } from 'lucide-react'
 import { useApi } from '../hooks/useApi'
-import { analyzeProfile } from '../services/api'
+import { analyzeProfile, uploadResume } from '../services/api'
 import { useCareerMemory } from '../hooks/useCareerMemory'
 import { transformReportToMemory } from '../utils/profileTransformer'
 import Button from '../components/ui/Button'
@@ -106,12 +106,9 @@ export default function AnalyzePage() {
 
   const handleUploadSubmit = async () => {
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      
-      // 1. Upload and extract text
-      const uploadRes = await axios.post('/api/v1/resume/upload', formData)
-      const text = uploadRes.data.text
+      // 1. Upload and extract text using our base64 safe uploadResume function
+      const uploadRes = await uploadResume(file)
+      const text = uploadRes.text
 
       // 2. We don't have explicit inputs for target_role in upload mode, so let's default or extract
       // Since backend /report requires name, current_role, target_role, we can pass placeholders 

@@ -21,7 +21,9 @@ from schemas.models import (
     ProjectEnhanceRequest,
     ProjectEnhanceResponse,
     ErrorResponse,
+    ResumeUploadBase64Request,
 )
+import base64
 from agents.resume_agent import ResumeAgent
 from utils.dependencies import get_resume_agent
 
@@ -108,6 +110,29 @@ async def rewrite_resume(
 ):
     result = await agent.rewrite_resume_bullets(data.resume_text, data.target_role)
     return result
+
+@router.post(
+    "/upload/base64",
+    status_code=status.HTTP_200_OK,
+    summary="Extract text from a base64 encoded resume (PDF/TXT) to bypass Vercel form-data corruption",
+)
+async def upload_resume_base64(data: ResumeUploadBase64Request):
+    try:
+        content = base64.b64decode(data.content_base64)
+        text = ""
+        
+        if data.filename.lower().endswith(".pdf"):
+            pdf = PdfReader(io.BytesIO(content))
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+        else:
+            text = content.decode("utf-8", errors="replace")
+            
+        return {"text": text.strip()}
+    except Exception as e:
+        return Response(content=f'{{"error": "Failed to parse base64 file: {str(e)}"}}', status_code=400, media_type="application/json")
 
 
 # ─── POST /resume/enhance-project ────────────────────────────

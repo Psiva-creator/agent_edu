@@ -74,9 +74,7 @@ export default function ResumePanel({ data: existingData, formData }) {
     setUploadError(null)
     if (reset) reset()
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await uploadResume(fd)
+      const res = await uploadResume(file)
       if (res.text && res.text.trim()) {
         setResumeText(res.text)
         

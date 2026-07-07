@@ -62,11 +62,25 @@ export const rewriteResumeBullets = async (data) => {
 }
 
 // ── Resume File Upload ──
-export const uploadResume = async (formData) => {
-  const res = await api.post('/resume/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
-  return res.data
+export const uploadResume = async (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      // reader.result is something like "data:application/pdf;base64,JVBERi0xLjc..."
+      const base64Str = reader.result.split(',')[1];
+      try {
+        const res = await api.post('/resume/upload/base64', {
+          filename: file.name,
+          content_base64: base64Str
+        });
+        resolve(res.data);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = error => reject(error);
+  });
 }
 
 // ── Export Resume (PDF) ──

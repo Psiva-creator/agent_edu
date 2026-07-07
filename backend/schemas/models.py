@@ -19,6 +19,11 @@ class ErrorResponse(BaseModel):
     error: str
     status_code: int = 400
 
+class ResumeUploadBase64Request(BaseModel):
+    """Base64 encoded resume for serverless deployment bypass."""
+    filename: str
+    content_base64: str
+
 
 class SuccessMessage(BaseModel):
     """Generic success wrapper."""
