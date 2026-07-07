@@ -55,7 +55,7 @@ export const analyzeResumeText = async (data) => {
 // ── Resume File Upload ──
 export const uploadResume = async (formData) => {
   const res = await api.post('/resume/upload', formData, {
-    headers: { 'Content-Type': undefined },
+    headers: { 'Content-Type': 'multipart/form-data' },
   })
   return res.data
 }
