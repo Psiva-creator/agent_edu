@@ -748,7 +748,7 @@ function RoadmapSidebar({ progressPercent, completedCount, totalTasks, result, f
 // ─── Main Component ───────────────────────────────────────────
 
 export default function RoadmapPanel({ data: existingData, formData }) {
-  const { memory } = useCareerMemory()
+  const { memory, updateMemory } = useCareerMemory()
 
   // ── Form state ──────────────────────────────────────────
   const [mode, setMode] = useState('selection')
@@ -826,16 +826,30 @@ export default function RoadmapPanel({ data: existingData, formData }) {
     if (!roleToUse.trim()) return
     setTargetRole(roleToUse)
     
-    await execute({
-      current_role:   currentToUse,
-      target_role:    roleToUse,
-      deadline_weeks: parseInt(timeToUse) || 12,
-      skill_gaps:     formData?.skill_gaps || [],
-      skills:         formData?.skills     || [],
-    })
-    setCompletedTasks({})
-    setExpandedWeeks([])
-    setMode('roadmap')
+    try {
+      const res = await execute({
+        current_role:   currentToUse,
+        target_role:    roleToUse,
+        deadline_weeks: parseInt(timeToUse) || 12,
+        skill_gaps:     formData?.skill_gaps || [],
+        skills:         formData?.skills     || [],
+      })
+      
+      if (res && res.weeks) {
+        updateMemory({
+          career_analysis: {
+            ...memory?.career_analysis,
+            roadmap: res
+          }
+        })
+      }
+      
+      setCompletedTasks({})
+      setExpandedWeeks([])
+      setMode('roadmap')
+    } catch (err) {
+      console.error("Failed to generate roadmap", err)
+    }
   }
 
   const toggleTask = (weekNum, taskIndex) => {
