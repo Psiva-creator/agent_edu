@@ -60,6 +60,20 @@ export const uploadResume = async (formData) => {
   return res.data
 }
 
+// ── Export Resume (PDF) ──
+export const exportResumePdf = async (resumeData) => {
+  const res = await api.post('/resume/export/pdf', resumeData, {
+    responseType: 'blob'
+  })
+  return res.data
+}
+
+// ── Enhance Project Description ──
+export const enhanceProjectDescription = async (description) => {
+  const res = await api.post('/resume/enhance-project', { description })
+  return res.data
+}
+
 // ── Mentor Advice ──
 // Backend: POST /api/v1/mentor → MentorQuestionRequest → MentorQuestionResponse
 export const askMentor = async (data) => {

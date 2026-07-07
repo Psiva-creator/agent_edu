@@ -653,7 +653,23 @@ class ResumeAgent:
             lines.append("## Projects")
             lines.append("")
             for proj in data["projects"]:
-                lines.append(f"### {proj.get('name', 'Project')}")
+                if proj.get("hidden"):
+                    continue
+                proj_title = proj.get('name', 'Project')
+                if proj.get("role"):
+                    proj_title += f" — {proj['role']}"
+                if proj.get("completion_date"):
+                    proj_title += f" ({proj['completion_date']})"
+                lines.append(f"### {proj_title}")
+                
+                links = []
+                if proj.get("github"):
+                    links.append(f"[GitHub]({proj['github']})")
+                if proj.get("live_demo"):
+                    links.append(f"[Live Demo]({proj['live_demo']})")
+                if links:
+                    lines.append(" | ".join(links))
+
                 if proj.get("description"):
                     lines.append(proj["description"])
                 if proj.get("tech"):
@@ -661,6 +677,23 @@ class ResumeAgent:
                     tech_str = ", ".join(tech) if isinstance(tech, list) else tech
                     lines.append(f"**Tech:** {tech_str}")
                 lines.append("")
+
+        # ── Achievements ─────────────────────────────────────
+        if data.get("achievements"):
+            lines.append("## Achievements")
+            lines.append("")
+            for ach in data["achievements"]:
+                if ach.get("hidden"):
+                    continue
+                ach_title = ach.get("title", "Achievement")
+                if ach.get("date"):
+                    ach_title += f" ({ach['date']})"
+                if ach.get("type"):
+                    ach_title += f" - *{ach['type']}*"
+                lines.append(f"- **{ach_title}**")
+                if ach.get("description"):
+                    lines.append(f"  {ach['description']}")
+            lines.append("")
 
         # ── Certifications ───────────────────────────────────
         if data.get("certifications"):
@@ -671,6 +704,50 @@ class ResumeAgent:
             lines.append("")
 
         return "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════
+    # ENHANCE PROJECT DESCRIPTION
+    # ═══════════════════════════════════════════════════════════
+
+    async def enhance_project_description(self, text: str) -> str:
+        """
+        Enhance a project description to be more ATS-friendly.
+        """
+        if not text or not text.strip():
+            return text
+
+        if self.llm.is_available:
+            prompt = (
+                "You are an expert resume writer. Rewrite the following project description "
+                "to be professional, ATS-friendly, and impactful. Use strong action verbs "
+                "and ensure it highlights measurable impact if possible. Keep it concise (1-2 sentences max).\n\n"
+                f"Original: {text}\n\n"
+                "Return ONLY the rewritten text, with no preamble or quotes."
+            )
+            try:
+                # generate_text isn't explicitly shown, assuming it exists or using completion pattern
+                # If generate_text isn't in LLMService, we can use generate_json and parse.
+                # Let's check LLMService interface safely or use a fallback logic.
+                prompt_json = (
+                    "You are an expert resume writer. Rewrite the following project description "
+                    "to be professional, ATS-friendly, and impactful. Use strong action verbs. "
+                    "Return a JSON object with the key 'enhanced_description'.\n\n"
+                    f"Original: {text}"
+                )
+                result = await self.llm.generate_json(prompt_json)
+                if isinstance(result, dict) and "enhanced_description" in result:
+                    return result["enhanced_description"]
+            except Exception as e:
+                logger.warning(f"LLM project enhancement failed: {e}")
+
+        # Fallback simple enhancement
+        words = text.split()
+        if words and words[0].lower() in ["did", "made", "worked", "built"]:
+            words[0] = "Engineered"
+        elif words and words[0].lower() not in ["developed", "engineered", "architected", "designed"]:
+            words.insert(0, "Developed and delivered")
+        
+        return " ".join(words).capitalize()
 
     # ═══════════════════════════════════════════════════════════
     # EXPORT — HTML (Jinja2)

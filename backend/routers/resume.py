@@ -16,6 +16,8 @@ from schemas.models import (
     ResumeAnalysisResponse,
     ResumeExportRequest,
     MarkdownExportResponse,
+    ProjectEnhanceRequest,
+    ProjectEnhanceResponse,
     ErrorResponse,
 )
 from agents.resume_agent import ResumeAgent
@@ -85,6 +87,23 @@ async def upload_resume(file: UploadFile = File(...)):
         return {"text": text.strip()}
     except Exception as e:
         return Response(content=f'{{"error": "Failed to parse file: {str(e)}"}}', status_code=400, media_type="application/json")
+
+
+# ─── POST /resume/enhance-project ────────────────────────────
+
+@router.post(
+    "/enhance-project",
+    response_model=ProjectEnhanceResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Enhance a project description",
+    description="Rewrite a project description to be professional, ATS-friendly, and impactful using action verbs.",
+)
+async def enhance_project(
+    data: ProjectEnhanceRequest,
+    agent: ResumeAgent = Depends(get_resume_agent),
+):
+    enhanced = await agent.enhance_project_description(data.description)
+    return {"enhanced_description": enhanced}
 
 
 # ─── POST /resume/export/markdown ────────────────────────────

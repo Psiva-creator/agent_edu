@@ -285,8 +285,31 @@
     <div class="section">
         <div class="section-title">Projects</div>
         {% for proj in projects %}
+        {% if not proj.hidden %}
         <div class="project-entry">
-            <div class="project-name">{{ proj.name | default("Project") }}</div>
+            <div class="project-name">
+                {{ proj.name | default("Project") }}
+                {% if proj.role %}
+                <span style="font-weight: normal; color: #475569;"> — {{ proj.role }}</span>
+                {% endif %}
+                {% if proj.completion_date %}
+                <span style="font-style: italic; color: #64748b; font-size: 9.5pt;"> ({{ proj.completion_date }})</span>
+                {% endif %}
+            </div>
+            
+            {% set links = [] %}
+            {% if proj.github %}
+                {% set _ = links.append('<a href="' + proj.github + '" style="color: #6366f1; text-decoration: none;">GitHub</a>') %}
+            {% endif %}
+            {% if proj.live_demo %}
+                {% set _ = links.append('<a href="' + proj.live_demo + '" style="color: #6366f1; text-decoration: none;">Live Demo</a>') %}
+            {% endif %}
+            {% if links %}
+            <div style="font-size: 9pt; margin-top: 2px;">
+                {{ links | join(' | ') | safe }}
+            </div>
+            {% endif %}
+
             {% if proj.description %}
             <div class="project-desc">{{ proj.description }}</div>
             {% endif %}
@@ -296,7 +319,33 @@
             </div>
             {% endif %}
         </div>
+        {% endif %}
         {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ─── Achievements ──────────────────────────────────── -->
+    {% if achievements %}
+    <div class="section">
+        <div class="section-title">Achievements</div>
+        <ul class="cert-list">
+            {% for ach in achievements %}
+            {% if not ach.hidden %}
+            <li>
+                <strong>{{ ach.title | default("Achievement") }}</strong>
+                {% if ach.date %}
+                <span style="color: #64748b; font-size: 9.5pt;"> ({{ ach.date }})</span>
+                {% endif %}
+                {% if ach.type %}
+                <span style="color: #4f46e5; font-size: 9pt;"> - <em>{{ ach.type }}</em></span>
+                {% endif %}
+                {% if ach.description %}
+                <div style="font-size: 9.5pt; color: #475569; margin-top: 2px;">{{ ach.description }}</div>
+                {% endif %}
+            </li>
+            {% endif %}
+            {% endfor %}
+        </ul>
     </div>
     {% endif %}
 

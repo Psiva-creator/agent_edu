@@ -65,6 +65,11 @@ class ResumeAnalysisResponse(BaseModel):
     ats_suggestions: list[str] = []
     summary: str = ""
     score: float = Field(0.0, ge=0, le=100)
+    ats_breakdown: Optional[dict] = None
+    recruiter_verdict: Optional[dict] = None
+    ai_rewrites: Optional[list[dict]] = None
+    interview_questions: Optional[dict] = None
+    section_checklist: Optional[dict] = None
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -91,6 +96,20 @@ class ProjectEntry(BaseModel):
     name: str = "Project"
     description: str = ""
     tech: list[str] = []
+    role: Optional[str] = None
+    completion_date: Optional[str] = None
+    github: Optional[str] = None
+    live_demo: Optional[str] = None
+    hidden: bool = False
+
+
+class AchievementEntry(BaseModel):
+    """A single achievement entry."""
+    title: str = "Achievement"
+    description: str = ""
+    date: Optional[str] = None
+    type: Optional[str] = None
+    hidden: bool = False
 
 
 class ResumeExportRequest(BaseModel):
@@ -105,6 +124,7 @@ class ResumeExportRequest(BaseModel):
     experience: list[ExperienceEntry] = Field([], description="Work experience")
     education: list[EducationEntry] = Field([], description="Education history")
     projects: list[ProjectEntry] = Field([], description="Notable projects")
+    achievements: list[AchievementEntry] = Field([], description="Achievements and awards")
     certifications: list[str] = Field([], description="Certifications")
 
     model_config = {"json_schema_extra": {
@@ -126,6 +146,16 @@ class MarkdownExportResponse(BaseModel):
     """Response containing exported Markdown."""
     format: str = "markdown"
     content: str
+
+
+class ProjectEnhanceRequest(BaseModel):
+    """Request to enhance a project description."""
+    description: str
+
+
+class ProjectEnhanceResponse(BaseModel):
+    """Response containing the enhanced project description."""
+    enhanced_description: str
 
 
 # ═══════════════════════════════════════════════════════════════
