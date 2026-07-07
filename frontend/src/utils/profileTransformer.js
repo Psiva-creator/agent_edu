@@ -11,6 +11,7 @@ export function transformReportToMemory(report) {
       location: report.location || '',
       experience_years: report.experience_years || 0,
       education: report.education || '',
+      resume_text: report.resume_text || '',
     },
     resume_intelligence: {
       skills: report.skills || [],
@@ -22,12 +23,13 @@ export function transformReportToMemory(report) {
       readiness_score: report.readiness_score || 0,
       certifications: report.certifications || [],
       projects: report.projects || [],
+      raw_analysis: report.resume_analysis || null,
     },
     career_analysis: {
       roadmap: report.roadmap || null,
       jobs: report.jobs || null,
       market_insights: report.market_data || report.market_insights || null,
-      mentor_context: report.mentor_advice || '',
+      mentor_context: report.mentor_advice || report.mentor_context || '',
       recommended_roles: report.target_roles || [],
       salary_estimate: report.expected_salary || null,
     },

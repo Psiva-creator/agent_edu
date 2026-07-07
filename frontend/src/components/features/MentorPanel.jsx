@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 import mermaid from 'mermaid'
 import { useApi } from '../../hooks/useApi'
 import { askMentor } from '../../services/api'
+import { useCareerMemory } from '../../hooks/useCareerMemory'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
 import './MentorPanel.css'
@@ -54,11 +55,14 @@ const markdownComponents = {
 }
 
 export default function MentorPanel({ data: existingData, formData }) {
+  const { memory } = useCareerMemory()
+  
   const [messages, setMessages] = useState(() => {
-    // CareerReportResponse has mentor_advice as a string
-    if (existingData?.mentor_advice) {
+    const mentorAdvice = memory?.career_analysis?.mentor_context || existingData?.mentor_advice
+    if (mentorAdvice) {
+      const content = typeof mentorAdvice === 'string' ? mentorAdvice : (mentorAdvice.answer || mentorAdvice.advice || 'Hello! I am your AI Mentor.')
       return [
-        { role: 'assistant', content: existingData.mentor_advice },
+        { role: 'assistant', content },
       ]
     }
     return []
@@ -81,11 +85,11 @@ export default function MentorPanel({ data: existingData, formData }) {
 
     try {
       const memoryContextData = {
-        name: existingData?.name,
-        target_role: existingData?.target_role,
-        skills: existingData?.skills,
-        experience_years: existingData?.experience_years,
-        roadmap_summary: existingData?.roadmap_summary
+        name: memory?.personal_info?.name || existingData?.name,
+        target_role: memory?.personal_info?.target_role || existingData?.target_role,
+        skills: memory?.resume_intelligence?.skills || existingData?.skills,
+        experience_years: memory?.personal_info?.experience_years || existingData?.experience_years,
+        roadmap_summary: memory?.career_analysis?.roadmap?.summary || existingData?.roadmap_summary
       };
       const result = await execute({ question, context: memoryContextData })
       // Backend returns MentorQuestionResponse { answer: "..." }

@@ -66,6 +66,56 @@ async def analyze_resume(
 import io
 from pypdf import PdfReader
 
+
+def _extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:
+    """
+    Robust PDF text extraction.
+    Strategy:
+      1. Try pdfplumber (best for complex layouts, tables, columns)
+      2. Fallback to pypdf (fast, good for simple text PDFs)
+      3. Fallback to pdfminer.six high-level API
+    Returns extracted text or empty string.
+    """
+    text = ""
+
+    # ── Strategy 1: pdfplumber (best overall) ──
+    try:
+        import pdfplumber
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+        if text.strip():
+            return text.strip()
+    except Exception:
+        pass  # fall through
+
+    # ── Strategy 2: pypdf ──
+    try:
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        text = ""
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+        if text.strip():
+            return text.strip()
+    except Exception:
+        pass  # fall through
+
+    # ── Strategy 3: pdfminer high-level ──
+    try:
+        from pdfminer.high_level import extract_text as pdfminer_extract
+        text = pdfminer_extract(io.BytesIO(pdf_bytes))
+        if text and text.strip():
+            return text.strip()
+    except Exception:
+        pass
+
+    return text.strip()
+
+
 # ─── POST /resume/upload ─────────────────────────────────────
 @router.post(
     "/upload",
@@ -81,11 +131,7 @@ async def upload_resume(file: UploadFile = File(...)):
         text = ""
         
         if file.filename.lower().endswith(".pdf"):
-            pdf = PdfReader(io.BytesIO(content))
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
+            text = _extract_text_from_pdf_bytes(content)
         else:
             # Assume text/plain
             text = content.decode("utf-8", errors="replace")
@@ -122,11 +168,7 @@ async def upload_resume_base64(data: ResumeUploadBase64Request):
         text = ""
         
         if data.filename.lower().endswith(".pdf"):
-            pdf = PdfReader(io.BytesIO(content))
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
+            text = _extract_text_from_pdf_bytes(content)
         else:
             text = content.decode("utf-8", errors="replace")
             

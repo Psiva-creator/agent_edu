@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Briefcase, Search, MapPin, Sparkles, ExternalLink, Info } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { searchJobs } from '../../services/api'
@@ -22,11 +22,14 @@ export default function JobsPanel({ data: existingData, formData }) {
   const [selectedJob, setSelectedJob] = useState(null)
   
   const { data, loading, error, execute } = useApi(searchJobs)
-  const result = data || existingData
+  const memoryJobs = memory?.career_analysis?.jobs
+  const result = memoryJobs || data || existingData
+  
+  const [showSearch, setShowSearch] = useState(!result)
 
   useEffect(() => {
-    // Auto-search if we have a query from memory and haven't searched yet
-    if (query && !data && !existingData?.matches) {
+    // Auto-search if we have a query from memory, haven't searched yet, and don't have pre-fetched jobs
+    if (query && !data && !existingData?.matches && !memoryJobs) {
       execute(query, location)
     }
   }, [memory.isActive])
@@ -44,15 +47,32 @@ export default function JobsPanel({ data: existingData, formData }) {
     <div className="jobs-panel">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Card padding="md">
-          <div className="jobs-panel__header">
-            <Briefcase size={20} style={{ color: 'var(--accent-secondary)' }} />
-            <h3>Search Jobs</h3>
+          <div className="jobs-panel__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Briefcase size={20} style={{ color: 'var(--accent-secondary)' }} />
+              <h3 style={{ margin: 0 }}>Recommended Jobs</h3>
+            </div>
+            {result && (
+              <Button variant="ghost" size="sm" onClick={() => setShowSearch(!showSearch)}>
+                {showSearch ? 'Hide Search' : 'Search New Role'}
+              </Button>
+            )}
           </div>
-          <div className="jobs-panel__form">
-            <Input icon={Search} label="Job Title or Keyword" placeholder="e.g. Python Developer" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={handleKeyDown} />
-            <Input icon={MapPin} label="Location (optional)" placeholder="e.g. Hyderabad" value={location} onChange={(e) => setLocation(e.target.value)} onKeyDown={handleKeyDown} />
-            <Button variant="primary" icon={Sparkles} loading={loading} disabled={!query.trim()} onClick={handleSearch}>Search Jobs</Button>
-          </div>
+          <AnimatePresence>
+            {showSearch && (
+              <motion.div 
+                className="jobs-panel__form" 
+                initial={{ height: 0, opacity: 0 }} 
+                animate={{ height: 'auto', opacity: 1 }} 
+                exit={{ height: 0, opacity: 0 }}
+                style={{ overflow: 'hidden', marginTop: '1rem' }}
+              >
+                <Input icon={Search} label="Job Title or Keyword" placeholder="e.g. Python Developer" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={handleKeyDown} />
+                <Input icon={MapPin} label="Location (optional)" placeholder="e.g. Hyderabad" value={location} onChange={(e) => setLocation(e.target.value)} onKeyDown={handleKeyDown} />
+                <Button variant="primary" icon={Sparkles} loading={loading} disabled={!query.trim()} onClick={handleSearch}>Search Jobs</Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Card>
       </motion.div>
 

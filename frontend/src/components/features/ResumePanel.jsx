@@ -10,6 +10,7 @@ import {
 import { useApi } from '../../hooks/useApi'
 import { analyzeResumeText, uploadResume, exportResumePdf, enhanceProjectDescription } from '../../services/api'
 import { usePlatformSync } from '../../hooks/usePlatformSync'
+import { useCareerMemory } from '../../hooks/useCareerMemory'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
 import Input from '../ui/Input'
@@ -38,7 +39,10 @@ export default function ResumePanel({ data: existingData, formData }) {
   })
 
   const { data, loading, error, execute, reset } = useApi(analyzeResumeText)
-  const result = data || localResumeData || existingData
+  const { memory } = useCareerMemory()
+  
+  const memoryAnalysis = memory?.resume_intelligence?.raw_analysis
+  const result = memoryAnalysis || data || localResumeData || existingData
 
   // Builder States
   const { syncing, lastSynced, fetchPlatformData } = usePlatformSync()
