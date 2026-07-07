@@ -210,16 +210,21 @@ class LLMService:
         self.gemini_model = None
         self.provider = None
 
-        if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "your_api_key_here":
+        # ── Gemini key rotation setup ─────────────────────────
+        self._gemini_api_keys: list[str] = settings.gemini_api_keys
+        self._current_key_index: int = 0
+
+        if self._gemini_api_keys:
             if genai:
                 try:
-                    genai.configure(api_key=settings.GEMINI_API_KEY)
+                    genai.configure(api_key=self._gemini_api_keys[0])
                     self.gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
                     self.provider = "gemini"
                     self.model = settings.GEMINI_MODEL
                     logger.info(
                         f"Gemini async client initialized — model={self.model}, "
-                        f"temp={self.temperature}, timeout={self.timeout}s"
+                        f"temp={self.temperature}, timeout={self.timeout}s, "
+                        f"keys_available={len(self._gemini_api_keys)}"
                     )
                 except Exception as e:
                     logger.error(f"Failed to initialize Gemini async client: {e}")
@@ -517,6 +522,20 @@ class LLMService:
                 last_error = e
                 error_name = type(e).__name__
 
+                # ── Key rotation on quota exhaustion ────────
+                if "ResourceExhausted" in error_name and self.provider == "gemini":
+                    if self._rotate_gemini_key():
+                        self.stats.total_retries += 1
+                        # Retry immediately with the new key — no sleep needed
+                        continue
+                    else:
+                        self.stats.total_errors += 1
+                        logger.error(
+                            "All Gemini API keys exhausted. "
+                            "No more keys to rotate. Giving up."
+                        )
+                        break
+
                 # ── Check if retryable ──────────────────────
                 is_retryable = self._is_retryable(e)
 
@@ -539,6 +558,28 @@ class LLMService:
 
         return LLMResponse(content="", model=self.model)
 
+    def _rotate_gemini_key(self) -> bool:
+        """
+        Switch to the next available Gemini API key.
+
+        Returns:
+            True if a new key was activated, False if all keys are exhausted.
+        """
+        next_index = self._current_key_index + 1
+        if next_index < len(self._gemini_api_keys):
+            self._current_key_index = next_index
+            new_key = self._gemini_api_keys[next_index]
+            genai.configure(api_key=new_key)
+            logger.warning(
+                f"Gemini ResourceExhausted — rotated to API key "
+                f"#{next_index + 1} of {len(self._gemini_api_keys)}"
+            )
+            return True
+        logger.error(
+            f"All {len(self._gemini_api_keys)} Gemini API key(s) exhausted."
+        )
+        return False
+
     def _is_retryable(self, error: Exception) -> bool:
         """Determine if an error is retryable."""
         error_name = type(error).__name__
@@ -547,8 +588,8 @@ class LLMService:
         if "timeout" in error_name.lower() or "Timeout" in str(error):
             return True
 
-        # Rate limit
-        if "RateLimitError" in error_name:
+        # Rate limit / quota — handled via key rotation, still retryable
+        if "RateLimitError" in error_name or "ResourceExhausted" in error_name:
             return True
 
         # Server errors

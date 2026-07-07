@@ -40,7 +40,22 @@ class Settings(BaseSettings):
 
     # ─── Gemini ──────────────────────────────────────────
     GEMINI_API_KEY: Optional[str] = None
+    GEMINI_API_KEY_2: Optional[str] = None
+    GEMINI_API_KEY_3: Optional[str] = None
     GEMINI_MODEL: str = "gemini-2.5-flash"
+
+    @property
+    def gemini_api_keys(self) -> list[str]:
+        """Return all configured, non-empty Gemini API keys in rotation order."""
+        candidates = [
+            self.GEMINI_API_KEY,
+            self.GEMINI_API_KEY_2,
+            self.GEMINI_API_KEY_3,
+        ]
+        return [
+            k for k in candidates
+            if k and k != "your_api_key_here"
+        ]
 
     # ─── Serper / SerpApi ────────────────────────────────
     SERPAPI_API_KEY: Optional[str] = None
