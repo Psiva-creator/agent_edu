@@ -99,4 +99,20 @@ export const healthCheck = async () => {
   return res.data
 }
 
+// ── Interview Simulator ──
+export const generateInterviewQuestion = async (data) => {
+  const res = await api.post('/interview/question', data)
+  return res.data
+}
+
+export const evaluateInterviewAnswer = async (data) => {
+  const res = await api.post('/interview/evaluate', data)
+  return res.data
+}
+
+export const getInterviewFinalScore = async (data) => {
+  const res = await api.post('/interview/final-score', data)
+  return res.data
+}
+
 export default api

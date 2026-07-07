@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock
+  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain
 } from 'lucide-react'
 import Tabs from '../components/ui/Tabs'
 import EmptyState from '../components/ui/EmptyState'
@@ -12,6 +12,7 @@ import RoadmapPanel from '../components/features/RoadmapPanel'
 import JobsPanel from '../components/features/JobsPanel'
 import MarketPanel from '../components/features/MarketPanel'
 import MentorPanel from '../components/features/MentorPanel'
+import InterviewPanel from '../components/features/InterviewPanel'
 import { useCareerMemory } from '../hooks/useCareerMemory'
 import './DashboardPage.css'
 
@@ -22,6 +23,7 @@ const TAB_LIST = [
   { id: 'jobs',      label: 'Jobs',      icon: Briefcase },
   { id: 'market',    label: 'Market',    icon: TrendingUp },
   { id: 'mentor',    label: 'Mentor',    icon: MessageCircle },
+  { id: 'interview', label: 'Interview', icon: Brain },
 ]
 
 export default function DashboardPage() {
@@ -58,6 +60,8 @@ export default function DashboardPage() {
         return <MarketPanel data={data} formData={formData} />
       case 'mentor':
         return <MentorPanel data={data} formData={formData} />
+      case 'interview':
+        return <InterviewPanel data={data} formData={formData} />
       default:
         return <EmptyState title="Tab not found" description="Select a tab from the navigation." />
     }
@@ -99,6 +103,7 @@ export default function DashboardPage() {
               <span className="agent-tag"><CheckCircle2 size={12}/> Jobs</span>
               <span className="agent-tag"><CheckCircle2 size={12}/> Market</span>
               <span className="agent-tag"><CheckCircle2 size={12}/> Mentor</span>
+              <span className="agent-tag"><CheckCircle2 size={12}/> Interview</span>
             </div>
           </div>
         </motion.div>

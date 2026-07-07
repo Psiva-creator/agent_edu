@@ -44,6 +44,7 @@ export function CareerMemoryProvider({ children }) {
         salary_estimate: null,
       },
       raw_report: null, // The raw /api/v1/report response for fallback
+      interview_history: [], // Stores completed interview sessions
     };
   });
 
@@ -79,6 +80,7 @@ export function CareerMemoryProvider({ children }) {
         roadmap: null, jobs: null, market_insights: null, mentor_context: '', recommended_roles: [], salary_estimate: null,
       },
       raw_report: null,
+      interview_history: [],
     });
   }, []);
 
@@ -110,6 +112,18 @@ export function CareerMemoryProvider({ children }) {
     }));
   }, []);
 
+  const addInterviewSession = useCallback((session) => {
+    setMemory((prev) => ({
+      ...prev,
+      interview_history: [
+        { ...session, date: new Date().toISOString() },
+        ...(prev.interview_history || []),
+      ].slice(0, 20), // keep last 20 sessions
+      isActive: true,
+      lastUpdated: new Date().toISOString(),
+    }));
+  }, []);
+
   const value = {
     memory,
     updateMemory,
@@ -117,6 +131,7 @@ export function CareerMemoryProvider({ children }) {
     updatePersonalInfo,
     updateResumeIntelligence,
     updateCareerAnalysis,
+    addInterviewSession,
   };
 
   return (
