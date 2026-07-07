@@ -23,7 +23,7 @@ export default function Sidebar({ collapsed, onToggle }) {
   const navigate = useNavigate()
 
   const isActive = (path) => {
-    if (path === '/dashboard') return location.pathname === '/dashboard'
+    if (path === '/dashboard') return location.pathname === '/dashboard' || location.pathname === '/dashboard/overview'
     return location.pathname.startsWith(path)
   }
 
