@@ -1302,7 +1302,7 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--bg-elevated);
 }
 
 .rh-cert-card__logo img {
