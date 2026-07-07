@@ -75,3 +75,7 @@ def get_job_agent():
     from agents.job_agent import JobAgent
     return JobAgent(llm_service=get_llm())
 
+def get_cover_letter_agent():
+    """Inject Cover Letter agent with shared LLM service."""
+    from agents.cover_letter_agent import CoverLetterAgent
+    return CoverLetterAgent()

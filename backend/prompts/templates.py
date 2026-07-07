@@ -350,6 +350,73 @@ Provide:
 2. Additional insights
 3. Follow-up questions to explore
 """
+
+# ═══════════════════════════════════════════════════════════════
+# Resume Rewrite Studio
+# ═══════════════════════════════════════════════════════════════
+
+RESUME_REWRITE_PROMPT = """\
+You are an expert resume writer and ATS optimization specialist.
+Extract 3-5 of the weakest bullet points from the following resume text and rewrite them to be highly impactful, quantified, and ATS-friendly for a {target_role} role.
+
+Resume Content:
+{resume_text}
+
+For each extracted bullet point, provide the original text, the AI improved version, and a detailed explanation of why you made the changes across 5 dimensions: Grammar, Impact, Action Verbs, ATS Keywords, and Clarity.
+
+Return your response strictly as a JSON object matching this schema:
+{{
+  "rewrites": [
+    {{
+      "original": "<original bullet point from resume>",
+      "improved": "<highly impactful rewritten bullet point>",
+      "explanation": {{
+        "grammar": "<how grammar or phrasing was improved>",
+        "impact": "<how the impact was quantified or highlighted>",
+        "action_verbs": "<action verbs that were introduced>",
+        "ats_keywords": "<ATS keywords added for the target role>",
+        "clarity": "<how clarity and readability were improved>"
+      }}
+    }}
+  ]
+}}
 """
 
+# ═══════════════════════════════════════════════════════════════
+# Cover Letter Generator
+# ═══════════════════════════════════════════════════════════════
+
+COVER_LETTER_PROMPT = """\
+You are an expert career coach and executive resume writer.
+Generate a highly personalized cover letter for the user. Do NOT use any hardcoded placeholders (e.g. [Hiring Manager], [Company Name]) if the information is not provided. Instead, write naturally around missing information (e.g., "To the Hiring Team,").
+
+Tone: {tone}
+
+User Context:
+- Target Role: {target_role}
+- Resume: {resume_text}
+- Skills: {skills}
+- Experience: {experience_years} years
+- Projects: {projects}
+- Job Description: {job_description}
+
+Instructions:
+1. Write a 3 to 4 paragraph cover letter.
+2. The letter must match the requested tone ({tone}).
+   - Formal: Traditional, highly professional, polite.
+   - Startup: Energetic, passionate, impact-driven, modern.
+   - Corporate: Results-oriented, leadership-focused, structured.
+   - Friendly: Warm, personable, enthusiastic.
+   - Executive: High-level strategy, confident, authoritative.
+3. For each paragraph, provide an explanation of WHY this paragraph exists strategically (e.g., "Grabs attention and establishes alignment with the role", "Highlights quantifiable impact from past projects").
+
+Return your response strictly as a JSON object matching this schema:
+{{
+  "paragraphs": [
+    {{
+      "text": "<The actual paragraph text>",
+      "explanation": "<Strategic explanation of this paragraph>"
+    }}
+  ]
+}}
 """

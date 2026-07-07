@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain, Target, GitCompare,
+  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain, Target, GitCompare, Sparkles,
 } from 'lucide-react'
 import Tabs from '../components/ui/Tabs'
 import EmptyState from '../components/ui/EmptyState'
@@ -15,12 +15,16 @@ import MentorPanel from '../components/features/MentorPanel'
 import InterviewPanel from '../components/features/InterviewPanel'
 import SkillPanel from '../components/features/SkillPanel'
 import ComparePanel from '../components/features/ComparePanel'
+import ResumeRewriteStudio from '../components/features/ResumeRewriteStudio'
+import CoverLetterStudio from '../components/features/CoverLetterStudio'
 import { useCareerMemory } from '../hooks/useCareerMemory'
 import './DashboardPage.css'
 
 const TAB_LIST = [
   { id: 'overview',  label: 'Overview',  icon: LayoutDashboard },
   { id: 'resume',    label: 'Resume',    icon: FileText },
+  { id: 'rewrite',   label: 'Rewrite Studio', icon: Sparkles },
+  { id: 'cover-letter', label: 'Cover Letter', icon: FileText },
   { id: 'roadmap',   label: 'Roadmap',   icon: Map },
   { id: 'jobs',      label: 'Jobs',      icon: Briefcase },
   { id: 'compare',   label: 'Compare',   icon: GitCompare },
@@ -49,7 +53,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const handler = (e) => {
       const targetTab = e.detail
-      if (targetTab) {
+      if (targetTab && TAB_LIST.some(t => t.id === targetTab)) {
         setActiveTab(targetTab)
         navigate(`/dashboard/${targetTab}`, { replace: true })
       }
@@ -69,6 +73,10 @@ export default function DashboardPage() {
         return <OverviewPanel data={data} formData={formData} />
       case 'resume':
         return <ResumePanel data={data} formData={formData} />
+      case 'rewrite':
+        return <ResumeRewriteStudio />
+      case 'cover-letter':
+        return <CoverLetterStudio />
       case 'roadmap':
         return <RoadmapPanel data={data} formData={formData} />
       case 'jobs':

@@ -163,6 +163,7 @@ const computeCareerScore = (report, resumeData) => {
 // ─── Hook ────────────────────────────────────────────────────
 export default function useCareerScore() {
   const [scoreData, setScoreData] = useState(null)
+  const [bonusScore, setBonusScore] = useState(0)
 
   const recompute = useCallback(() => {
     let report = null
@@ -179,8 +180,14 @@ export default function useCareerScore() {
     } catch {}
 
     const result = computeCareerScore(report, resumeData)
+    if (result) {
+      result.score = Math.min(100, result.score + bonusScore)
+      result.scoreColor = getScoreColor(result.score)
+      result.scoreLabel = getScoreLabel(result.score)
+      result.scoreZone = getScoreZone(result.score)
+    }
     setScoreData(result)
-  }, [])
+  }, [bonusScore])
 
   useEffect(() => {
     // Initial computation
@@ -190,14 +197,23 @@ export default function useCareerScore() {
     const handleUpdate = () => recompute()
     window.addEventListener('career-score-update', handleUpdate)
 
+    // Listen for incremental updates from Rewrite Studio
+    const handleIncrement = (e) => {
+      const amount = e.detail?.amount || 2
+      setBonusScore(prev => prev + amount)
+    }
+    window.addEventListener('resume-score-increment', handleIncrement)
+
     // Also poll sessionStorage for cross-tab updates (lightweight)
     const interval = setInterval(recompute, 5000)
 
     return () => {
       window.removeEventListener('career-score-update', handleUpdate)
+      window.removeEventListener('resume-score-increment', handleIncrement)
       clearInterval(interval)
     }
   }, [recompute])
 
   return scoreData
 }
+

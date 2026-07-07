@@ -422,3 +422,52 @@ class SkillIntelligenceRequest(BaseModel):
     target_role: str = "Software Engineer"
     experience_years: int = 0
 
+
+# ═══════════════════════════════════════════════════════════════
+# Resume Rewrite Studio
+# ═══════════════════════════════════════════════════════════════
+
+class ResumeRewriteRequest(BaseModel):
+    resume_text: str = Field(..., description="The full resume text from which bullets will be extracted and rewritten")
+    target_role: str = Field(default="Software Engineer", description="Target career role")
+
+class RewriteExplanation(BaseModel):
+    grammar: str = Field("", description="Grammar improvements made")
+    impact: str = Field("", description="How the impact was quantified or highlighted")
+    action_verbs: str = Field("", description="Action verbs introduced")
+    ats_keywords: str = Field("", description="Keywords added for ATS optimization")
+    clarity: str = Field("", description="How clarity and readability were improved")
+
+class RewriteDetail(BaseModel):
+    original: str
+    improved: str
+    explanation: RewriteExplanation
+
+class ResumeRewriteResponse(BaseModel):
+    rewrites: list[RewriteDetail] = []
+
+# ═══════════════════════════════════════════════════════════════
+# Cover Letter Generator
+# ═══════════════════════════════════════════════════════════════
+
+class CoverLetterRequest(BaseModel):
+    resume_text: str = Field(..., description="The user's resume text")
+    target_role: str = Field(..., description="The target role applied for")
+    job_description: Optional[str] = Field(None, description="The job description of the selected job")
+    skills: list[str] = Field(default=[], description="User skills")
+    experience_years: int = Field(default=0, description="Years of experience")
+    projects: list[dict] = Field(default=[], description="Relevant projects")
+    tone: str = Field(default="Formal", description="The tone of the cover letter (e.g., Formal, Startup, Friendly)")
+
+class CoverLetterParagraph(BaseModel):
+    text: str = Field(..., description="The actual content of the paragraph")
+    explanation: str = Field(..., description="Why this paragraph exists strategically")
+
+class CoverLetterResponse(BaseModel):
+    paragraphs: list[CoverLetterParagraph] = []
+
+class CoverLetterExportRequest(BaseModel):
+    paragraphs: list[str] = Field(..., description="List of paragraph texts to export")
+    name: str = Field(default="Candidate", description="Name of candidate")
+    target_role: str = Field(default="Role", description="Role applied for")
+

@@ -172,7 +172,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # ─── Register Routers (API v1) ───────────────────────────────
 
-from routers import career, jobs, roadmap, resume, report, resources, interview, skills, compare
+from routers import career, jobs, roadmap, resume, report, resources, interview, skills, compare, cover_letter
 
 API_PREFIX = settings.API_V1_PREFIX  # /api/v1
 
@@ -185,6 +185,7 @@ app.include_router(jobs.router,      prefix=API_PREFIX)
 app.include_router(interview.router, prefix=API_PREFIX)
 app.include_router(skills.router,    prefix=API_PREFIX)
 app.include_router(compare.router,   prefix=API_PREFIX)
+app.include_router(cover_letter.router, prefix=API_PREFIX)
 
 # ─── Root Endpoints ──────────────────────────────────────────
 

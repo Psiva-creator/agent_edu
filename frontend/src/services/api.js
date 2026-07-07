@@ -52,6 +52,15 @@ export const analyzeResumeText = async (data) => {
   return res.data
 }
 
+// ── Resume Rewrite (JSON body) ──
+export const rewriteResumeBullets = async (data) => {
+  const res = await api.post('/resume/rewrite', {
+    resume_text: data.resume_text,
+    target_role: data.target_role || 'Software Engineer',
+  })
+  return res.data
+}
+
 // ── Resume File Upload ──
 export const uploadResume = async (formData) => {
   const res = await api.post('/resume/upload', formData, {
@@ -81,6 +90,22 @@ export const askMentor = async (data) => {
     question: data.question || data,
     career_context: data.context || data.career_context || null,
   })
+  return res.data
+}
+
+// ── Cover Letter ──
+export const generateCoverLetter = async (data) => {
+  const res = await api.post('/cover-letter/generate', data)
+  return res.data
+}
+
+export const exportCoverLetterPdf = async (data) => {
+  const res = await api.post('/cover-letter/export/pdf', data, { responseType: 'blob' })
+  return res.data
+}
+
+export const exportCoverLetterDocx = async (data) => {
+  const res = await api.post('/cover-letter/export/docx', data, { responseType: 'blob' })
   return res.data
 }
 

@@ -16,6 +16,8 @@ from schemas.models import (
     ResumeAnalysisResponse,
     ResumeExportRequest,
     MarkdownExportResponse,
+    ResumeRewriteRequest,
+    ResumeRewriteResponse,
     ProjectEnhanceRequest,
     ProjectEnhanceResponse,
     ErrorResponse,
@@ -89,6 +91,23 @@ async def upload_resume(file: UploadFile = File(...)):
         return {"text": text.strip()}
     except Exception as e:
         return Response(content=f'{{"error": "Failed to parse file: {str(e)}"}}', status_code=400, media_type="application/json")
+
+
+# ─── POST /resume/rewrite ────────────────────────────
+
+@router.post(
+    "/rewrite",
+    response_model=ResumeRewriteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Rewrite weak resume bullets",
+    description="Extracts and rewrites weak bullet points from the resume, providing ATS and impact improvements.",
+)
+async def rewrite_resume(
+    data: ResumeRewriteRequest,
+    agent: ResumeAgent = Depends(get_resume_agent),
+):
+    result = await agent.rewrite_resume_bullets(data.resume_text, data.target_role)
+    return result
 
 
 # ─── POST /resume/enhance-project ────────────────────────────
