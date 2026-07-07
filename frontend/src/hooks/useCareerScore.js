@@ -170,14 +170,17 @@ export default function useCareerScore() {
     let resumeData = null
 
     try {
-      const raw = sessionStorage.getItem('analysisResult')
-      if (raw) report = JSON.parse(raw)
-    } catch {}
-
-    try {
-      const raw = sessionStorage.getItem('resumeAnalysis')
-      if (raw) resumeData = JSON.parse(raw)
-    } catch {}
+      const raw = sessionStorage.getItem('careerMemory')
+      if (raw) {
+        const mem = JSON.parse(raw)
+        if (mem.isActive) {
+          report = mem.raw_report || null
+          resumeData = mem.resume_intelligence?.raw_analysis || null
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse career memory in useCareerScore", e)
+    }
 
     const result = computeCareerScore(report, resumeData)
     if (result) {

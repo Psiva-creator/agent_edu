@@ -49,76 +49,57 @@ const stagger = { animate: { transition: { staggerChildren: 0.06 } } }
 function getCareerMemory() {
   /**
    * Extracts all Career Memory signals from sessionStorage.
-   * Sources:
-   *   - 'analysisResult'  → POST /report response (profile data)
-   *   - 'resumeAnalysis'  → POST /resume/analyze response
-   *   - 'analysisFormData' → form input data from analyze page
+   * Uses the unified 'careerMemory' object.
    */
-  let report = null
-  let resume = null
-  let formData = null
-
   try {
-    const raw = sessionStorage.getItem('analysisResult')
-    if (raw) report = JSON.parse(raw)
-  } catch {}
+    const raw = sessionStorage.getItem('careerMemory')
+    if (!raw) return null
+    
+    const mem = JSON.parse(raw)
+    if (!mem.isActive) return null
+    
+    // ── Extract skills ────────────────────────────────────────
+    const profileSkills = mem.raw_report?.skills || mem.resume_intelligence?.skills || []
+    const resumeSkills = mem.resume_intelligence?.strengths || []
+    const allSkills = [...new Set([...profileSkills, ...resumeSkills])]
 
-  try {
-    const raw = sessionStorage.getItem('resumeAnalysis')
-    if (raw) resume = JSON.parse(raw)
-  } catch {}
+    // ── Extract experience ────────────────────────────────────
+    const experienceYears = parseInt(mem.personal_info?.experience_years || 0)
 
-  try {
-    const raw = sessionStorage.getItem('analysisFormData')
-    if (raw) formData = JSON.parse(raw)
-  } catch {}
+    // ── Extract education ─────────────────────────────────────
+    const education = mem.personal_info?.education || null
 
-  if (!report && !resume && !formData) return null
+    // ── Has projects / certifications from resume checklist ───
+    const hasProjects = mem.resume_intelligence?.projects?.length > 0 || (mem.resume_intelligence?.raw_analysis?.section_checklist?.projects ?? false)
+    const hasCertifications = mem.resume_intelligence?.certifications?.length > 0 || (mem.resume_intelligence?.raw_analysis?.section_checklist?.certifications ?? false)
 
-  // ── Extract skills ────────────────────────────────────────
-  const profileSkills = formData?.skills || report?.skills || []
-  const resumeSkills = resume?.strengths || []
-  const allSkills = [...new Set([...profileSkills, ...resumeSkills])]
+    // ── Resume text from resume analysis ──────────────────────
+    const resumeText = mem.personal_info?.resume_text || mem.raw_report?.resume_text || null
 
-  // ── Extract experience ────────────────────────────────────
-  const experienceYears = parseInt(
-    formData?.experience_years || formData?.experience || report?.experience_years || 0
-  )
+    // ── Career path / recommended roles ───────────────────────
+    let careerPath = mem.raw_report?.career_path || mem.career_analysis?.recommended_roles || []
+    // If roadmap is available, its steps might have titles but career_path usually has roles. 
+    // Fallback to raw report's career path.
 
-  // ── Extract education ─────────────────────────────────────
-  const education = formData?.education || 
-    (formData?.degree ? `${formData.degree} ${formData.branch || ''}`.trim() : null) ||
-    report?.education || null
+    // ── Target role ───────────────────────────────────────────
+    const targetRole = mem.personal_info?.target_role || mem.raw_report?.target_role || 'Software Engineer'
 
-  // ── Has projects / certifications from resume checklist ───
-  const checklist = resume?.section_checklist || {}
-  const hasProjects = checklist.projects ?? false
-  const hasCertifications = checklist.certifications ?? false
-
-  // ── Resume text from resume analysis ──────────────────────
-  const resumeText = resume?.resume_text || null
-
-  // ── Career path / recommended roles ───────────────────────
-  const careerPath = resume?.career_path || report?.career_path || []
-
-  // ── Target role ───────────────────────────────────────────
-  const targetRole = formData?.target_role || formData?.career_goal || 
-    report?.target_role || 'Software Engineer'
-
-  return {
-    profileSkills,
-    resumeSkills,
-    allSkills,
-    experienceYears,
-    education,
-    hasProjects,
-    hasCertifications,
-    resumeText,
-    careerPath,
-    targetRole,
-    formData,
-    report,
-    resume,
+    return {
+      profileSkills,
+      resumeSkills,
+      allSkills,
+      experienceYears,
+      education,
+      hasProjects,
+      hasCertifications,
+      resumeText,
+      careerPath,
+      targetRole,
+      report: mem.raw_report,
+      resume: mem.resume_intelligence?.raw_analysis,
+    }
+  } catch(e) {
+    return null
   }
 }
 
