@@ -46,7 +46,7 @@ export default function DashboardPage() {
   const formData = memory.personal_info
 
   useEffect(() => {
-    if (tab && tab !== activeTab) setActiveTab(tab)
+    setActiveTab(tab || 'overview')
   }, [tab])
 
   // Listen for programmatic tab navigation (e.g. from CareerScoreEngine tip)

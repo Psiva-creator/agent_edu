@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import AppLayout from './components/layout/AppLayout'
 import LandingPage from './pages/LandingPage'
@@ -20,7 +20,7 @@ function App() {
 
             {/* Dashboard — uses sidebar layout */}
             <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard" element={<Navigate to="/dashboard/overview" replace />} />
               <Route path="/dashboard/:tab" element={<DashboardPage />} />
             </Route>
           </Routes>

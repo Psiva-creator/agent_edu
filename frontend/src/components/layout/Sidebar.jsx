@@ -8,7 +8,7 @@ import { cn } from '../../utils/helpers'
 import './Sidebar.css'
 
 const NAV_ITEMS = [
-  { id: 'overview',  label: 'Overview',  icon: LayoutDashboard, path: '/dashboard' },
+  { id: 'overview',  label: 'Overview',  icon: LayoutDashboard, path: '/dashboard/overview' },
   { id: 'resume',    label: 'Resume',    icon: FileText,        path: '/dashboard/resume' },
   { id: 'roadmap',   label: 'Roadmap',   icon: Map,             path: '/dashboard/roadmap' },
   { id: 'jobs',      label: 'Jobs',      icon: Briefcase,       path: '/dashboard/jobs' },
@@ -23,7 +23,7 @@ export default function Sidebar({ collapsed, onToggle }) {
   const navigate = useNavigate()
 
   const isActive = (path) => {
-    if (path === '/dashboard') return location.pathname === '/dashboard'
+    if (path === '/dashboard/overview') return location.pathname === '/dashboard' || location.pathname === '/dashboard/overview'
     return location.pathname.startsWith(path)
   }
 

@@ -53,7 +53,7 @@ def setup_logging() -> None:
     console_handler.setLevel(level)
 
     console_fmt = logging.Formatter(
-        fmt="%(asctime)s │ %(levelname)-8s │ %(name)-25s │ %(message)s",
+        fmt="%(asctime)s | %(levelname)-8s | %(name)-25s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     console_handler.setFormatter(console_fmt)
@@ -84,7 +84,7 @@ def setup_logging() -> None:
         logging.getLogger(noisy_logger).setLevel(logging.WARNING)
 
     logging.getLogger(__name__).info(
-        f"Logging initialized — level={settings.LOG_LEVEL}, app={settings.APP_NAME}"
+        f"Logging initialized - level={settings.LOG_LEVEL}, app={settings.APP_NAME}"
     )
 
 

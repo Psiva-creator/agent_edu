@@ -14,7 +14,7 @@ export default function MobileNav() {
   ]
 
   const isActive = (path) => {
-    if (path === '/dashboard') return location.pathname === '/dashboard'
+    if (path === '/dashboard/overview') return location.pathname === '/dashboard' || location.pathname === '/dashboard/overview'
     return location.pathname.startsWith(path)
   }
 
