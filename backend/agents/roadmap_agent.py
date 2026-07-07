@@ -36,34 +36,111 @@ DEFAULT_HOURS = 10
 # ─── Known Role → Skill Mappings (fallback inference) ────────────
 
 ROLE_SKILL_MAP: dict[str, list[str]] = {
-    "data scientist": [
-        "Python", "Statistics", "Machine Learning",
-        "SQL", "Data Analysis", "PyTorch",
+    "python developer": [
+        "Python Basics", "Functions", "OOP", "Flask", "Django", "SQL", "REST APIs"
     ],
     "frontend developer": [
-        "JavaScript", "React", "TypeScript",
-        "CSS", "Git", "Testing",
+        "HTML", "CSS", "JavaScript", "React", "State Management", "Routing", "Performance"
     ],
     "backend developer": [
-        "Python", "FastAPI", "SQL",
-        "Docker", "Git", "System Design",
+        "Node.js", "Express", "Databases", "Authentication", "System Design", "Docker", "CI/CD"
     ],
     "full stack developer": [
-        "JavaScript", "React", "Node.js",
-        "SQL", "Docker", "Git",
+        "JavaScript", "React", "Node.js", "SQL", "Docker", "Git", "System Architecture"
+    ],
+    "java developer": [
+        "Java Basics", "OOP", "Spring Boot", "Hibernate", "Microservices", "SQL"
+    ],
+    "cpp developer": [
+        "C++ Basics", "Pointers", "Memory Management", "STL", "Multithreading", "Algorithms"
+    ],
+    "mobile app developer": [
+        "Dart", "Flutter", "State Management", "API Integration", "App Store Deployment"
+    ],
+    "game developer": [
+        "C#", "Unity Engine", "Physics", "3D Math", "Game Logic", "Optimization"
+    ],
+    "ai engineer": [
+        "Python", "NumPy", "Pandas", "Statistics", "Machine Learning", "Deep Learning", "PyTorch", "NLP"
+    ],
+    "machine learning engineer": [
+        "Python", "Scikit-Learn", "TensorFlow", "MLOps", "Model Deployment", "AWS"
+    ],
+    "data scientist": [
+        "Python", "Data Analysis", "SQL", "Machine Learning", "Data Visualization", "Big Data"
+    ],
+    "data analyst": [
+        "Excel", "SQL", "Tableau", "PowerBI", "Python", "Data Cleaning"
+    ],
+    "nlp engineer": [
+        "Python", "Text Processing", "Transformers", "HuggingFace", "LLMs", "LangChain"
+    ],
+    "computer vision engineer": [
+        "Python", "OpenCV", "PyTorch", "CNNs", "Object Detection", "Image Segmentation"
+    ],
+    "mlops engineer": [
+        "Docker", "Kubernetes", "CI/CD", "Model Registry", "Monitoring", "AWS SageMaker"
+    ],
+    "cybersecurity analyst": [
+        "Networking", "Linux", "Security Basics", "SIEM", "Incident Response", "Threat Hunting"
+    ],
+    "cybersecurity engineer": [
+        "Linux", "Networking", "Python", "OWASP", "Cryptography", "Security Architecture"
+    ],
+    "security engineer": [
+        "Linux", "Networking", "Python", "OWASP", "Cryptography", "Security Architecture"
+    ],
+    "penetration tester": [
+        "Networking", "Linux", "Kali", "Web Exploitation", "Network Spoofing", "Privilege Escalation"
+    ],
+    "soc analyst": [
+        "Networking", "Logs Analysis", "SIEM", "Wireshark", "Malware Analysis"
+    ],
+    "cloud security": [
+        "AWS Security", "IAM", "Compliance", "Vulnerability Management", "Network Security"
+    ],
+    "cloud engineer": [
+        "Linux", "Networking", "AWS", "Docker", "Terraform", "CI/CD"
+    ],
+    "aws engineer": [
+        "AWS EC2", "S3 & RDS", "VPC & Networking", "IAM", "Lambda & Serverless", "CloudFormation"
+    ],
+    "azure engineer": [
+        "Azure VMs", "Azure Networking", "Active Directory", "Azure Functions", "ARM Templates"
+    ],
+    "google cloud engineer": [
+        "GCP Compute", "GCP Networking", "Cloud Storage", "BigQuery", "GKE"
     ],
     "devops engineer": [
-        "Docker", "Kubernetes", "AWS",
-        "Git", "Python", "CI/CD",
+        "Linux", "Bash", "Docker", "Kubernetes", "CI/CD (Jenkins/Actions)", "Terraform", "Monitoring"
     ],
-    "ml engineer": [
-        "Python", "PyTorch", "TensorFlow",
-        "MLOps", "Docker", "AWS",
+    "site reliability engineer": [
+        "Linux", "Python/Go", "Kubernetes", "Observability", "Incident Management", "SLIs/SLOs"
+    ],
+    "data engineer": [
+        "Python", "SQL", "Data Modeling", "ETL Pipelines", "Spark", "Airflow"
+    ],
+    "database administrator": [
+        "SQL", "Database Design", "Performance Tuning", "Backup & Recovery", "Security"
+    ],
+    "big data engineer": [
+        "Hadoop", "Spark", "Kafka", "NoSQL", "Data Warehousing"
+    ],
+    "ui designer": [
+        "Design Principles", "Typography", "Color Theory", "Figma", "Prototyping", "Design Systems"
+    ],
+    "ux designer": [
+        "User Research", "Wireframing", "User Testing", "Information Architecture", "Figma"
+    ],
+    "product designer": [
+        "UX Research", "UI Design", "Interaction Design", "Prototyping", "Design Handoff"
+    ],
+    "blockchain developer": [
+        "Cryptography", "Solidity", "Smart Contracts", "Web3.js", "Ethereum", "DeFi"
     ],
     "software engineer": [
-        "Python", "Data Structures", "Algorithms",
-        "SQL", "Git", "System Design",
-    ],
+        "Python", "Data Structures", "Algorithms", "SQL", "Git", "System Design"
+    ]
 }
 
 # ─── Phase Definitions ───────────────────────────────────────────
