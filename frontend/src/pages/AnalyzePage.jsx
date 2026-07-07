@@ -161,7 +161,8 @@ export default function AnalyzePage() {
       const result = await execute(payload)
       processReportAndNavigate(result)
     } catch (err) {
-      // Error handled by useApi
+      console.error('Manual submission error:', err)
+      alert('Failed to run AI Analysis. Please try again. Error: ' + (err.response?.data?.error || err.message))
     }
   }
 
