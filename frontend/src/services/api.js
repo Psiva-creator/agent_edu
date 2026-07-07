@@ -115,4 +115,10 @@ export const getInterviewFinalScore = async (data) => {
   return res.data
 }
 
+// ── Skills Dashboard ──
+export const analyzeSkills = async (data) => {
+  const res = await api.post('/skills/analyze', data)
+  return res.data
+}
+
 export default api

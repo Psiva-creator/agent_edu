@@ -102,6 +102,7 @@ app = FastAPI(
         {"name": "Report", "description": "Career Intelligence Report (JSON / HTML / PDF)"},
         {"name": "Career", "description": "Career analysis and job search"},
         {"name": "Interview", "description": "AI Interview Simulator — generate questions, evaluate answers, final scoring"},
+        {"name": "Skills", "description": "Skill Intelligence Dashboard - market demand, salary impact, deep analytics"},
     ],
 )
 
@@ -171,7 +172,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # ─── Register Routers (API v1) ───────────────────────────────
 
-from routers import career, jobs, roadmap, resume, report, resources, interview
+from routers import career, jobs, roadmap, resume, report, resources, interview, skills
 
 API_PREFIX = settings.API_V1_PREFIX  # /api/v1
 
@@ -182,6 +183,7 @@ app.include_router(report.router,    prefix=API_PREFIX)
 app.include_router(career.router,    prefix=API_PREFIX)
 app.include_router(jobs.router,      prefix=API_PREFIX)
 app.include_router(interview.router, prefix=API_PREFIX)
+app.include_router(skills.router,    prefix=API_PREFIX)
 
 # ─── Root Endpoints ──────────────────────────────────────────
 

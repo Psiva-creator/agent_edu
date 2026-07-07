@@ -370,3 +370,25 @@ class MentorQuestionResponse(BaseModel):
     """AI mentor answer response."""
     answer: str
 
+
+# ═══════════════════════════════════════════════════════════════
+# Skill Intelligence
+# ═══════════════════════════════════════════════════════════════
+
+class SkillNode(BaseModel):
+    name: str
+    is_gap: bool
+    current_level: int
+    target_level: int
+    market_demand: int
+    salary_impact: int
+    time_required_hours: int
+    category: str
+    related_skills: list[str] = []
+
+class SkillIntelligenceRequest(BaseModel):
+    current_skills: list[str] = []
+    skill_gaps: list[str] = []
+    target_role: str = "Software Engineer"
+    experience_years: int = 0
+

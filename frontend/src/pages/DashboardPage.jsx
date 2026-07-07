@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain
+  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain, Target
 } from 'lucide-react'
 import Tabs from '../components/ui/Tabs'
 import EmptyState from '../components/ui/EmptyState'
@@ -13,6 +13,7 @@ import JobsPanel from '../components/features/JobsPanel'
 import MarketPanel from '../components/features/MarketPanel'
 import MentorPanel from '../components/features/MentorPanel'
 import InterviewPanel from '../components/features/InterviewPanel'
+import SkillPanel from '../components/features/SkillPanel'
 import { useCareerMemory } from '../hooks/useCareerMemory'
 import './DashboardPage.css'
 
@@ -22,6 +23,7 @@ const TAB_LIST = [
   { id: 'roadmap',   label: 'Roadmap',   icon: Map },
   { id: 'jobs',      label: 'Jobs',      icon: Briefcase },
   { id: 'market',    label: 'Market',    icon: TrendingUp },
+  { id: 'skills',    label: 'Skills',    icon: Target },
   { id: 'mentor',    label: 'Mentor',    icon: MessageCircle },
   { id: 'interview', label: 'Interview', icon: Brain },
 ]
@@ -58,6 +60,8 @@ export default function DashboardPage() {
         return <JobsPanel data={data} formData={formData} />
       case 'market':
         return <MarketPanel data={data} formData={formData} />
+      case 'skills':
+        return <SkillPanel />
       case 'mentor':
         return <MentorPanel data={data} formData={formData} />
       case 'interview':

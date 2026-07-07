@@ -45,6 +45,7 @@ export function CareerMemoryProvider({ children }) {
       },
       raw_report: null, // The raw /api/v1/report response for fallback
       interview_history: [], // Stores completed interview sessions
+      skill_intelligence: null, // Stores deep analytics on skills
     };
   });
 
@@ -81,6 +82,7 @@ export function CareerMemoryProvider({ children }) {
       },
       raw_report: null,
       interview_history: [],
+      skill_intelligence: null,
     });
   }, []);
 
@@ -124,6 +126,15 @@ export function CareerMemoryProvider({ children }) {
     }));
   }, []);
 
+  const updateSkillIntelligence = useCallback((data) => {
+    setMemory((prev) => ({
+      ...prev,
+      skill_intelligence: data,
+      isActive: true,
+      lastUpdated: new Date().toISOString(),
+    }));
+  }, []);
+
   const value = {
     memory,
     updateMemory,
@@ -132,6 +143,7 @@ export function CareerMemoryProvider({ children }) {
     updateResumeIntelligence,
     updateCareerAnalysis,
     addInterviewSession,
+    updateSkillIntelligence,
   };
 
   return (
