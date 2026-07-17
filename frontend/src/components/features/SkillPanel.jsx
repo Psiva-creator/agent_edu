@@ -100,9 +100,7 @@ export default function SkillPanel() {
 
       {!loading && !error && intel && (
         <motion.div className="skill-bento" initial={{opacity:0, y:20}} animate={{opacity:1, y:0}}>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <FallbackBanner source={intel.source} />
-          </div>
+          <FallbackBanner source={intel.source} />
           {/* ── HERO STATS ── */}
           <div className="bento-card bento-card--hero">
             <div className="skill-hero-stat">

@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Menu, ArrowLeft } from 'lucide-react'
+import { Menu, ArrowLeft, LogOut } from 'lucide-react'
 import { cn } from '../../utils/helpers'
+import { useAuth } from '../../context/AuthContext'
 import ThemeSwitcher from '../ui/ThemeSwitcher'
 import './TopBar.css'
 
@@ -18,6 +19,7 @@ const TITLE_MAP = {
 export default function TopBar({ onMenuClick, className }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const { signOut } = useAuth()
   const title = TITLE_MAP[location.pathname] || 'Career Guide AI'
   const showBack = location.pathname !== '/dashboard' && location.pathname !== '/'
 
@@ -40,6 +42,9 @@ export default function TopBar({ onMenuClick, className }) {
           <span className="topbar__status-text">AI Ready</span>
         </div>
         <ThemeSwitcher />
+        <button className="topbar__menu-btn" onClick={signOut} aria-label="Sign out" style={{ marginLeft: '8px' }} title="Sign Out">
+          <LogOut size={20} />
+        </button>
       </div>
     </header>
   )

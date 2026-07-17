@@ -1,4 +1,4 @@
-.dashboard-page { display: flex; flex-direction: column; gap: var(--space-6); }
+.dashboard-page { display: flex; flex-direction: column; gap: var(--space-4); }
 .dashboard-page__content { flex: 1; min-height: 0; }
 
 .dashboard-page__memory-banner {

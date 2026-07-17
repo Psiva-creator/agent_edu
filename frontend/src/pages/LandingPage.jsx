@@ -70,7 +70,7 @@ export default function LandingPage() {
             <a href="#how-it-works">How It Works</a>
             <a href="#ai-agents">AI Agents</a>
             <a href="#benefits">Benefits</a>
-            <Button id="nav-get-started" variant="primary" size="sm" onClick={() => navigate('/analyze')}>Get Started</Button>
+            <Button id="nav-get-started" variant="primary" size="sm" onClick={() => navigate('/auth')}>Get Started</Button>
             <ThemeSwitcher />
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function LandingPage() {
             Discover your strengths, explore career paths, improve your resume, and receive personalized guidance from six intelligent AI agents.
           </motion.p>
           <motion.div className="landing__hero-actions" {...fadeUp(0.3)}>
-            <Button id="hero-start-analysis" variant="primary" size="xl" iconRight={ArrowRight} onClick={() => navigate('/analyze')} className="btn-hero-primary">
+            <Button id="hero-start-analysis" variant="primary" size="xl" iconRight={ArrowRight} onClick={() => navigate('/auth')} className="btn-hero-primary">
               Start AI Analysis
             </Button>
             <Button id="hero-explore-dashboard" variant="secondary" size="xl" onClick={() => navigate('/dashboard')} className="btn-hero-secondary">
@@ -209,8 +209,8 @@ export default function LandingPage() {
           <motion.div className="landing__cta-inner" {...fadeUp()}>
             <h2>Ready to shape your career?</h2>
             <p>Start your free AI-powered career analysis today.</p>
-            <Button id="cta-get-started" variant="primary" size="xl" iconRight={ArrowRight} onClick={() => navigate('/analyze')}>
-              Get Started Now
+            <Button variant="primary" size="lg" className="hero-cta" onClick={() => navigate('/auth')}>
+              Get Started Now <ArrowRight size={20} />
             </Button>
           </motion.div>
         </div>
