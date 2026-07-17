@@ -331,14 +331,11 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
 
         context_str = ""
         if career_context and isinstance(career_context, dict):
-            skills = career_context.get('skills')
-            if not isinstance(skills, list):
-                skills = []
             context_str = (
                 f"Candidate Name: {career_context.get('name') or 'User'}\n"
                 f"Current Role: {career_context.get('current_role') or 'Student'}\n"
                 f"Target Role: {career_context.get('target_role') or 'Software Engineer'}\n"
-                f"Skills: {', '.join(skills)}\n"
+                f"Skills: {', '.join(career_context.get('skills') or [])}\n"
                 f"Experience: {career_context.get('experience_years') or 0} years\n"
                 f"Location: {career_context.get('location') or 'India'}\n"
             )
