@@ -22,10 +22,14 @@ from schemas.models import (
     ProjectEnhanceResponse,
     ErrorResponse,
     ResumeUploadBase64Request,
+    ResumeExtractionResponse,
+    ReparseRequest,
 )
 import base64
 from agents.resume_agent import ResumeAgent
-from utils.dependencies import get_resume_agent
+from utils.dependencies import get_resume_agent, get_llm
+from services.resume_extraction import ResumeExtractionService
+from services.llm_service import LLMService
 
 router = APIRouter(prefix="/resume", tags=["Resume"])
 
@@ -63,80 +67,25 @@ async def analyze_resume(
 
     return result
 
-import io
-from pypdf import PdfReader
-
-
-def _extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:
-    """
-    Robust PDF text extraction.
-    Strategy:
-      1. Try pdfplumber (best for complex layouts, tables, columns)
-      2. Fallback to pypdf (fast, good for simple text PDFs)
-      3. Fallback to pdfminer.six high-level API
-    Returns extracted text or empty string.
-    """
-    text = ""
-
-    # ── Strategy 1: pdfplumber (best overall) ──
-    try:
-        import pdfplumber
-        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
-        if text.strip():
-            return text.strip()
-    except Exception:
-        pass  # fall through
-
-    # ── Strategy 2: pypdf ──
-    try:
-        reader = PdfReader(io.BytesIO(pdf_bytes))
-        text = ""
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-        if text.strip():
-            return text.strip()
-    except Exception:
-        pass  # fall through
-
-    # ── Strategy 3: pdfminer high-level ──
-    try:
-        from pdfminer.high_level import extract_text as pdfminer_extract
-        text = pdfminer_extract(io.BytesIO(pdf_bytes))
-        if text and text.strip():
-            return text.strip()
-    except Exception:
-        pass
-
-    return text.strip()
-
-
 # ─── POST /resume/upload ─────────────────────────────────────
 @router.post(
     "/upload",
+    response_model=ResumeExtractionResponse,
     status_code=status.HTTP_200_OK,
-    summary="Extract text from an uploaded resume (PDF/TXT)",
+    summary="Extract text from an uploaded resume (Multi-format)",
 )
-async def upload_resume(file: UploadFile = File(...)):
+async def upload_resume(
+    file: UploadFile = File(...),
+    llm: LLMService = Depends(get_llm),
+):
     if not file.filename:
         return Response(content='{"error": "No file uploaded"}', status_code=400, media_type="application/json")
     
     try:
         content = await file.read()
-        text = ""
-        
-        if file.filename.lower().endswith(".pdf"):
-            text = _extract_text_from_pdf_bytes(content)
-        else:
-            # Assume text/plain
-            text = content.decode("utf-8", errors="replace")
-            
-        return {"text": text.strip()}
+        extractor = ResumeExtractionService(llm_service=llm)
+        result = await extractor.extract(content, file.filename)
+        return result
     except Exception as e:
         return Response(content=f'{{"error": "Failed to parse file: {str(e)}"}}', status_code=400, media_type="application/json")
 
@@ -159,22 +108,44 @@ async def rewrite_resume(
 
 @router.post(
     "/upload/base64",
+    response_model=ResumeExtractionResponse,
     status_code=status.HTTP_200_OK,
-    summary="Extract text from a base64 encoded resume (PDF/TXT) to bypass Vercel form-data corruption",
+    summary="Extract text from a base64 encoded resume (Multi-format)",
 )
-async def upload_resume_base64(data: ResumeUploadBase64Request):
+async def upload_resume_base64(
+    data: ResumeUploadBase64Request,
+    llm: LLMService = Depends(get_llm),
+):
     try:
         content = base64.b64decode(data.content_base64)
-        text = ""
-        
-        if data.filename.lower().endswith(".pdf"):
-            text = _extract_text_from_pdf_bytes(content)
-        else:
-            text = content.decode("utf-8", errors="replace")
-            
-        return {"text": text.strip()}
+        extractor = ResumeExtractionService(llm_service=llm)
+        result = await extractor.extract(content, data.filename)
+        return result
     except Exception as e:
         return Response(content=f'{{"error": "Failed to parse base64 file: {str(e)}"}}', status_code=400, media_type="application/json")
+
+
+# ─── POST /resume/upload/reparse ─────────────────────────────
+
+@router.post(
+    "/upload/reparse",
+    status_code=status.HTTP_200_OK,
+    summary="Re-run structured extraction on user-edited text",
+)
+async def reparse_resume_text(
+    data: ReparseRequest,
+    llm: LLMService = Depends(get_llm),
+):
+    try:
+        extractor = ResumeExtractionService(llm_service=llm)
+        structured = await extractor.extract_structured(data.text)
+        
+        return {
+            "text": data.text,
+            "structured": structured,
+        }
+    except Exception as e:
+        return Response(content=f'{{"error": "Failed to reparse text: {str(e)}"}}', status_code=400, media_type="application/json")
 
 
 # ─── POST /resume/enhance-project ────────────────────────────

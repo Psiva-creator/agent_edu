@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
 import { generateInterviewQuestion, evaluateInterviewAnswer, getInterviewFinalScore } from '../../services/api'
+import FallbackBanner from '../ui/FallbackBanner'
 import './InterviewPanel.css'
 
 // ─── Round Configuration ──────────────────────────────────────
@@ -379,6 +380,7 @@ export default function InterviewPanel({ data, formData }) {
       {/* ── PHASE: ACTIVE ── */}
       {phase === 'active' && question && (
         <motion.div className="interview-active" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <FallbackBanner source={question.source} />
 
           {/* Header bar */}
           <div className="interview-active__header">
@@ -473,6 +475,7 @@ export default function InterviewPanel({ data, formData }) {
       {/* ── PHASE: EVALUATION ── */}
       {phase === 'eval' && evaluation && (
         <motion.div className="interview-eval" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <FallbackBanner source={evaluation.source} />
 
           {/* Score Card */}
           <div className="interview-eval__score-card">
@@ -541,6 +544,7 @@ export default function InterviewPanel({ data, formData }) {
       {/* ── PHASE: FINAL SCORE ── */}
       {phase === 'final' && finalScore && (
         <motion.div className="interview-final" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <FallbackBanner source={finalScore.source} />
 
           {/* Hero Score */}
           <div className="interview-final__hero">

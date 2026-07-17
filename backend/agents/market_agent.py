@@ -515,13 +515,29 @@ class MarketAgent:
                 result = await self._analyze_with_llm(industry, location_display)
                 if result and result.get("trends"):
                     logger.info("Market analysis successfully generated via LLM.")
+                    result["source"] = "ai"
                     return result
             except Exception as e:
-                logger.warning(f"LLM market analysis failed: {e}. Falling back to predefined knowledge.")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] MarketAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "MarketAgent", "source": "fallback", "reason": reason}
+                )
 
         # ── 2. Run deterministic fallback ────────────────────
-        logger.info("Performing fallback market analysis using predefined knowledge database.")
-        return self._analyze_fallback(industry, location_display)
+        logger.warning(
+            "[Fallback] MarketAgent using fallback because LLM is unavailable.",
+            extra={"agent": "MarketAgent", "source": "fallback", "reason": "llm_unavailable"}
+        )
+        return self._fallback_response(industry, location_display)
 
     # ═══════════════════════════════════════════════════════════
     # LLM Market Analysis
@@ -575,7 +591,7 @@ class MarketAgent:
     # Predefined Fallback Logic
     # ═══════════════════════════════════════════════════════════
 
-    def _analyze_fallback(self, industry: str, location: str) -> Dict[str, Any]:
+    def _fallback_response(self, industry: str, location: str) -> Dict[str, Any]:
         """Perform fallback market analysis by matching the industry with predefined sectors."""
         normalized_industry = self._normalize_industry_key(industry)
         
@@ -606,11 +622,22 @@ class MarketAgent:
                 "emerging_technologies": list(generic_raw["emerging_technologies"]),
                 "in_demand_skills": list(generic_raw["in_demand_skills"])
             }
+            
+            # Dynamic variations for generic
+            words = industry.split()
+            generic_skills = [f"{w.capitalize()} Tools" for w in words if len(w) > 3] + data["in_demand_skills"]
+            data["in_demand_skills"] = generic_skills[:6]
+
+        # Dynamic variation based on inputs
+        hash_val = sum(ord(c) for c in industry + location)
+        variance = (hash_val % 15) - 7  # -7 to +7 variance
+        data["demand_score"] = min(100.0, max(0.0, data["demand_score"] + variance))
 
         # Localize trends and opportunities slightly if a location is specified
         if location and location.lower() != "global":
-            data["trends"].insert(0, f"Increasing local tech investment and resource allocation in {location}.")
-            data["future_opportunities"].insert(0, f"Expanding job opportunities within local hubs in {location}.")
+            data["trends"].insert(0, f"Increasing local tech investment for {industry} in {location}.")
+            data["future_opportunities"].insert(0, f"Expanding {industry} job opportunities in {location}.")
+            data["demand_score"] = min(100.0, data["demand_score"] + 2.0)
 
         return {
             "industry": industry,
@@ -652,7 +679,8 @@ class MarketAgent:
             "ai_risk_detector": None,
             "hidden_opportunities": None,
             "recruiter_perspective": None,
-            "market_story": None
+            "market_story": None,
+            "source": "fallback"
         }
 
     # ═══════════════════════════════════════════════════════════

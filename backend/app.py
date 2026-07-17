@@ -212,8 +212,17 @@ async def root():
             "report_pdf":           f"{API_PREFIX}/report/pdf",
             "health":               "/health",
             "metrics":              "/metrics",
+            "debug_llm":            f"{API_PREFIX}/debug/llm-status",
         },
     }
+
+from utils.dependencies import get_llm
+
+@app.get(f"{API_PREFIX}/debug/llm-status", tags=["System"])
+async def llm_status():
+    """Monitoring LLMService state."""
+    llm = get_llm()
+    return llm.get_stats()
 
 
 @app.get("/health", tags=["System"])

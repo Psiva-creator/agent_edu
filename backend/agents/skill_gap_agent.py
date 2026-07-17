@@ -129,10 +129,25 @@ class SkillGapAgent:
                     logger.info("Skill gap analysis completed via LLM.")
                     return result
             except Exception as e:
-                logger.warning(f"LLM skill gap analysis failed: {e}. Falling back to deterministic analysis.")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] SkillGapAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "SkillGapAgent", "source": "fallback", "reason": reason}
+                )
 
         # ── 3. Run deterministic fallback analysis ────────────
-        logger.info("Performing deterministic skill gap analysis.")
+        logger.warning(
+            "[Fallback] SkillGapAgent using fallback because LLM is unavailable.",
+            extra={"agent": "SkillGapAgent", "source": "fallback", "reason": "llm_unavailable"}
+        )
         return self._analyze_fallback(parsed_skills, target_role)
 
     # ═══════════════════════════════════════════════════════════
@@ -251,7 +266,8 @@ Ensure all JSON keys and formats match exactly. Keep explanations concise.
             "strengths": strengths,
             "missing_skills": missing_skills,
             "gaps": gaps,
-            "confidence_score": confidence
+            "confidence_score": confidence,
+            "source": "ai"
         }
 
     # ═══════════════════════════════════════════════════════════
@@ -358,7 +374,8 @@ Ensure all JSON keys and formats match exactly. Keep explanations concise.
             "strengths": strengths,
             "missing_skills": final_missing_skills,
             "gaps": final_gaps,
-            "confidence_score": confidence_score
+            "confidence_score": confidence_score,
+            "source": "fallback"
         }
 
     # ═══════════════════════════════════════════════════════════

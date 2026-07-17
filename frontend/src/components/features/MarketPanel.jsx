@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 import EmptyState from '../ui/EmptyState';
+import FallbackBanner from '../ui/FallbackBanner';
 
 // Import all sub-components
 import MarketHero from './market/MarketHero';
@@ -53,6 +54,7 @@ export default function MarketPanel({ data, formData }) {
 
   return (
     <div className="market-dashboard">
+      <FallbackBanner source={data.source} />
       <MarketHero marketData={marketData} targetRole={targetRole} />
       
       {marketData.executive_summary && (

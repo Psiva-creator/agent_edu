@@ -366,4 +366,5 @@ class ResourceService:
                 "skills_practiced": [skill],
                 "estimated_hours": 8,
             },
+            "source": "fallback"
         }

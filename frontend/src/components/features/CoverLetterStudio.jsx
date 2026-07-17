@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FileText, Download, Copy, CheckCircle2, AlertCircle, Sparkles, Wand2, Info } from 'lucide-react'
 import { generateCoverLetter, exportCoverLetterPdf, exportCoverLetterDocx } from '../../services/api'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
+import FallbackBanner from '../ui/FallbackBanner'
 import './CoverLetterStudio.css'
 
 const TONES = ['Formal', 'Startup', 'Corporate', 'Friendly', 'Executive']
@@ -13,6 +14,7 @@ export default function CoverLetterStudio() {
   const [jobDescription, setJobDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [source, setSource] = useState(null)
   
   // Array of { text, explanation }
   const [paragraphs, setParagraphs] = useState([])
@@ -61,6 +63,7 @@ export default function CoverLetterStudio() {
       
       if (data && data.paragraphs) {
         setParagraphs(data.paragraphs)
+        setSource(data.source)
       }
     } catch (err) {
       setError("Failed to generate cover letter. Please try again.")
@@ -180,6 +183,7 @@ export default function CoverLetterStudio() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
+          <FallbackBanner source={source} />
           <div className="cls-actions">
             <button className="cls-action-btn" onClick={handleCopy}>
               {copied ? <CheckCircle2 size={16} className="text-green-600" /> : <Copy size={16} />}

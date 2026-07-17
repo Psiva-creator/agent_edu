@@ -243,13 +243,29 @@ class JobAgent:
                         "current_role": current_role,
                         "experience_years": experience_years,
                         "experience_level": self._classify_experience(experience_years),
+                        "source": "api"
                     })
                     return serpapi_results
             except Exception as e:
-                logger.error(f"SerpApi search failed: {e}. Falling back to deterministic matches.")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] JobAgent using fallback due to API error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "JobAgent", "source": "fallback", "reason": reason}
+                )
 
         # ── 3. Deterministic fallback ─────────────────────────
-        logger.info("Performing deterministic job matching.")
+        logger.warning(
+            "[Fallback] JobAgent using fallback because API/LLM is unavailable.",
+            extra={"agent": "JobAgent", "source": "fallback", "reason": "api_unavailable"}
+        )
         return self._find_fallback(
             skills, target_role, experience_years,
             current_role, preferences,
@@ -507,6 +523,7 @@ salary ranges (Indian market). Return ONLY the JSON object.
             "experience_level": self._classify_experience(experience_years),
             "total_matches": len(validated_matches),
             "matches": validated_matches,
+            "source": "ai",
         }
 
     # ═══════════════════════════════════════════════════════════
@@ -631,6 +648,7 @@ salary ranges (Indian market). Return ONLY the JSON object.
             "experience_level": experience_level,
             "total_matches": len(top_matches),
             "matches": top_matches,
+            "source": "fallback",
         }
 
     # ═══════════════════════════════════════════════════════════

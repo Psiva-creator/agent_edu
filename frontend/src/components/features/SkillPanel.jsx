@@ -10,6 +10,7 @@ import HeatMap from '../charts/HeatMap'
 import SkillGraph from '../charts/SkillGraph'
 import EmptyState from '../ui/EmptyState'
 import Button from '../ui/Button'
+import FallbackBanner from '../ui/FallbackBanner'
 import './SkillPanel.css'
 
 export default function SkillPanel() {
@@ -99,7 +100,9 @@ export default function SkillPanel() {
 
       {!loading && !error && intel && (
         <motion.div className="skill-bento" initial={{opacity:0, y:20}} animate={{opacity:1, y:0}}>
-          
+          <div style={{ gridColumn: '1 / -1' }}>
+            <FallbackBanner source={intel.source} />
+          </div>
           {/* ── HERO STATS ── */}
           <div className="bento-card bento-card--hero">
             <div className="skill-hero-stat">

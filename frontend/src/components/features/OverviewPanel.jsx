@@ -5,6 +5,7 @@ import {
   MessageCircle, Target, Brain, Sparkles, LayoutDashboard
 } from 'lucide-react'
 import Button from '../ui/Button'
+import FallbackBanner from '../ui/FallbackBanner'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
 import './OverviewPanel.css'
 
@@ -44,6 +45,7 @@ export default function OverviewPanel() {
     <div className="rh-overview">
       {/* HEADER & STATS */}
       <motion.div className="rh-overview__header" {...fadeUp}>
+        <FallbackBanner source={memory?.raw_report?.source || memory?.career_analysis?.source || memory?.resume_intelligence?.source} />
         <h1>Welcome back, {userName}</h1>
         <p>Continue your career journey.</p>
       </motion.div>

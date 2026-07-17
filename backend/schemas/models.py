@@ -25,6 +25,68 @@ class ResumeUploadBase64Request(BaseModel):
     content_base64: str
 
 
+# ═══════════════════════════════════════════════════════════════
+# Resume — Extraction Pipeline
+# ═══════════════════════════════════════════════════════════════
+
+class ConfidenceLevel(str, Enum):
+    """Extraction confidence level."""
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class StructuredExperience(BaseModel):
+    """A single work experience entry from structured extraction."""
+    role: str = ""
+    company: str = ""
+    dates: str = ""
+    bullets: list[str] = []
+
+
+class StructuredEducation(BaseModel):
+    """A single education entry from structured extraction."""
+    degree: str = ""
+    institution: str = ""
+    year: str = ""
+
+
+class StructuredProject(BaseModel):
+    """A single project from structured extraction."""
+    name: str = ""
+    description: str = ""
+    technologies: list[str] = []
+
+
+class StructuredResume(BaseModel):
+    """Structured fields extracted from resume text via LLM."""
+    name: str = ""
+    email: str = ""
+    phone: str = ""
+    linkedin: str = ""
+    github: str = ""
+    summary: str = ""
+    skills: list[str] = []
+    experience: list[StructuredExperience] = []
+    education: list[StructuredEducation] = []
+    projects: list[StructuredProject] = []
+    certifications: list[str] = []
+
+
+class ResumeExtractionResponse(BaseModel):
+    """Full response from resume extraction endpoint."""
+    text: str = ""
+    structured: Optional[StructuredResume] = None
+    confidence: ConfidenceLevel = ConfidenceLevel.LOW
+    warning: Optional[str] = None
+    extraction_method: str = "none"
+
+
+class ReparseRequest(BaseModel):
+    """Request to re-run structured extraction on user-edited text."""
+    text: str = Field(..., min_length=10, description="User-edited resume text to re-parse")
+
+
 class SuccessMessage(BaseModel):
     """Generic success wrapper."""
     message: str
@@ -75,6 +137,7 @@ class ResumeAnalysisResponse(BaseModel):
     ai_rewrites: Optional[list[dict]] = None
     interview_questions: Optional[dict] = None
     section_checklist: Optional[dict] = None
+    source: str = "ai"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -245,6 +308,7 @@ class RoadmapResponse(BaseModel):
     skill_gaps_addressed: list[str] = []
     weeks: list[RoadmapWeek] = []
     summary: str = ""
+    source: str = "ai"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -371,6 +435,7 @@ class CareerReportResponse(BaseModel):
     overall_recommendation: str = ""
     next_steps: list[str] = []
     market_data: dict = {}
+    source: str = "ai"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -450,6 +515,7 @@ class RewriteDetail(BaseModel):
 
 class ResumeRewriteResponse(BaseModel):
     rewrites: list[RewriteDetail] = []
+    source: str = "ai"
 
 # ═══════════════════════════════════════════════════════════════
 # Cover Letter Generator
@@ -470,6 +536,7 @@ class CoverLetterParagraph(BaseModel):
 
 class CoverLetterResponse(BaseModel):
     paragraphs: list[CoverLetterParagraph] = []
+    source: str = "ai"
 
 class CoverLetterExportRequest(BaseModel):
     paragraphs: list[str] = Field(..., description="List of paragraph texts to export")

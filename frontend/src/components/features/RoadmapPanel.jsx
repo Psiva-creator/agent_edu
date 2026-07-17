@@ -20,6 +20,7 @@ import Badge from '../ui/Badge'
 import EmptyState from '../ui/EmptyState'
 import ErrorState from '../ui/ErrorState'
 import { SkeletonCard } from '../ui/Skeleton'
+import FallbackBanner from '../ui/FallbackBanner'
 import './RoadmapPanel.css'
 import CareerSelection from './CareerSelection'
 import { getResourcesForTopic, getPracticePlatforms, getProjectTemplate, getCertificates } from '../../data/career-data'
@@ -937,6 +938,7 @@ export default function RoadmapPanel({ data: existingData, formData }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
+            <FallbackBanner source={result.source} />
             {/* ── Progress bar (preserved exactly) ── */}
             <div className="roadmap-progress">
               <div className="roadmap-progress__header">

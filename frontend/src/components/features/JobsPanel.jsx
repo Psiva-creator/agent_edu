@@ -12,6 +12,7 @@ import EmptyState from '../ui/EmptyState'
 import ErrorState from '../ui/ErrorState'
 import { SkeletonCard } from '../ui/Skeleton'
 import Dialog from '../ui/Dialog'
+import FallbackBanner from '../ui/FallbackBanner'
 import './JobsPanel.css'
 
 export default function JobsPanel({ data: existingData, formData }) {
@@ -81,6 +82,7 @@ export default function JobsPanel({ data: existingData, formData }) {
 
       {result && !loading && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
+          <FallbackBanner source={result.source} />
           {result.total_found > 0 && <p className="jobs-panel__count">{result.total_found} jobs found for "{result.query}"</p>}
           {result.matches?.length > 0 ? (
             <div className="jobs-panel__grid">

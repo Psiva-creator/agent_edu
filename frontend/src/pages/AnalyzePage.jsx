@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Sparkles, User, Code, Compass, CheckCircle, Upload, FileText, AlertTriangle, Loader } from 'lucide-react'
-import { analyzeProfile, uploadResume, analyzeResumeText, generateRoadmap, searchJobs, askMentor } from '../services/api'
+import { analyzeProfile, uploadResume, analyzeResumeText, generateRoadmap, searchJobs, askMentor, reparseResumeText } from '../services/api'
 import { useCareerMemory } from '../hooks/useCareerMemory'
 import { transformReportToMemory } from '../utils/profileTransformer'
 import Button from '../components/ui/Button'
@@ -31,6 +31,8 @@ export default function AnalyzePage() {
   const [step, setStep] = useState(0)
   const [mode, setMode] = useState(null) // 'upload' or 'manual'
   const [file, setFile] = useState(null)
+  const [extractedData, setExtractedData] = useState(null)
+  const [isExtracting, setIsExtracting] = useState(false)
   
   const [isProcessing, setIsProcessing] = useState(false)
   const [progress, setProgress] = useState({})
@@ -75,43 +77,53 @@ export default function AnalyzePage() {
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0]
-    if (selected && (selected.type === 'application/pdf' || selected.type === 'text/plain')) {
+    if (!selected) return;
+    
+    if (selected.size > 8 * 1024 * 1024) {
+      setGlobalError('File size exceeds 8MB limit. Please upload a smaller file.')
+      setFile(null)
+      return;
+    }
+    
+    const validTypes = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const ext = selected.name.toLowerCase().split('.').pop();
+    if (validTypes.includes(selected.type) || ['pdf', 'txt', 'png', 'jpg', 'jpeg', 'docx'].includes(ext)) {
       setFile(selected)
       setGlobalError(null)
+      setExtractedData(null)
     } else {
-      setGlobalError('Please upload a PDF or TXT file.')
+      setGlobalError('Unsupported file format. Please upload PDF, DOCX, TXT, PNG, or JPG.')
+      setFile(null)
     }
   }
   
   const handleLoadSample = () => {
-    const sampleText = `John Doe
-johndoe@email.com | San Francisco, CA
-
-SUMMARY
-Software Engineer with 4 years of experience building scalable web applications. Proficient in React, Node.js, and Python.
-
-EXPERIENCE
-Frontend Developer, Tech Corp
-2020 - Present
-- Built modern React applications improving user engagement by 30%
-- Optimized Webpack build times by 50%
-- Collaborated with UX team to redesign main dashboard
-
-Junior Developer, Web Solutions Inc.
-2018 - 2020
-- Developed RESTful APIs using Node.js and Express
-- Migrated legacy frontend to Vue.js
-
-EDUCATION
-B.S. Computer Science, University of California
-2014 - 2018
-
-SKILLS
-React, JavaScript, Python, Node.js, HTML, CSS, SQL`
+    const sampleText = `John Doe\njohndoe@email.com | San Francisco, CA\n\nSUMMARY\nSoftware Engineer with 4 years of experience building scalable web applications. Proficient in React, Node.js, and Python.\n\nEXPERIENCE\nFrontend Developer, Tech Corp\n2020 - Present\n- Built modern React applications improving user engagement by 30%\n- Optimized Webpack build times by 50%\n- Collaborated with UX team to redesign main dashboard\n\nJunior Developer, Web Solutions Inc.\n2018 - 2020\n- Developed RESTful APIs using Node.js and Express\n- Migrated legacy frontend to Vue.js\n\nEDUCATION\nB.S. Computer Science, University of California\n2014 - 2018\n\nSKILLS\nReact, JavaScript, Python, Node.js, HTML, CSS, SQL`
 
     const sampleFile = new File([sampleText], 'sample_resume.txt', { type: 'text/plain' })
     setFile(sampleFile)
     setGlobalError(null)
+    setExtractedData(null)
+  }
+
+  const handleExtractOnly = async () => {
+    if (!file) return;
+    setIsExtracting(true);
+    setGlobalError(null);
+    try {
+      const res = await uploadResume(file);
+      if (res.confidence === 'low' && (!res.text || !res.text.trim())) {
+        setGlobalError(res.warning || "We couldn't read this file automatically. You can enter your details manually.");
+        setMode('manual');
+        setFile(null);
+      } else {
+        setExtractedData(res);
+      }
+    } catch (err) {
+      setGlobalError(err.message || 'Failed to upload and extract resume.');
+    } finally {
+      setIsExtracting(false);
+    }
   }
 
   const validateStep = () => {
@@ -131,7 +143,11 @@ React, JavaScript, Python, Node.js, HTML, CSS, SQL`
   const next = () => { 
     if (validateStep()) {
       if (step === 0 && mode === 'upload' && file) {
-        handlePipelineSubmit()
+        if (!extractedData) {
+          handleExtractOnly();
+        } else {
+          handlePipelineSubmit();
+        }
       } else {
         setStep(s => Math.min(s + 1, 4))
       }
@@ -161,14 +177,19 @@ React, JavaScript, Python, Node.js, HTML, CSS, SQL`
       let text = ""
 
       if (mode === 'upload') {
-        // 1. Upload & Extract
-        updateProgress('upload', 'loading')
-        const uploadRes = await uploadResume(file)
-        text = uploadRes.text
-        if (!text || !text.trim()) {
-          throw new Error("Could not extract text from file.")
-        }
+        // 1. Extraction was done in previous step
         updateProgress('upload', 'success')
+        text = extractedData.text
+        if (!text || !text.trim()) {
+          throw new Error("Resume text is empty. Please check the extracted text.")
+        }
+        
+        try {
+          // Reparse to ensure structured data is fresh if user edited text
+          await reparseResumeText(text);
+        } catch (e) {
+          console.warn("Reparse failed, continuing with raw text", e);
+        }
 
         // 2. Analyze Resume
         updateProgress('analyze', 'loading')
@@ -350,32 +371,49 @@ React, JavaScript, Python, Node.js, HTML, CSS, SQL`
                       </div>
                     )}
                     
-                    <div className="mode-cards">
-                      <div className={`mode-card ${mode === 'upload' ? 'active' : ''}`} onClick={() => setMode('upload')}>
-                        <Upload size={32} />
-                        <h4>Upload Resume</h4>
-                        <p>Automatically extract skills, experience, and goals to build your Career Memory instantly.</p>
-                        {mode === 'upload' && (
-                          <>
-                            <div className="file-upload-zone" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                              <FileText size={24} />
-                              <span>{file ? file.name : "Click to select PDF or TXT"}</span>
-                              <input type="file" ref={fileInputRef} hidden accept=".pdf,.txt" onChange={handleFileChange} />
-                            </div>
-                            <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center' }}>
-                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleLoadSample(); }}>
-                                Load Sample Resume
-                              </Button>
-                            </div>
-                          </>
+                    {mode === 'upload' && extractedData ? (
+                      <div className="extracted-text-review" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {extractedData.warning && (
+                          <div className={`confidence-banner ${extractedData.confidence}`} style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', backgroundColor: extractedData.confidence === 'high' ? 'rgba(16, 185, 129, 0.1)' : extractedData.confidence === 'medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: extractedData.confidence === 'high' ? 'var(--success)' : extractedData.confidence === 'medium' ? '#F59E0B' : 'var(--error)' }}>
+                            <AlertTriangle size={16} />
+                            <span>{extractedData.warning}</span>
+                          </div>
                         )}
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>Please review and fix any text extraction errors below before continuing:</p>
+                        <TextArea 
+                          value={extractedData.text} 
+                          onChange={e => setExtractedData({...extractedData, text: e.target.value})}
+                          rows={14}
+                        />
                       </div>
-                      <div className={`mode-card ${mode === 'manual' ? 'active' : ''}`} onClick={() => setMode('manual')}>
-                        <User size={32} />
-                        <h4>Manual Entry</h4>
-                        <p>Answer a few questions about your background to generate your profile.</p>
+                    ) : (
+                      <div className="mode-cards">
+                        <div className={`mode-card ${mode === 'upload' ? 'active' : ''}`} onClick={() => setMode('upload')}>
+                          <Upload size={32} />
+                          <h4>Upload Resume</h4>
+                          <p>Automatically extract skills, experience, and goals to build your Career Memory instantly.</p>
+                          {mode === 'upload' && (
+                            <>
+                              <div className="file-upload-zone" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+                                <FileText size={24} />
+                                <span>{file ? file.name : "Click to select PDF, DOCX, TXT, PNG, JPG"}</span>
+                                <input type="file" ref={fileInputRef} hidden accept=".pdf,.txt,.png,.jpg,.jpeg,.docx" onChange={handleFileChange} />
+                              </div>
+                              <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleLoadSample(); }}>
+                                  Load Sample Resume
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className={`mode-card ${mode === 'manual' ? 'active' : ''}`} onClick={() => setMode('manual')}>
+                          <User size={32} />
+                          <h4>Manual Entry</h4>
+                          <p>Answer a few questions about your background to generate your profile.</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
@@ -483,11 +521,11 @@ React, JavaScript, Python, Node.js, HTML, CSS, SQL`
               ) : (
                 <Button 
                   variant="primary" 
-                  icon={Sparkles} 
-                  onClick={handlePipelineSubmit} 
-                  disabled={mode === 'upload' && !file}
+                  icon={mode === 'upload' && !extractedData ? Upload : Sparkles} 
+                  onClick={mode === 'upload' && !extractedData ? handleExtractOnly : handlePipelineSubmit} 
+                  disabled={(mode === 'upload' && !file) || isExtracting}
                 >
-                  {mode === 'upload' ? 'Upload & Analyze Resume' : 'Run AI Analysis'}
+                  {isExtracting ? 'Extracting...' : (mode === 'upload' ? (!extractedData ? 'Upload & Extract Resume' : 'Confirm & Analyze Resume') : 'Run AI Analysis')}
                 </Button>
               )}
             </div>

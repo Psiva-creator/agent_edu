@@ -245,12 +245,28 @@ class RoadmapAgent:
                 )
                 if result and result.get("weeks"):
                     logger.info("Roadmap generated via LLM successfully.")
+                    result["source"] = "ai"
                     return result
             except Exception as e:
-                logger.warning(f"LLM roadmap generation failed: {e}. Using fallback.")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] RoadmapAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "RoadmapAgent", "source": "fallback", "reason": reason}
+                )
 
         # ── Fallback: intelligent mock generation ─────────────
-        logger.info("Generating roadmap via intelligent fallback.")
+        logger.warning(
+            "[Fallback] RoadmapAgent using fallback because LLM is unavailable.",
+            extra={"agent": "RoadmapAgent", "source": "fallback", "reason": "llm_unavailable"}
+        )
         return self._generate_fallback(
             skill_gaps, hours_per_week, deadline_weeks,
             current_role, target_role,
@@ -401,6 +417,7 @@ class RoadmapAgent:
         return self._wrap_response(
             weeks, skill_gaps, hours_per_week,
             deadline_weeks, current_role, target_role,
+            source="fallback"
         )
 
     # ─── Week Component Builders ──────────────────────────────
@@ -667,6 +684,7 @@ class RoadmapAgent:
     def _wrap_response(
         weeks: list, skill_gaps: list[str], hours_per_week: int,
         deadline_weeks: int, current_role: str, target_role: str,
+        source: str = "ai"
     ) -> dict:
         """Wrap the weekly data into the full response envelope."""
         return {
@@ -685,4 +703,5 @@ class RoadmapAgent:
                 f"Phases: Foundations → Core Skills → Advanced Topics → "
                 f"Portfolio & Interview Prep."
             ),
+            "source": source
         }

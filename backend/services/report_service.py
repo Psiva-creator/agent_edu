@@ -368,6 +368,7 @@ class ReportService:
             "overall_recommendation": overall_recommendation,
             "next_steps": next_steps,
             "market_data": market_analysis,
+            "source": "ai"
         }
 
         report["report_html"] = self.render_html(report)
@@ -492,6 +493,7 @@ class ReportService:
             ],
             
             "market_data": {},
+            "source": "fallback"
         }
 
         report["report_html"] = self.render_html(report)

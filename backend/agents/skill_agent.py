@@ -79,34 +79,92 @@ Return EXACTLY this JSON structure:
             try:
                 data = await self.llm.generate_json(prompt, system_message=system_msg)
                 if isinstance(data, dict) and "skills" in data:
+                    data["source"] = "ai"
                     return data
             except Exception as e:
-                logger.warning(f"Skill Intelligence generation failed: {e}")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                
+                logger.warning(
+                    f"[Fallback] SkillAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "SkillAgent", "source": "fallback", "reason": reason}
+                )
+                return self._fallback_response(all_skills, current_skills, target_role, experience)
 
-        # Fallback
-        return self._fallback_response(all_skills, current_skills)
+        logger.warning(
+            "[Fallback] SkillAgent using fallback because LLM is unavailable.",
+            extra={"agent": "SkillAgent", "source": "fallback", "reason": "llm_unavailable"}
+        )
+        return self._fallback_response(all_skills, current_skills, target_role, experience)
 
-    def _fallback_response(self, all_skills: list, current_skills: list) -> Dict[str, Any]:
+    def _fallback_response(self, all_skills: list, current_skills: list, target_role: str, experience: int) -> Dict[str, Any]:
         skills_data = []
+        target_role_lower = target_role.lower()
+        
         for s in all_skills:
             is_gap = s not in current_skills
+            s_lower = s.lower()
+            
+            # Dynamic heuristic for market_demand based on skill name
+            if "cloud" in s_lower or "aws" in s_lower or "azure" in s_lower:
+                base_demand = 85
+                cat = "Cloud"
+            elif "data" in s_lower or "sql" in s_lower or "machine learning" in s_lower or "ai" in s_lower:
+                base_demand = 90
+                cat = "Data/AI"
+            elif "react" in s_lower or "node" in s_lower or "frontend" in s_lower or "backend" in s_lower:
+                base_demand = 80
+                cat = "Web Development"
+            else:
+                base_demand = 70
+                cat = "Core"
+                
+            # Bump demand if it aligns with the target role vaguely
+            if any(word in target_role_lower for word in s_lower.split() if len(word) > 2):
+                base_demand = min(98, base_demand + 10)
+                
+            # Target level scales with experience up to a point
+            target_level = min(95, 60 + (experience * 5))
+            
+            # Current level dynamic
+            if is_gap:
+                current_level = 0
+                time_required = 40 + len(s) * 2  # arbitrary variance so it's not identical across skills
+            else:
+                current_level = min(90, 40 + (experience * 5) + (len(s) % 10))
+                time_required = max(5, 20 - (experience * 2))
+                
+            salary_impact = min(90, base_demand - 10 + (experience * 2))
+            
             skills_data.append({
                 "name": s,
                 "is_gap": is_gap,
-                "current_level": 0 if is_gap else 60,
-                "target_level": 85,
-                "market_demand": 75,
-                "salary_impact": 60,
-                "time_required_hours": 40 if is_gap else 10,
-                "category": "Core",
-                "related_skills": ["Related 1", "Related 2"]
+                "current_level": current_level,
+                "target_level": target_level,
+                "market_demand": base_demand,
+                "salary_impact": salary_impact,
+                "time_required_hours": time_required,
+                "category": cat,
+                "related_skills": [f"{s} Fundamentals", f"Advanced {s}"]
             })
         
+        # Sort by market demand so top priority is somewhat intelligent
+        skills_data.sort(key=lambda x: x["market_demand"], reverse=True)
+        
+        overall = min(95, 40 + (experience * 5))
+        
         return {
-            "overall_market_readiness": 50,
-            "top_priority_skill": all_skills[0] if all_skills else "N/A",
+            "overall_market_readiness": overall,
+            "top_priority_skill": skills_data[0]["name"] if skills_data else "N/A",
             "total_learning_hours": sum(s["time_required_hours"] for s in skills_data),
-            "skills": skills_data
+            "skills": skills_data,
+            "source": "fallback"
         }
 
     def _empty_response(self) -> Dict[str, Any]:
@@ -114,5 +172,6 @@ Return EXACTLY this JSON structure:
             "overall_market_readiness": 0,
             "top_priority_skill": "None",
             "total_learning_hours": 0,
-            "skills": []
+            "skills": [],
+            "source": "fallback"
         }

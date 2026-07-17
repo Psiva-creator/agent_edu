@@ -19,6 +19,7 @@ import Badge from '../ui/Badge'
 import EmptyState from '../ui/EmptyState'
 import ScoreRing from '../ui/ScoreRing'
 import Tabs from '../ui/Tabs'
+import FallbackBanner from '../ui/FallbackBanner'
 import './ResumePanel.css'
 
 export default function ResumePanel({ data: existingData, formData }) {
@@ -252,6 +253,7 @@ University of Technology | 2014 - 2018`)
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+        <FallbackBanner source={result.source} />
         {/* Score Cards */}
         <div className="dashboard-row dashboard-row--4">
           <div className="premium-card" style={{ alignItems: 'center', textAlign: 'center' }}>

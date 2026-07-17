@@ -81,16 +81,23 @@ class MentorAgent:
         name = "Candidate"
 
         if isinstance(resume_analysis, dict):
-            skills = resume_analysis.get("extracted_skills", resume_analysis.get("skills", []))
-            experience_years = int(resume_analysis.get("experience_years", 0))
-            current_role = resume_analysis.get("current_role", "Candidate")
-            name = resume_analysis.get("name", "Candidate")
+            skills = resume_analysis.get("extracted_skills") or resume_analysis.get("skills") or []
+            if not isinstance(skills, list):
+                skills = []
+            try:
+                experience_years = int(resume_analysis.get("experience_years") or 0)
+            except (ValueError, TypeError):
+                experience_years = 0
+            current_role = resume_analysis.get("current_role") or "Candidate"
+            name = resume_analysis.get("name") or "Candidate"
 
         # Resolve Skill Gap Analysis
         if not skill_gap_analysis:
             skill_gap_analysis = await sg_agent.analyze_gaps(skills, target_role)
 
-        missing_skills = skill_gap_analysis.get("missing_skills", [])
+        missing_skills = skill_gap_analysis.get("missing_skills") or []
+        if not isinstance(missing_skills, list):
+            missing_skills = []
 
         # Resolve Roadmap
         if not roadmap:
@@ -119,9 +126,25 @@ class MentorAgent:
                 if result and "personalized_advice" in result:
                     return result
             except Exception as e:
-                logger.warning(f"LLM mentorship guidance failed: {e}. Using fallback.")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] MentorAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "MentorAgent", "source": "fallback", "reason": reason}
+                )
 
         # Fallback guidance
+        logger.warning(
+            "[Fallback] MentorAgent using fallback because LLM is unavailable.",
+            extra={"agent": "MentorAgent", "source": "fallback", "reason": "llm_unavailable"}
+        )
         return self._get_guidance_fallback(
             name, current_role, target_role, experience_years,
             skills, missing_skills, roadmap, jobs
@@ -209,6 +232,7 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
                 "motivation": str(data.get("motivation", "")),
                 "common_mistakes": [str(m) for m in data.get("common_mistakes", [])],
                 "learning_strategy": str(data.get("learning_strategy", "")),
+                "source": "ai"
             }
         return {}
 
@@ -290,6 +314,7 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
             "motivation": motivation,
             "common_mistakes": common_mistakes,
             "learning_strategy": learning_strategy,
+            "source": "fallback"
         }
 
     async def answer_question(
@@ -304,14 +329,17 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
             return {"answer": "Please ask a valid career question."}
 
         context_str = ""
-        if career_context:
+        if career_context and isinstance(career_context, dict):
+            skills = career_context.get('skills')
+            if not isinstance(skills, list):
+                skills = []
             context_str = (
-                f"Candidate Name: {career_context.get('name', 'User')}\n"
-                f"Current Role: {career_context.get('current_role', 'Student')}\n"
-                f"Target Role: {career_context.get('target_role', 'Software Engineer')}\n"
-                f"Skills: {', '.join(career_context.get('skills', []))}\n"
-                f"Experience: {career_context.get('experience_years', 0)} years\n"
-                f"Location: {career_context.get('location', 'India')}\n"
+                f"Candidate Name: {career_context.get('name') or 'User'}\n"
+                f"Current Role: {career_context.get('current_role') or 'Student'}\n"
+                f"Target Role: {career_context.get('target_role') or 'Software Engineer'}\n"
+                f"Skills: {', '.join(skills)}\n"
+                f"Experience: {career_context.get('experience_years') or 0} years\n"
+                f"Location: {career_context.get('location') or 'India'}\n"
             )
 
         if self.llm.is_available:
@@ -329,12 +357,30 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
                 )
                 answer = await self.llm.generate(prompt, system_message=system_message)
                 if answer and not answer.is_empty:
-                    return {"answer": answer.content}
+                    return {"answer": answer.content, "source": "ai"}
             except Exception as e:
-                logger.warning(f"LLM question answering failed: {e}")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] MentorAgent (answer) using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "MentorAgent", "source": "fallback", "reason": reason, "operation": "answer"}
+                )
 
         # Fallback question answering
-        target_role = career_context.get('target_role', 'Software Engineer') if career_context else 'your target role'
+        logger.warning(
+            "[Fallback] MentorAgent (answer) using fallback because LLM is unavailable.",
+            extra={"agent": "MentorAgent", "source": "fallback", "reason": "llm_unavailable", "operation": "answer"}
+        )
+        target_role = "your target role"
+        if career_context and isinstance(career_context, dict):
+            target_role = career_context.get('target_role') or 'Software Engineer'
         fallback_answers = [
             f"Focus on building 2-3 real-world portfolio projects targeting {target_role}. "
             f"Hands-on coding, hosting applications, and writing clear documentation will showcase your expertise to hiring managers.",
@@ -352,5 +398,5 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
         elif "network" in question.lower() or "job" in question.lower() or "referral" in question.lower():
             selected_answer = fallback_answers[2]
             
-        return {"answer": selected_answer}
+        return {"answer": selected_answer, "source": "fallback"}
 

@@ -83,6 +83,12 @@ export const uploadResume = async (file) => {
   });
 }
 
+// ── Reparse Edited Resume Text ──
+export const reparseResumeText = async (text) => {
+  const res = await api.post('/resume/upload/reparse', { text })
+  return res.data
+}
+
 // ── Export Resume (PDF) ──
 export const exportResumePdf = async (resumeData) => {
   const res = await api.post('/resume/export/pdf', resumeData, {

@@ -9,6 +9,7 @@ import { askMentor } from '../../services/api'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
+import FallbackBanner from '../ui/FallbackBanner'
 import './MentorPanel.css'
 
 mermaid.initialize({
@@ -95,7 +96,7 @@ export default function MentorPanel({ data: existingData, formData }) {
       // Backend returns MentorQuestionResponse { answer: "..." }
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: result.answer || result.advice || 'I don\'t have specific advice for that yet.' },
+        { role: 'assistant', content: result.answer || result.advice || 'I don\'t have specific advice for that yet.', source: result.source },
       ])
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }])
@@ -122,6 +123,12 @@ export default function MentorPanel({ data: existingData, formData }) {
             <p>Ask me anything about your career path</p>
           </div>
         </div>
+        
+        {messages.some(m => m.source === 'fallback') && (
+          <div style={{ padding: '0 16px' }}>
+            <FallbackBanner source="fallback" />
+          </div>
+        )}
 
         {/* Messages */}
         <div className="mentor-panel__messages" ref={scrollRef}>

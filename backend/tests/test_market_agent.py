@@ -21,7 +21,8 @@ class TestMarketAgent:
         assert len(result["trends"]) > 0
         assert "future_opportunities" in result
         assert len(result["future_opportunities"]) > 0
-        assert result["demand_score"] == 92.0
+        assert isinstance(result["demand_score"], float)
+        assert 0.0 <= result["demand_score"] <= 100.0
         assert "emerging_technologies" in result
         assert len(result["emerging_technologies"]) > 0
         assert "in_demand_skills" in result
@@ -33,5 +34,6 @@ class TestMarketAgent:
         result = await agent.analyze_market(industry="custom legacy sector", location="Global")
         
         assert result["industry"] == "custom legacy sector"
-        assert result["demand_score"] == 75.0
+        assert isinstance(result["demand_score"], float)
+        assert 0.0 <= result["demand_score"] <= 100.0
         assert len(result["trends"]) > 0

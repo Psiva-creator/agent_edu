@@ -126,11 +126,28 @@ Return ONLY this exact JSON (no markdown wraps):
                         "hints": [str(h) for h in data.get("hints", [])],
                         "expected_answer": str(data.get("expected_answer", "")),
                         "time_limit_seconds": int(data.get("time_limit_seconds", config["time_limit"])),
+                        "source": "ai"
                     }
             except Exception as e:
-                logger.warning(f"Interview question generation failed: {e}")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] InterviewAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "InterviewAgent", "source": "fallback", "reason": reason, "operation": "generate_question"}
+                )
 
-        return self._fallback_question(round_type, career_context, config)
+        logger.warning(
+            "[Fallback] InterviewAgent using fallback because LLM is unavailable.",
+            extra={"agent": "InterviewAgent", "source": "fallback", "reason": "llm_unavailable", "operation": "generate_question"}
+        )
+        return self._fallback_question(round_type, career_context, config, question_number)
 
     # ─── Answer Evaluation ────────────────────────────────────────
 
@@ -159,6 +176,7 @@ Return ONLY this exact JSON (no markdown wraps):
                 "strengths": [],
                 "weaknesses": ["No answer submitted"],
                 "improved_answer": expected_answer,
+                "source": "fallback"
             }
 
         prompt = f"""You are evaluating a candidate's answer in a {config['label']} interview.
@@ -213,10 +231,27 @@ Return ONLY this exact JSON (no markdown):
                         "strengths": [str(s) for s in data.get("strengths", [])],
                         "weaknesses": [str(w) for w in data.get("weaknesses", [])],
                         "improved_answer": str(data.get("improved_answer", "")),
+                        "source": "ai"
                     }
             except Exception as e:
-                logger.warning(f"Answer evaluation failed: {e}")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] InterviewAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "InterviewAgent", "source": "fallback", "reason": reason, "operation": "evaluate_answer"}
+                )
 
+        logger.warning(
+            "[Fallback] InterviewAgent using fallback because LLM is unavailable.",
+            extra={"agent": "InterviewAgent", "source": "fallback", "reason": "llm_unavailable", "operation": "evaluate_answer"}
+        )
         return self._fallback_evaluation(candidate_answer, expected_answer)
 
     # ─── Final Score ──────────────────────────────────────────────
@@ -293,10 +328,27 @@ Generate a final interview report. Return ONLY this JSON:
                         "summary": str(data.get("summary", "")),
                         "next_steps": [str(s) for s in data.get("next_steps", [])],
                         "question_scores": scores,
+                        "source": "ai"
                     }
             except Exception as e:
-                logger.warning(f"Final score generation failed: {e}")
+                error_msg = str(e).lower()
+                reason = "unknown_error"
+                if "quota" in error_msg or "429" in error_msg:
+                    reason = "quota_exhausted"
+                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
+                    reason = "auth_error"
+                elif "timeout" in error_msg:
+                    reason = "timeout"
+                    
+                logger.warning(
+                    f"[Fallback] InterviewAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
+                    extra={"agent": "InterviewAgent", "source": "fallback", "reason": reason, "operation": "generate_final_score"}
+                )
 
+        logger.warning(
+            "[Fallback] InterviewAgent using fallback because LLM is unavailable.",
+            extra={"agent": "InterviewAgent", "source": "fallback", "reason": "llm_unavailable", "operation": "generate_final_score"}
+        )
         return self._fallback_final_score(overall, scores, all_strengths, all_weaknesses)
 
     # ─── Helpers ──────────────────────────────────────────────────
@@ -333,21 +385,55 @@ Generate a final interview report. Return ONLY this JSON:
         if score >= 55: return "Maybe"
         return "No Hire"
 
-    def _fallback_question(self, round_type: str, ctx: Dict[str, Any], config: Dict) -> Dict[str, Any]:
+    def _fallback_question(self, round_type: str, ctx: Dict[str, Any], config: Dict, question_number: int = 1) -> Dict[str, Any]:
         role = ctx.get("target_role", "Software Engineer")
         skills = ctx.get("skills", ["Python"])
         skill = skills[0] if skills else "Python"
 
         questions = {
-            "hr": f"Why do you want to become a {role}? What motivates you most about this career path?",
-            "technical": f"Explain how you would optimize a slow database query in a {skill} application.",
-            "behavioral": f"Tell me about a time you faced a technical challenge in one of your projects. How did you resolve it?",
-            "system_design": f"Design a scalable REST API for a job board platform targeting {role} roles. Walk me through your architecture.",
-            "coding": f"Write a function in {skill} to find the longest substring without repeating characters.",
+            "hr": [
+                f"Why do you want to become a {role}? What motivates you most about this career path?",
+                "Where do you see yourself in 5 years?",
+                "How do you handle conflicts within a team?",
+                "What is your expected salary and why?",
+                "Describe your ideal work environment."
+            ],
+            "technical": [
+                f"Explain how you would optimize a slow database query in a {skill} application.",
+                f"What are the main differences between relational and non-relational databases when working with {skill}?",
+                f"How do you handle memory management and avoid leaks in {skill}?",
+                f"Describe a complex architectural pattern you've implemented for a {role} project.",
+                f"How do you ensure your code is secure against common vulnerabilities in {skill}?"
+            ],
+            "behavioral": [
+                f"Tell me about a time you faced a technical challenge in one of your projects. How did you resolve it?",
+                "Describe a situation where you had to disagree with a team member. What was the outcome?",
+                "Give an example of a time you had to learn a new technology quickly.",
+                "Tell me about a project that failed. What did you learn from it?",
+                "Describe a time you went above and beyond your duties for a project."
+            ],
+            "system_design": [
+                f"Design a scalable REST API for a job board platform targeting {role} roles. Walk me through your architecture.",
+                "How would you design a rate limiter for a distributed system?",
+                "Design a URL shortener service. Discuss the database schema and scaling strategies.",
+                "How would you architecture a real-time chat application?",
+                "Design a highly available notification system that can send millions of messages daily."
+            ],
+            "coding": [
+                f"Write a function in {skill} to find the longest substring without repeating characters.",
+                f"Implement a binary search algorithm in {skill} and explain its time complexity.",
+                f"Write a function in {skill} to reverse a linked list.",
+                f"How would you detect a cycle in a directed graph using {skill}?",
+                f"Implement an LRU cache in {skill}."
+            ],
         }
 
+        q_list = questions.get(round_type, questions["technical"])
+        idx = (question_number - 1) % len(q_list)
+        selected_q = q_list[idx]
+
         return {
-            "question": questions.get(round_type, questions["technical"]),
+            "question": selected_q,
             "difficulty": "Medium",
             "hints": [
                 "Think about the core concepts involved.",
@@ -356,6 +442,7 @@ Generate a final interview report. Return ONLY this JSON:
             ],
             "expected_answer": f"A strong answer would demonstrate deep knowledge of {skill} and practical experience as a {role}.",
             "time_limit_seconds": config["time_limit"],
+            "source": "fallback"
         }
 
     def _fallback_evaluation(self, answer: str, expected: str) -> Dict[str, Any]:
@@ -367,6 +454,7 @@ Generate a final interview report. Return ONLY this JSON:
             "strengths": ["Attempted the question", "Provided some relevant information"],
             "weaknesses": ["Could be more detailed", "Missing key concepts from the expected answer"],
             "improved_answer": expected,
+            "source": "fallback"
         }
 
     def _fallback_final_score(self, overall: int, scores: List[int], strengths: List[str], weaknesses: List[str]) -> Dict[str, Any]:
@@ -383,6 +471,7 @@ Generate a final interview report. Return ONLY this JSON:
                 "Build projects demonstrating your target role skills",
             ],
             "question_scores": scores,
+            "source": "fallback"
         }
 
     def _empty_final_score(self) -> Dict[str, Any]:
@@ -395,4 +484,5 @@ Generate a final interview report. Return ONLY this JSON:
             "summary": "No evaluations found.",
             "next_steps": [],
             "question_scores": [],
+            "source": "fallback"
         }

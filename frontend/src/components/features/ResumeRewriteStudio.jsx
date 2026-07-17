@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, Copy, CheckCircle2, Sparkles, AlertCircle } from 'lucide-react'
 import { rewriteResumeBullets } from '../../services/api'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
+import FallbackBanner from '../ui/FallbackBanner'
 import './ResumeRewriteStudio.css'
 
 export default function ResumeRewriteStudio() {
@@ -13,6 +14,7 @@ export default function ResumeRewriteStudio() {
   const [acceptedIds, setAcceptedIds] = useState(new Set())
   const [rejectedIds, setRejectedIds] = useState(new Set())
   const [copiedId, setCopiedId] = useState(null)
+  const [source, setSource] = useState(null)
 
   const handleScan = async () => {
     const resumeText = memory.personal_info?.resume_text || memory.raw_report?.resume_text
@@ -30,6 +32,7 @@ export default function ResumeRewriteStudio() {
       const data = await rewriteResumeBullets({ resume_text: resumeText, target_role: targetRole })
       if (data && data.rewrites) {
         setRewrites(data.rewrites.map((r, idx) => ({ ...r, id: `rewrite-${idx}` })))
+        setSource(data.source)
         setAcceptedIds(new Set())
         setRejectedIds(new Set())
       }
@@ -119,6 +122,7 @@ export default function ResumeRewriteStudio() {
 
       {!loading && rewrites.length > 0 && (
         <div className="rewrite-cards">
+          <FallbackBanner source={source} />
           <AnimatePresence>
             {rewrites.map((rewrite) => {
               const isAccepted = acceptedIds.has(rewrite.id)
