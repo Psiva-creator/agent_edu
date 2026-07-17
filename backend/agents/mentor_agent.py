@@ -383,9 +383,8 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
         if career_context and isinstance(career_context, dict):
             target_role = career_context.get('target_role') or 'your academic goals'
             
-        # Seed random with the question string so the same question gets the same answer consistently
-        seed = int(hashlib.md5(question.encode()).hexdigest(), 16)
-        rng = random.Random(seed)
+        # Use unseeded random so it generates completely different responses every time
+        rng = random.Random()
         
         intros = [
             f"That's a fantastic question regarding your journey toward {target_role}.",
