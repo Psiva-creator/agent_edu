@@ -643,7 +643,7 @@ class LLMService:
             return True
 
         # Connection errors
-        if "APIConnectionError" in error_name or "ConnectionError" in error_name:
+        if "APIConnectionError" in error_name or "ConnectionError" in error_name or "ReadError" in error_name:
             return True
 
         return False

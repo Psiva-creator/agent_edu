@@ -38,11 +38,11 @@ export default function CoverLetterStudio() {
   }, [paragraphs])
 
   const handleGenerate = async () => {
-    const resumeText = memory.personal_info?.resume_text || memory.raw_report?.resume_text
-    const targetRole = memory.personal_info?.target_role || 'Software Engineer'
-    const skills = memory.personal_info?.skills || []
-    const experienceYears = memory.personal_info?.experience_years || 0
-    const projects = memory.raw_report?.projects || []
+    const resumeText = memory.personal_info?.resume_text || memory.raw_report?.resume_text || ''
+    const targetRole = memory.personal_info?.target_role || memory.raw_report?.target_role || 'Software Engineer'
+    const skills = memory.resume_intelligence?.extracted_skills || memory.resume_intelligence?.skills || memory.personal_info?.skills || []
+    const experienceYears = memory.resume_intelligence?.experience_years || memory.personal_info?.experience_years || 0
+    const projects = memory.resume_intelligence?.projects || memory.raw_report?.projects || []
 
     if (!resumeText) {
       setError("No resume text found in Career Memory. Please analyze your resume first.")

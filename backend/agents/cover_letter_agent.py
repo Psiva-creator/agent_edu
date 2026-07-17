@@ -68,22 +68,28 @@ class CoverLetterAgent:
         role = data.get("target_role", "the open position")
         tone = data.get("tone", "Formal")
         skills = data.get("skills", [])
+        company_name = data.get("company_name")
+        hiring_manager = data.get("hiring_manager")
+        
+        c_name = company_name if company_name else "your organization"
+        h_manager = hiring_manager if hiring_manager else "Hiring Team"
+        
         top_skills = ", ".join(skills[:3]) if skills else "my skills"
         exp = data.get("experience_years", 0)
         exp_text = f"{exp} years of experience" if exp > 0 else "my academic and project background"
         
         # Add dynamic tone phrasing
         if tone.lower() == "startup":
-            greeting = "Hi Team,"
-            closing = "I'm pumped to bring my hustle to your organization. Thanks!"
+            greeting = f"Hi {h_manager},"
+            closing = f"I'm pumped to bring my hustle to {c_name}. Thanks!"
         else:
-            greeting = "Dear Hiring Team,"
-            closing = "I am excited about the opportunity to bring my unique blend of skills to your organization. Thank you for your time and consideration."
+            greeting = f"Dear {h_manager},"
+            closing = f"I am excited about the opportunity to bring my unique blend of skills to {c_name}. Thank you for your time and consideration."
             
         return {
             "paragraphs": [
                 {
-                    "text": f"{greeting}\n\nI am writing to express my strong interest in the {role} position. With my background and passion for delivering results, I am confident in my ability to contribute effectively to your team.",
+                    "text": f"{greeting}\n\nI am writing to express my strong interest in the {role} position. With my background and passion for delivering results, I am confident in my ability to contribute effectively to {c_name}.",
                     "explanation": "Standard opening to state intent clearly."
                 },
                 {

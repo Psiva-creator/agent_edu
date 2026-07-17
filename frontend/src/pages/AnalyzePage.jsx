@@ -297,11 +297,11 @@ export default function AnalyzePage() {
         const mentorPrompt = `I have just uploaded my profile for the role of ${targetRole}. My top skills are ${skills.slice(0,3).join(', ')}. Please introduce yourself as my AI Career Mentor.`
         const mentorRes = await askMentor({
           question: mentorPrompt,
-          career_context: JSON.stringify({
+          career_context: {
             target_role: targetRole,
             skills: skills,
             skill_gaps: skillGaps
-          })
+          }
         })
         reportResult.mentor_context = mentorRes
         updateProgress('mentor', 'success')
