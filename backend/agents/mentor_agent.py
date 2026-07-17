@@ -7,6 +7,8 @@ skill gap analysis, roadmap progress, and job recommendations.
 """
 
 import logging
+import hashlib
+import random
 from typing import Optional, Union, List, Dict, Any
 
 from services.llm_service import LLMService
@@ -248,63 +250,62 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
         jobs: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Provide fallback career mentorship guidance without OpenAI."""
-        first_gap = missing_skills[0] if missing_skills else "advanced concepts"
-        second_gap = missing_skills[1] if len(missing_skills) > 1 else "related tools"
+        first_gap = missing_skills[0] if missing_skills else "advanced academic concepts"
+        second_gap = missing_skills[1] if len(missing_skills) > 1 else "research methodologies"
 
         # Personalized Advice
         if experience_years == 0:
             advice = (
-                f"Hi {name}! As you start your journey toward becoming a {target_role}, "
-                f"your priority is building a foundation in {first_gap}. Focus on "
-                f"practical project creation to validate your skills to recruiters. "
-                f"Building a strong personal GitHub repository will showcase your skills."
+                f"Hi {name}! As you focus on your education toward becoming a {target_role}, "
+                f"your academic priority is building a strong foundation in {first_gap}. Focus on "
+                f"understanding the theoretical concepts deeply and applying them to course projects to stand out."
             )
         else:
             advice = (
-                f"Hi {name}! Transitioning from {current_role} to {target_role} is a highly strategic path. "
+                f"Hi {name}! Elevating your education in {target_role} is a highly strategic path. "
                 f"With {experience_years} years of background, you possess valuable domain insights. "
-                f"Your immediate learning target should be acquiring knowledge in {first_gap} and {second_gap}."
+                f"Your immediate academic target should be mastering {first_gap} and {second_gap}."
             )
 
         # Goals
         weekly_goals = [
-            f"Set up a dedicated learning environment for {first_gap}.",
-            f"Spend 2 hours reviewing basic documentation and tutorials on {first_gap}.",
-            "Create a new workspace directory for practice projects.",
-            f"Read a professional article about {target_role} development patterns."
+            f"Set up a dedicated, distraction-free study environment for {first_gap}.",
+            f"Spend 2 hours reviewing course materials and academic literature on {first_gap}.",
+            "Form a study group or connect with a classmate to discuss recent lectures.",
+            f"Read an academic journal or professional article about {target_role} trends."
         ]
 
         monthly_goals = [
-            f"Build and host a clean portfolio project featuring {first_gap}.",
-            f"Integrate {second_gap} into your projects to demonstrate full application skills.",
-            f"Optimize your resume and online profile to match {target_role} job requirements.",
-            "Complete 3 system design or problem-solving mock assessments."
+            f"Complete a comprehensive academic project or research paper featuring {first_gap}.",
+            f"Integrate {second_gap} into your coursework to demonstrate advanced understanding.",
+            f"Visit your professor or academic advisor during office hours to discuss your career path.",
+            "Complete 3 mock exams or practice problem sets."
         ]
 
         # Interview Tips
         interview_tips = [
-            f"Prepare to describe projects featuring {first_gap} using the STAR format.",
-            "Emphasize your background and how your past experiences benefit the team.",
-            "Practice coding on a whiteboard or shared editor, narrating your thought process.",
-            f"Understand the main performance trade-offs associated with {first_gap} technologies."
+            f"Prepare to discuss your academic coursework featuring {first_gap} using the STAR format.",
+            "Emphasize your educational background and how your university projects benefit the team.",
+            "Highlight your ability to learn quickly and adapt to new academic challenges.",
+            f"Understand the main theoretical principles associated with {first_gap}."
         ]
 
         # Mistakes to avoid
         common_mistakes = [
-            "Tutorial Hell: spending hours watching videos without writing original code.",
-            "Neglecting fundamentals and copy-pasting code blocks without full comprehension.",
-            "Failing to document your work or showcase projects on public platforms.",
-            "Applying to roles without customizing your summary to fit the specific role."
+            "Cramming: trying to memorize everything the night before an exam instead of spaced repetition.",
+            "Neglecting fundamentals and skipping foundational lectures without full comprehension.",
+            "Failing to ask questions in class or during office hours when confused.",
+            "Ignoring your mental health and burning out from excessive academic stress."
         ]
 
         # Learning strategy
         learning_strategy = (
-            "We recommend adopting a 20/80 active learning strategy. Allocate 20% of your study "
-            "time to theoretical tutorials, and spend the remaining 80% actively writing code, "
-            "debugging, and creating functional applications. This builds strong engineering muscle memory."
+            "We recommend adopting the Feynman Technique for your studies. "
+            "Explain complex concepts in simple terms as if teaching them to someone else. "
+            "This exposes any gaps in your understanding and solidifies long-term academic retention."
         )
 
-        motivation = "Consistency beats intensity. Keep showing up every single day and you will get there!"
+        motivation = "Education is a marathon, not a sprint. Keep showing up every single day and you will achieve your academic goals!"
 
         return {
             "personalized_advice": advice,
@@ -378,25 +379,76 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
             "[Fallback] MentorAgent (answer) using fallback because LLM is unavailable.",
             extra={"agent": "MentorAgent", "source": "fallback", "reason": "llm_unavailable", "operation": "answer"}
         )
-        target_role = "your target role"
+        target_role = "your academic goals"
         if career_context and isinstance(career_context, dict):
-            target_role = career_context.get('target_role') or 'Software Engineer'
-        fallback_answers = [
-            f"Focus on building 2-3 real-world portfolio projects targeting {target_role}. "
-            f"Hands-on coding, hosting applications, and writing clear documentation will showcase your expertise to hiring managers.",
-            "Consistency beats intensity! Dedicate a structured 1-2 hours daily to coding, "
-            "focus on understanding the basic software design patterns, and avoid tutorial hell.",
-            "Reach out to engineering leads or developers in similar roles on LinkedIn. "
-            "Ask for 15-minute informational interviews to understand how they work day-to-day."
+            target_role = career_context.get('target_role') or 'your academic goals'
+            
+        # Seed random with the question string so the same question gets the same answer consistently
+        seed = int(hashlib.md5(question.encode()).hexdigest(), 16)
+        rng = random.Random(seed)
+        
+        intros = [
+            f"That's a fantastic question regarding your journey toward {target_role}.",
+            "I'm glad you asked that! Navigating your education effectively is crucial.",
+            "Great question. Balancing academic theory and practical application is key here.",
+            f"This is a very common challenge for students aiming for {target_role}."
         ]
-        # Choose a response
-        selected_answer = fallback_answers[0]
-        if "project" in question.lower() or "portfolio" in question.lower():
-            selected_answer = fallback_answers[0]
-        elif "study" in question.lower() or "learn" in question.lower() or "consist" in question.lower():
-            selected_answer = fallback_answers[1]
-        elif "network" in question.lower() or "job" in question.lower() or "referral" in question.lower():
-            selected_answer = fallback_answers[2]
+        
+        body_points_academic = [
+            "First, prioritize mastering the core theoretical concepts. Without a solid foundation, advanced topics will become overwhelming.",
+            "Consider forming a study group. Explaining complex concepts to peers using the Feynman Technique is one of the best ways to solidify your understanding.",
+            "Don't hesitate to utilize your professor's office hours. Asking targeted questions shows initiative and helps clear up confusion early.",
+            "Make sure to read academic journals and supplementary materials, not just the textbook. Broadening your sources improves critical thinking."
+        ]
+        
+        body_points_practical = [
+            "Beyond coursework, try to apply what you've learned to a practical university project or research paper.",
+            "Look into internships or teaching assistant positions. Practical experience on campus is highly valued by future employers.",
+            "Build a portfolio of your academic projects. Documenting your methodology and results is just as important as the code or research itself.",
+            "Participate in hackathons or academic conferences to network and apply your knowledge under pressure."
+        ]
+        
+        body_points_wellness = [
+            "Remember that consistency beats intensity. A structured 1-2 hours of daily study is far more effective than cramming the night before.",
+            "Maintain a healthy work-life balance. Adequate sleep and exercise are scientifically proven to enhance memory retention and cognitive function.",
+            "Watch out for academic burnout. Take scheduled breaks using the Pomodoro technique to keep your mind fresh.",
+            "Don't be too hard on yourself if you hit a roadblock. Education is a marathon, and resilience is the most important skill you can learn."
+        ]
+        
+        conclusions = [
+            "Keep pushing forward, you've got this!",
+            "Stay curious and keep exploring your academic interests.",
+            "I believe in your potential. Let me know if you need any more advice!",
+            f"Stick to this strategy and you'll excel in {target_role}."
+        ]
+        
+        # Pick one from each category deterministically based on the question
+        intro = rng.choice(intros)
+        pt1 = rng.choice(body_points_academic)
+        pt2 = rng.choice(body_points_practical)
+        pt3 = rng.choice(body_points_wellness)
+        conclusion = rng.choice(conclusions)
+        
+        # Override with highly specific advice if certain keywords are present
+        diagram = ""
+        q_lower = question.lower()
+        if "exam" in q_lower or "test" in q_lower or "study" in q_lower:
+            pt1 = "For exams, active recall and spaced repetition are your absolute best tools. Stop passively re-reading your notes and start testing yourself with flashcards or practice tests."
+            pt3 = "Make sure you get 8 full hours of sleep before the test. Cramming will only harm your working memory and increase test anxiety."
+            diagram = "\n\n```mermaid\ngraph TD\n    A[Review Material] --> B{Understand?}\n    B -- Yes --> C[Create Flashcards]\n    B -- No --> D[Use Feynman Technique]\n    D --> A\n    C --> E[Spaced Repetition]\n    E --> F[Acing the Exam!]\n```\n"
+            
+        elif "intern" in q_lower or "job" in q_lower or "career" in q_lower:
+            pt2 = "Start applying for internships early in the semester. Make sure your academic projects are highlighted clearly on your resume, emphasizing the problem-solving aspects."
+            diagram = "\n\n```mermaid\ngraph LR\n    A[Build Projects] --> B[Update Resume]\n    B --> C[Network/Referrals]\n    C --> D[Apply Online]\n    D --> E[Mock Interviews]\n    E --> F((Offer!))\n```\n"
+            
+        elif "stress" in q_lower or "burnout" in q_lower or "health" in q_lower or "balance" in q_lower:
+            pt3 = "If you're feeling overwhelmed, step away from your books. Taking a 24-hour break will reset your cortisol levels and make you much more productive when you return."
+            diagram = "\n\n```mermaid\npie title Study-Life Balance\n    \"Focused Study\" : 40\n    \"Sleep\" : 33\n    \"Exercise/Breaks\" : 15\n    \"Social/Free Time\" : 12\n```\n"
+        else:
+            diagram = "\n\n```mermaid\ngraph TD\n    A[Foundational Knowledge] --> B[Practical Academic Projects]\n    B --> C[Network with Professors]\n    C --> D{Mastery of Subject}\n```\n"
+
+        # Construct a well-formatted multi-paragraph response
+        selected_answer = f"{intro}\n\n{pt1} {pt2}\n\n{pt3}\n{diagram}\n{conclusion}"
             
         return {"answer": selected_answer, "source": "fallback"}
 

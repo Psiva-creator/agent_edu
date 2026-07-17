@@ -558,6 +558,7 @@ class LLMService:
                     or getattr(e, "code", None) == 429
                 )
                 if is_quota_error and self.provider == "gemini":
+                    logger.error(f"Quota error triggered: {e} (code: {getattr(e, 'code', None)})")
                     if self._rotate_gemini_key():
                         self.stats.total_retries += 1
                         # Retry immediately with the new key — no sleep needed
