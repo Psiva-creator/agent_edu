@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_API_KEY_2: Optional[str] = None
     GEMINI_API_KEY_3: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-2.5-flash-lite"
+    GEMINI_MODEL: str = "gemini-flash-latest"
 
     @property
     def gemini_api_keys(self) -> list[str]:

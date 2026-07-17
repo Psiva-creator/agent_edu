@@ -493,15 +493,16 @@ class LLMService:
                     f"{self._gemini_cooldown_until - now:.0f}s, skipping call."
                 )
                 return LLMResponse(content="", model=self.model)
-            elif self._gemini_cooldown_until and self._current_key_index != 0:
-                # Cooldown expired — retry from the first key again.
+            
+            # Reset to first key for any fresh request if not already there
+            if self._current_key_index != 0:
                 self._current_key_index = 0
                 self._gemini_cooldown_until = 0.0
                 try:
                     self.gemini_client = genai.Client(api_key=self._gemini_api_keys[0])
-                    logger.info("Gemini cooldown elapsed, retrying from first API key.")
+                    logger.info("Resetting Gemini client to first API key for fresh request.")
                 except Exception as e:
-                    logger.error(f"Failed to re-initialize Gemini client after cooldown: {e}")
+                    logger.error(f"Failed to re-initialize Gemini client: {e}")
 
         for attempt in range(self.retry_config.max_retries + 1):
             try:

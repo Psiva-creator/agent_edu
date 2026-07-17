@@ -368,6 +368,10 @@ class ReportService:
             "overall_recommendation": overall_recommendation,
             "next_steps": next_steps,
             "market_data": market_analysis,
+            "resume_text": data.get("resume_text", ""),
+            "skills": extracted_skills,
+            "experience_years": experience_years,
+            "projects": data.get("projects", []),
             "source": "ai"
         }
 
@@ -493,6 +497,10 @@ class ReportService:
             ],
             
             "market_data": {},
+            "resume_text": data.get("resume_text", ""),
+            "skills": skills,
+            "experience_years": exp,
+            "projects": data.get("projects", []),
             "source": "fallback"
         }
 

@@ -435,6 +435,10 @@ class CareerReportResponse(BaseModel):
     overall_recommendation: str = ""
     next_steps: list[str] = []
     market_data: dict = {}
+    skills: list[str] = []
+    experience_years: int = 0
+    resume_text: str = ""
+    projects: list[dict] = []
     source: str = "ai"
 
 
