@@ -215,6 +215,13 @@ class LLMService:
         # ── Gemini key rotation setup ─────────────────────────
         self._gemini_api_keys: list[str] = settings.gemini_api_keys
         self._current_key_index: int = 0
+        # Once every configured key hits quota, we stop hammering the API
+        # and fall back to canned answers — but only for this cooldown
+        # window, after which we retry from the first key again. Without
+        # this, a single burst of traffic permanently locks a warm
+        # serverless instance into fallback mode until it cold-starts.
+        self._gemini_cooldown_until: float = 0.0
+        self._gemini_cooldown_seconds: float = 60.0
 
         if self._gemini_api_keys:
             if genai:
@@ -476,6 +483,26 @@ class LLMService:
         """
         last_error = None
 
+        if self.provider == "gemini" and self._gemini_api_keys:
+            now = time.time()
+            if now < self._gemini_cooldown_until:
+                # Still cooling down from exhausting every key — don't
+                # waste a call, go straight to fallback.
+                logger.info(
+                    f"Gemini cooldown active for another "
+                    f"{self._gemini_cooldown_until - now:.0f}s, skipping call."
+                )
+                return LLMResponse(content="", model=self.model)
+            elif self._gemini_cooldown_until and self._current_key_index != 0:
+                # Cooldown expired — retry from the first key again.
+                self._current_key_index = 0
+                self._gemini_cooldown_until = 0.0
+                try:
+                    self.gemini_client = genai.Client(api_key=self._gemini_api_keys[0])
+                    logger.info("Gemini cooldown elapsed, retrying from first API key.")
+                except Exception as e:
+                    logger.error(f"Failed to re-initialize Gemini client after cooldown: {e}")
+
         for attempt in range(self.retry_config.max_retries + 1):
             try:
                 start_time = time.perf_counter()
@@ -581,8 +608,10 @@ class LLMService:
             )
             return True
         logger.error(
-            f"All {len(self._gemini_api_keys)} Gemini API key(s) exhausted."
+            f"All {len(self._gemini_api_keys)} Gemini API key(s) exhausted. "
+            f"Falling back for {self._gemini_cooldown_seconds:.0f}s before retrying."
         )
+        self._gemini_cooldown_until = time.time() + self._gemini_cooldown_seconds
         return False
 
     def _is_retryable(self, error: Exception) -> bool:
