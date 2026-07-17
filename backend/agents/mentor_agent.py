@@ -383,73 +383,60 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
         if career_context and isinstance(career_context, dict):
             target_role = career_context.get('target_role') or 'your academic goals'
             
-        # Use unseeded random so it generates completely different responses every time
-        rng = random.Random()
+        q_lower = question.lower().strip()
         
-        intros = [
-            f"That's a fantastic question regarding your journey toward {target_role}.",
-            "I'm glad you asked that! Navigating your education effectively is crucial.",
-            "Great question. Balancing academic theory and practical application is key here.",
-            f"This is a very common challenge for students aiming for {target_role}."
-        ]
-        
-        body_points_academic = [
-            "First, prioritize mastering the core theoretical concepts. Without a solid foundation, advanced topics will become overwhelming.",
-            "Consider forming a study group. Explaining complex concepts to peers using the Feynman Technique is one of the best ways to solidify your understanding.",
-            "Don't hesitate to utilize your professor's office hours. Asking targeted questions shows initiative and helps clear up confusion early.",
-            "Make sure to read academic journals and supplementary materials, not just the textbook. Broadening your sources improves critical thinking."
-        ]
-        
-        body_points_practical = [
-            "Beyond coursework, try to apply what you've learned to a practical university project or research paper.",
-            "Look into internships or teaching assistant positions. Practical experience on campus is highly valued by future employers.",
-            "Build a portfolio of your academic projects. Documenting your methodology and results is just as important as the code or research itself.",
-            "Participate in hackathons or academic conferences to network and apply your knowledge under pressure."
-        ]
-        
-        body_points_wellness = [
-            "Remember that consistency beats intensity. A structured 1-2 hours of daily study is far more effective than cramming the night before.",
-            "Maintain a healthy work-life balance. Adequate sleep and exercise are scientifically proven to enhance memory retention and cognitive function.",
-            "Watch out for academic burnout. Take scheduled breaks using the Pomodoro technique to keep your mind fresh.",
-            "Don't be too hard on yourself if you hit a roadblock. Education is a marathon, and resilience is the most important skill you can learn."
-        ]
-        
-        conclusions = [
-            "Keep pushing forward, you've got this!",
-            "Stay curious and keep exploring your academic interests.",
-            "I believe in your potential. Let me know if you need any more advice!",
-            f"Stick to this strategy and you'll excel in {target_role}."
-        ]
-        
-        # Pick one from each category deterministically based on the question
-        intro = rng.choice(intros)
-        pt1 = rng.choice(body_points_academic)
-        pt2 = rng.choice(body_points_practical)
-        pt3 = rng.choice(body_points_wellness)
-        conclusion = rng.choice(conclusions)
-        
-        # Override with highly specific advice if certain keywords are present
-        diagram = ""
-        q_lower = question.lower()
-        if "exam" in q_lower or "test" in q_lower or "study" in q_lower:
-            pt1 = "For exams, active recall and spaced repetition are your absolute best tools. Stop passively re-reading your notes and start testing yourself with flashcards or practice tests."
-            pt3 = "Make sure you get 8 full hours of sleep before the test. Cramming will only harm your working memory and increase test anxiety."
-            diagram = "\n\n```mermaid\ngraph TD\n    A[Review Material] --> B{Understand?}\n    B -- Yes --> C[Create Flashcards]\n    B -- No --> D[Use Feynman Technique]\n    D --> A\n    C --> E[Spaced Repetition]\n    E --> F[Acing the Exam!]\n```\n"
+        # Handle greetings
+        if q_lower in ["hi", "hello", "hey", "help"]:
+            answer = f"Hello! I am your AI Education Mentor. I am here to help you navigate your academic journey toward {target_role}. What specific topics or challenges can I help you with today?"
+            return {"answer": answer, "source": "fallback"}
             
-        elif "intern" in q_lower or "job" in q_lower or "career" in q_lower:
-            pt2 = "Start applying for internships early in the semester. Make sure your academic projects are highlighted clearly on your resume, emphasizing the problem-solving aspects."
-            diagram = "\n\n```mermaid\ngraph LR\n    A[Build Projects] --> B[Update Resume]\n    B --> C[Network/Referrals]\n    C --> D[Apply Online]\n    D --> E[Mock Interviews]\n    E --> F((Offer!))\n```\n"
+        # Keyword: Study / Exams
+        if "exam" in q_lower or "test" in q_lower or "study" in q_lower or "learn" in q_lower:
+            answer = (
+                f"To tackle your question about studying, I highly recommend moving away from passive reading. "
+                f"For {target_role}, you need deep comprehension. Use 'Active Recall'—test yourself constantly without looking at the material. "
+                f"Combine this with the Pomodoro technique (25 minutes of intense focus, 5 minutes of rest) to maximize retention before your exams."
+            )
+            return {"answer": answer, "source": "fallback"}
             
-        elif "stress" in q_lower or "burnout" in q_lower or "health" in q_lower or "balance" in q_lower:
-            pt3 = "If you're feeling overwhelmed, step away from your books. Taking a 24-hour break will reset your cortisol levels and make you much more productive when you return."
-            diagram = "\n\n```mermaid\npie title Study-Life Balance\n    \"Focused Study\" : 40\n    \"Sleep\" : 33\n    \"Exercise/Breaks\" : 15\n    \"Social/Free Time\" : 12\n```\n"
-        else:
-            diagram = "\n\n```mermaid\ngraph TD\n    A[Foundational Knowledge] --> B[Practical Academic Projects]\n    B --> C[Network with Professors]\n    C --> D{Mastery of Subject}\n```\n"
+        # Keyword: Internships / Jobs / Career
+        if "intern" in q_lower or "job" in q_lower or "career" in q_lower or "resume" in q_lower:
+            answer = (
+                f"Regarding your career search: The most effective way to land an internship in {target_role} is through "
+                f"proof of work. Recruiters want to see what you've built, not just what you've studied. "
+                f"I suggest polishing 2-3 university projects, putting them on GitHub or a personal portfolio, and proactively reaching out to university alumni on LinkedIn for referrals."
+            )
+            return {"answer": answer, "source": "fallback"}
+            
+        # Keyword: Stress / Burnout / Time management
+        if "stress" in q_lower or "burnout" in q_lower or "health" in q_lower or "balance" in q_lower or "time" in q_lower:
+            answer = (
+                f"Balancing academics and life is tough. If you're feeling overwhelmed, taking a step back is actually the most productive thing you can do. "
+                f"Ensure you are getting at least 7-8 hours of sleep, as sleep is when your brain consolidates what you've learned. "
+                f"Protect your time by time-blocking your calendar specifically for deep work versus relaxation."
+            )
+            return {"answer": answer, "source": "fallback"}
+            
+        # Keyword: Project / Code
+        if "project" in q_lower or "code" in q_lower or "build" in q_lower or "error" in q_lower:
+            answer = (
+                f"When working on technical projects for {target_role}, getting stuck is part of the process. "
+                f"Try to break the problem down into the smallest possible components. If you are facing an error, carefully read the stack trace from top to bottom. "
+                f"Building hands-on projects is exactly how you bridge the gap between academic theory and industry expectations."
+            )
+            return {"answer": answer, "source": "fallback"}
 
-        # Construct a well-formatted multi-paragraph response
-        selected_answer = f"{intro}\n\n{pt1} {pt2}\n\n{pt3}\n{diagram}\n{conclusion}"
+        # Smart Catch-all for everything else (Echoes their exact question)
+        # We strip question marks and capitalize properly for the echo
+        clean_q = question.strip(' ?.!').capitalize()
+        answer = (
+            f"That is an excellent point regarding '{clean_q}'.\n\n"
+            f"When approaching this in the context of {target_role}, the key is to tie it back to core fundamentals. "
+            f"I recommend exploring academic journals, official documentation, or speaking directly with your professors about this specific topic to gain a deeper, more technical understanding. "
+            f"How else can I assist you with this?"
+        )
             
-        return {"answer": selected_answer, "source": "fallback"}
+        return {"answer": answer, "source": "fallback"}
 
 if __name__ == "__main__":
     import asyncio
