@@ -5,7 +5,7 @@ All API models for request validation and response serialization.
 These power Swagger/OpenAPI auto-documentation.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional
 from enum import Enum
 
@@ -281,10 +281,20 @@ class RoadmapRequest(BaseModel):
     """Request to generate a career roadmap."""
     current_role: str = Field(default="Student", description="User's current role")
     target_role: str = Field(default="Software Engineer", description="Desired target role")
-    skill_gaps: list[str] = Field([], description="Skills the user needs to learn")
+    skill_gaps: Optional[list[str]] = Field(default=[], description="Skills the user needs to learn")
     hours_per_week: int = Field(default=10, ge=1, le=80, description="Available study hours per week")
     deadline_weeks: int = Field(default=10, ge=1, le=52, description="Total weeks for the roadmap")
-    skills: list[str] = Field([], description="User's current skills")
+    skills: Optional[list[str]] = Field(default=[], description="User's current skills")
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_lists(cls, values):
+        if isinstance(values, dict):
+            if values.get("skills") is None:
+                values["skills"] = []
+            if values.get("skill_gaps") is None:
+                values["skill_gaps"] = []
+        return values
 
     model_config = {"json_schema_extra": {
         "examples": [{
@@ -379,10 +389,18 @@ class CareerReportRequest(BaseModel):
     name: str = Field(..., description="Candidate full name")
     current_role: str = Field(..., description="Current job role or status")
     target_role: str = Field(..., description="Target career role")
-    skills: list[str] = Field([], description="Current technical skills")
+    skills: Optional[list[str]] = Field(default=[], description="Current technical skills")
     experience_years: int = Field(0, ge=0, description="Years of professional experience")
     education: Optional[str] = Field(None, description="Highest education level")
     location: Optional[str] = Field(None, description="Current location")
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_skills(cls, values):
+        """Coerce null/None skills to an empty list."""
+        if isinstance(values, dict) and values.get("skills") is None:
+            values["skills"] = []
+        return values
 
     model_config = {"json_schema_extra": {
         "examples": [{
@@ -531,10 +549,20 @@ class CoverLetterRequest(BaseModel):
     job_description: Optional[str] = Field(None, description="The job description of the selected job")
     company_name: Optional[str] = Field(None, description="Company name applying to")
     hiring_manager: Optional[str] = Field(None, description="Name of the hiring manager")
-    skills: list[str] = Field(default=[], description="User skills")
+    skills: Optional[list[str]] = Field(default=[], description="User skills")
     experience_years: int = Field(default=0, description="Years of experience")
-    projects: list[dict] = Field(default=[], description="Relevant projects")
+    projects: Optional[list[dict]] = Field(default=[], description="Relevant projects")
     tone: str = Field(default="Formal", description="The tone of the cover letter (e.g., Formal, Startup, Friendly)")
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_lists(cls, values):
+        if isinstance(values, dict):
+            if values.get("skills") is None:
+                values["skills"] = []
+            if values.get("projects") is None:
+                values["projects"] = []
+        return values
 
 class CoverLetterParagraph(BaseModel):
     text: str = Field(..., description="The actual content of the paragraph")
