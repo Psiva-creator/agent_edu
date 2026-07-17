@@ -12,6 +12,8 @@ export default function CoverLetterStudio() {
   const { memory } = useCareerMemory()
   const [tone, setTone] = useState('Formal')
   const [jobDescription, setJobDescription] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [hiringManager, setHiringManager] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [source, setSource] = useState(null)
@@ -58,6 +60,8 @@ export default function CoverLetterStudio() {
         experience_years: experienceYears,
         projects,
         job_description: jobDescription,
+        company_name: companyName,
+        hiring_manager: hiringManager,
         tone
       })
       
@@ -74,7 +78,7 @@ export default function CoverLetterStudio() {
 
   const handleParagraphChange = (index, newText) => {
     const newParagraphs = [...paragraphs]
-    newParagraphs[index].text = newText
+    newParagraphs[index] = { ...newParagraphs[index], text: newText }
     setParagraphs(newParagraphs)
   }
 
@@ -144,6 +148,30 @@ export default function CoverLetterStudio() {
                 {t}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="cls-row">
+            <label className="cls-label">Company Name (Optional)</label>
+            <input 
+              className="cls-textarea"
+              style={{ minHeight: '40px', padding: '0.6rem' }}
+              placeholder="e.g. Acme Corp"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+            />
+          </div>
+          
+          <div className="cls-row">
+            <label className="cls-label">Hiring Manager (Optional)</label>
+            <input 
+              className="cls-textarea"
+              style={{ minHeight: '40px', padding: '0.6rem' }}
+              placeholder="e.g. Jane Doe"
+              value={hiringManager}
+              onChange={(e) => setHiringManager(e.target.value)}
+            />
           </div>
         </div>
 

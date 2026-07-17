@@ -394,6 +394,8 @@ Tone: {tone}
 
 User Context:
 - Target Role: {target_role}
+- Company Name: {company_name}
+- Hiring Manager: {hiring_manager}
 - Resume: {resume_text}
 - Skills: {skills}
 - Experience: {experience_years} years

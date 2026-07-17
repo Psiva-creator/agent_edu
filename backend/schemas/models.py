@@ -525,6 +525,8 @@ class CoverLetterRequest(BaseModel):
     resume_text: str = Field(..., description="The user's resume text")
     target_role: str = Field(..., description="The target role applied for")
     job_description: Optional[str] = Field(None, description="The job description of the selected job")
+    company_name: Optional[str] = Field(None, description="Company name applying to")
+    hiring_manager: Optional[str] = Field(None, description="Name of the hiring manager")
     skills: list[str] = Field(default=[], description="User skills")
     experience_years: int = Field(default=0, description="Years of experience")
     projects: list[dict] = Field(default=[], description="Relevant projects")

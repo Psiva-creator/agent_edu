@@ -29,6 +29,8 @@ class CoverLetterAgent:
         prompt = COVER_LETTER_PROMPT.format(
             tone=data.get("tone", "Formal"),
             target_role=data.get("target_role", "Role"),
+            company_name=data.get("company_name") or "Not provided",
+            hiring_manager=data.get("hiring_manager") or "Not provided",
             resume_text=data.get("resume_text", "")[:3000],
             skills=", ".join(skills),
             experience_years=data.get("experience_years", 0),
