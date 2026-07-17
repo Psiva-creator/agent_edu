@@ -8,8 +8,8 @@
 
 .card--pad-none { padding: 0; }
 .card--pad-sm   { padding: var(--space-3); }
-.card--pad-md   { padding: var(--space-5); }
-.card--pad-lg   { padding: var(--space-8); }
+.card--pad-md   { padding: var(--space-4); }
+.card--pad-lg   { padding: var(--space-6); }
 
 .card--hover:hover {
   border-color: var(--border-accent);

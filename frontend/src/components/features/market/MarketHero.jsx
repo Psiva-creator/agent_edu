@@ -2,66 +2,68 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, RefreshCw, Briefcase, Zap } from 'lucide-react';
 import Card from '../../ui/Card';
-import CareerWeather from './CareerWeather';
 import MarketPulse from './MarketPulse';
 
 export default function MarketHero({ marketData, targetRole }) {
   const demandScore = marketData.demand_score || 0;
   const pulse = marketData.market_pulse || 'Healthy';
-  const weather = marketData.career_weather || 'Sunny';
+  const growthPrediction = marketData.growth_prediction || '+5% YoY';
 
   return (
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="col-span-full">
-      <Card padding="none" className="market-hero-card">
+      <Card padding="none" className="market-hero-card relative overflow-hidden border-[var(--border-default)]">
         {/* Animated Particles Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[20%] left-[10%] w-64 h-64 bg-[var(--accent-primary)] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob"></div>
           <div className="absolute top-[30%] right-[10%] w-64 h-64 bg-[var(--info)] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob" style={{ animationDelay: '2s' }}></div>
           <div className="absolute -bottom-[20%] left-[40%] w-64 h-64 bg-[var(--success)] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob" style={{ animationDelay: '4s' }}></div>
         </div>
 
-        <div className="p-8 md:p-12 flex flex-col md:flex-row justify-between relative z-10">
-          <div className="market-hero__content flex-1 max-w-2xl">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <span className="market-hero__badge bg-[rgba(var(--accent-primary-rgb),0.1)] text-[var(--accent-primary)] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-[rgba(var(--accent-primary-rgb),0.2)]">
-                AI Market Intelligence
-              </span>
-              <MarketPulse pulse={pulse} />
-            </div>
-            
-            <h1 className="market-hero__title mb-4">
-              Market Intelligence for <br/>
-              <span className="text-gradient leading-tight">{targetRole}</span>
+        <div className="px-6 py-8 md:px-8 md:py-10 flex flex-col lg:flex-row lg:items-center justify-between relative z-10 gap-8">
+          
+          <div className="flex-1 max-w-xl flex flex-col justify-center">
+            <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
+              <span className="text-white block">Market Intelligence:</span>
+              <span className="text-gradient block mt-1">{targetRole}</span>
             </h1>
             
-            <div className="market-hero__meta mt-6">
-              <div className="meta-item">
-                <Briefcase size={16} className="text-[var(--accent-primary)]" />
+            <div className="flex flex-wrap gap-x-6 gap-y-3 text-[13px] font-medium text-[var(--text-secondary)]">
+              <div className="flex items-center gap-2">
+                <Briefcase size={14} className="text-[var(--accent-primary)]" />
                 <span>Enterprise Grade AI Analysis</span>
               </div>
-              <div className="meta-item">
-                <Zap size={16} className="text-[var(--warning)]" />
+              <div className="flex items-center gap-2">
+                <Zap size={14} className="text-[var(--warning)]" />
                 <span>Predictive Modeling</span>
               </div>
-              <div className="meta-item">
-                <RefreshCw size={16} className="text-[var(--info)]" />
+              <div className="flex items-center gap-2 w-full lg:w-auto">
+                <RefreshCw size={14} className="text-[var(--info)]" />
                 <span>Live Data Sync</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-8 mt-8 md:mt-0">
-            <div className="hidden md:block">
-              <CareerWeather condition={weather} />
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-8 lg:gap-12 mt-4 lg:mt-0">
+            
+            {/* Hiring Growth */}
+            <div className="flex flex-col items-end text-right">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--text-secondary)] mb-2">Hiring Growth</span>
+              <div className="flex items-center gap-2">
+                <TrendingUp size={20} className="text-[var(--success)]" />
+                <span className="text-[19px] md:text-[21px] font-bold text-white max-w-[320px] leading-snug">
+                  {growthPrediction} growth predicted over the next 5 years.
+                </span>
+              </div>
             </div>
 
-            <div className="flex flex-col items-end shrink-0">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--text-secondary)] mb-1">Market Demand</span>
-              <div className="flex items-end gap-2">
-                <span className="text-6xl font-bold tracking-tighter leading-none text-gradient">{demandScore}</span>
-                <span className="text-xl font-medium text-[var(--text-secondary)] mb-1">/ 100</span>
+            {/* Demand Score */}
+            <div className="flex flex-col items-end min-w-[140px]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--text-secondary)] mb-2">Market Demand</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-5xl md:text-6xl font-bold tracking-tighter leading-none text-gradient">{demandScore}</span>
+                <span className="text-sm font-bold text-white">/ 100</span>
               </div>
-              <div className="mt-3 bg-[var(--bg-modifier-hover)] h-1.5 w-full rounded-full overflow-hidden">
+              <div className="mt-3 w-full bg-[var(--bg-modifier-hover)] h-1 rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }} 
                   animate={{ width: `${demandScore}%` }} 
@@ -70,6 +72,7 @@ export default function MarketHero({ marketData, targetRole }) {
                 />
               </div>
             </div>
+
           </div>
         </div>
       </Card>

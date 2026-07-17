@@ -79,3 +79,9 @@ exports/
 test_results.txt
 .vercel
 .env*
+
+# Database
+*.db
+# Scratch
+scratch/
+

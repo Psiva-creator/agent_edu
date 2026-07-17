@@ -3,10 +3,11 @@ import { useTheme } from '../../context/ThemeContext'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
 import { 
   Sun, Moon, Laptop, Trash2, User, Sparkles, Camera, Upload, X, CheckCircle2,
-  Mail, ShieldCheck, GraduationCap, Briefcase, Calendar, ChevronDown, Search, Phone
+  Mail, ShieldCheck, GraduationCap, Briefcase, Calendar, ChevronDown, Search, Phone, Lock
 } from 'lucide-react'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
+import { getProfile, saveProfile, sendMobileOtp, verifyMobileOtp } from '../../services/api'
 import './SettingsPanel.css'
 
 const UNIVERSITIES = [
@@ -62,7 +63,7 @@ export default function SettingsPanel() {
 
   // State fields
   const [name, setName] = useState(memory.personal_info?.name || '')
-  const [email, setEmail] = useState(memory.personal_info?.email || 'student@university.edu')
+  const [email, setEmail] = useState(memory.personal_info?.email || '')
   const [university, setUniversity] = useState(memory.personal_info?.education || '')
   const [graduationYear, setGraduationYear] = useState(memory.personal_info?.graduationYear || '')
   const [targetCareer, setTargetCareer] = useState(memory.personal_info?.target_role || '')
@@ -78,6 +79,7 @@ export default function SettingsPanel() {
   const [isEditingEmail, setIsEditingEmail] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isFetchingProfile, setIsFetchingProfile] = useState(true)
   const [showToast, setShowToast] = useState(false)
   const [toastText, setToastText] = useState('Profile updated successfully.')
 
@@ -86,6 +88,13 @@ export default function SettingsPanel() {
   const [otpCode, setOtpCode] = useState('')
   const [otpError, setOtpError] = useState('')
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
+  const [isEditingPhone, setIsEditingPhone] = useState(false)
+  const [otpModalOpen, setOtpModalOpen] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  const [isSendingOtp, setIsSendingOtp] = useState(false)
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
+
+  const otpDigitsRef = useRef([])
 
   // Autocomplete UI states
   const [universityQuery, setUniversityQuery] = useState(memory.personal_info?.education || '')
@@ -96,6 +105,34 @@ export default function SettingsPanel() {
   // Refs for click outside
   const universityRef = useRef(null)
   const careerRef = useRef(null)
+
+  // Fetch profile database values on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getProfile()
+        if (data) {
+          setName(data.name || '')
+          setEmail(data.email || '')
+          setUniversity(data.education || '')
+          setUniversityQuery(data.education || '')
+          setGraduationYear(data.graduationYear || '')
+          setTargetCareer(data.target_role || '')
+          setAvatarPreview(data.avatarUrl || '')
+          setCountryCode(data.country_code || '+91')
+          setPhoneNumber(data.phone_number || '')
+          setIsVerified(data.phone_verified || false)
+          
+          updatePersonalInfo(data)
+        }
+      } catch (err) {
+        console.error('Failed to load profile from database:', err)
+      } finally {
+        setIsFetchingProfile(false)
+      }
+    }
+    fetchProfile()
+  }, [])
 
   // Sync state if memory changes externally
   useEffect(() => {
@@ -141,27 +178,25 @@ export default function SettingsPanel() {
   // Dirty check to show Save / Cancel buttons
   const isDirty = useMemo(() => {
     const origName = memory.personal_info?.name || ''
-    const origEmail = memory.personal_info?.email || 'student@university.edu'
     const origUniv = memory.personal_info?.education || ''
     const origGrad = memory.personal_info?.graduationYear || ''
     const origCareer = memory.personal_info?.target_role || ''
     const origAvatar = memory.personal_info?.avatarUrl || ''
-    const origCountryCode = memory.personal_info?.country_code || '+91'
+    const origCountry = memory.personal_info?.country_code || '+91'
     const origPhone = memory.personal_info?.phone_number || ''
-    const origPhoneVerified = memory.personal_info?.phone_verified || false
+    const origVerified = memory.personal_info?.phone_verified || false
 
     return (
       name !== origName ||
-      email !== origEmail ||
       university !== origUniv ||
       graduationYear !== origGrad ||
       targetCareer !== origCareer ||
       avatarPreview !== origAvatar ||
-      countryCode !== origCountryCode ||
+      countryCode !== origCountry ||
       phoneNumber !== origPhone ||
-      isVerified !== origPhoneVerified
+      isVerified !== origVerified
     )
-  }, [name, email, university, graduationYear, targetCareer, avatarPreview, countryCode, phoneNumber, isVerified, memory.personal_info])
+  }, [name, university, graduationYear, targetCareer, avatarPreview, countryCode, phoneNumber, isVerified, memory.personal_info])
 
   // Validation
   const handleNameChange = (e) => {
@@ -174,32 +209,7 @@ export default function SettingsPanel() {
     }
   }
 
-  const handlePhoneChange = (e) => {
-    let rawVal = e.target.value.replace(/[^0-9]/g, '') // strip non-numeric
-    
-    // Format the number: e.g. for a 10 digit number: 98765 43210
-    let formatted = rawVal
-    if (rawVal.length > 5) {
-      formatted = `${rawVal.slice(0, 5)} ${rawVal.slice(5, 10)}`
-    }
-    
-    setPhoneNumber(formatted)
-    validatePhone(countryCode, rawVal)
-  }
 
-  const validatePhone = (code, rawNumber) => {
-    if (!rawNumber) {
-      setPhoneError('')
-      return
-    }
-    if (rawNumber.length < 10) {
-      setPhoneError('Phone number must be at least 10 digits')
-    } else if (rawNumber.length > 11) {
-      setPhoneError('Phone number cannot exceed 11 digits')
-    } else {
-      setPhoneError('')
-    }
-  }
 
   // Drag and drop image upload handlers
   const handleDragOver = (e) => {
@@ -239,35 +249,11 @@ export default function SettingsPanel() {
     setAvatarPreview('')
   }
 
-  const handleStartVerification = () => {
-    if (phoneError || !phoneNumber) return
-    setOtpSent(true)
-    setOtpError('')
-    setOtpCode('')
-  }
 
-  const handleVerifyOtp = async () => {
-    if (otpCode.length !== 4) {
-      setOtpError('Please enter a 4-digit code')
-      return
-    }
-    setIsVerifyingOtp(true)
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setIsVerifyingOtp(false)
-    
-    if (otpCode === '1234') { // Hardcoded mock code
-      setIsVerified(true)
-      setOtpSent(false)
-      setOtpError('')
-    } else {
-      setOtpError('Invalid OTP code. Try entering 1234')
-    }
-  }
 
   const handleCancel = () => {
     setName(memory.personal_info?.name || '')
-    setEmail(memory.personal_info?.email || 'student@university.edu')
+    setEmail(memory.personal_info?.email || '')
     setUniversity(memory.personal_info?.education || '')
     setUniversityQuery(memory.personal_info?.education || '')
     setGraduationYear(memory.personal_info?.graduationYear || '')
@@ -276,13 +262,160 @@ export default function SettingsPanel() {
     setCountryCode(memory.personal_info?.country_code || '+91')
     setPhoneNumber(memory.personal_info?.phone_number || '')
     setIsVerified(memory.personal_info?.phone_verified || false)
-    setOtpSent(false)
-    setOtpCode('')
     setNameError('')
-    setEmailError('')
+    setPhoneError('')
+    setIsEditingPhone(false)
+  }
+
+  // Resend OTP Countdown Timer
+  useEffect(() => {
+    let timer = null
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(timer)
+  }, [countdown])
+
+  const handleOtpDigitChange = (index, value) => {
+    const cleanVal = value.replace(/[^0-9]/g, '')
+    if (!cleanVal) {
+      const newDigits = [...otpDigits]
+      newDigits[index] = ''
+      setOtpDigits(newDigits)
+      return
+    }
+
+    const digit = cleanVal[cleanVal.length - 1]
+    const newDigits = [...otpDigits]
+    newDigits[index] = digit
+    setOtpDigits(newDigits)
+
+    if (index < 5) {
+      otpDigitsRef.current[index + 1]?.focus()
+    }
+  }
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpDigitsRef.current[index - 1]?.focus()
+    }
+  }
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault()
+    const text = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6)
+    if (text) {
+      const newDigits = [...otpDigits]
+      for (let i = 0; i < 6; i++) {
+        newDigits[i] = text[i] || ''
+      }
+      setOtpDigits(newDigits)
+      const focusIndex = Math.min(text.length, 5)
+      otpDigitsRef.current[focusIndex]?.focus()
+    }
+  }
+
+  const handleSendOtp = async () => {
+    if (!phoneNumber || phoneNumber.trim().length < 7) {
+      setPhoneError('Please enter a valid mobile number')
+      return
+    }
+
+    setIsSendingOtp(true)
     setPhoneError('')
     setOtpError('')
-    setIsEditingEmail(false)
+
+    const fullPhone = `${countryCode}${phoneNumber.trim()}`
+
+    try {
+      const res = await sendMobileOtp(fullPhone)
+      if (res && res.success) {
+        setOtpSent(true)
+        setOtpModalOpen(true)
+        setOtpDigits(['', '', '', '', '', ''])
+        setCountdown(30)
+        
+        setToastText("Verification code sent.")
+        setShowToast(true)
+        setTimeout(() => setShowToast(false), 3000)
+      } else {
+        setPhoneError(res.message || 'Failed to send verification code.')
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || 'Failed to send OTP. Please try again.'
+      setPhoneError(errorMsg)
+    } finally {
+      setIsSendingOtp(false)
+    }
+  }
+
+  const handleVerifyOtp = async () => {
+    const fullCode = otpDigits.join('')
+    if (fullCode.length !== 6) {
+      setOtpError('Please enter all 6 digits')
+      return
+    }
+
+    setIsVerifyingOtp(true)
+    setOtpError('')
+
+    const fullPhone = `${countryCode}${phoneNumber.trim()}`
+
+    try {
+      const res = await verifyMobileOtp(fullPhone, fullCode)
+      if (res && res.success) {
+        setIsVerified(true)
+        setOtpModalOpen(false)
+        setIsEditingPhone(false)
+        
+        try {
+          await saveProfile({
+            name,
+            email,
+            education: university,
+            graduationYear,
+            target_role: targetCareer,
+            avatarUrl: avatarPreview,
+            country_code: countryCode,
+            phone_number: phoneNumber,
+            phone_verified: true
+          })
+          
+          updatePersonalInfo({
+            name,
+            email,
+            education: university,
+            graduationYear,
+            target_role: targetCareer,
+            avatarUrl: avatarPreview,
+            country_code: countryCode,
+            phone_number: phoneNumber,
+            phone_verified: true
+          })
+        } catch (saveErr) {
+          console.error("Auto-save failed after verification:", saveErr)
+        }
+
+        setToastText("Mobile number verified successfully!")
+        setShowToast(true)
+        setTimeout(() => setShowToast(false), 3000)
+      } else {
+        setOtpError(res.message || 'Incorrect verification code.')
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || 'Incorrect verification code.'
+      setOtpError(errorMsg)
+    } finally {
+      setIsVerifyingOtp(false)
+    }
+  }
+
+  const handleCloseOtpModal = () => {
+    setOtpModalOpen(false)
+    setOtpDigits(['', '', '', '', '', ''])
+    setOtpError('')
   }
 
   const handleSave = async () => {
@@ -290,16 +423,27 @@ export default function SettingsPanel() {
       setNameError('Full Name is required')
       return
     }
-    if (phoneError) {
-      return
-    }
 
     setIsLoading(true)
 
+    try {
+      await saveProfile({
+        name,
+        email,
+        education: university,
+        graduationYear,
+        target_role: targetCareer,
+        avatarUrl: avatarPreview,
+        country_code: countryCode,
+        phone_number: phoneNumber,
+        phone_verified: isVerified
+      })
+    } catch (err) {
+      console.error('Failed to save profile to database:', err)
+    }
+
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1200))
-
-    const phoneChanged = phoneNumber !== (memory.personal_info?.phone_number || '')
 
     updatePersonalInfo({
       name,
@@ -314,7 +458,7 @@ export default function SettingsPanel() {
     })
 
     setIsLoading(false)
-    setToastText(phoneChanged ? "Mobile number updated successfully." : "Profile updated successfully.")
+    setToastText("Profile updated successfully.")
     setShowToast(true)
 
     setTimeout(() => {
@@ -345,6 +489,27 @@ export default function SettingsPanel() {
       .slice(0, 2)
       .toUpperCase()
   }, [name])
+
+  if (isFetchingProfile) {
+    return (
+      <div className="settings-panel animate-fade-in-up">
+        <div className="settings-panel__section">
+          <h3 className="settings-panel__sec-title">Profile Settings</h3>
+          <p className="settings-panel__sec-desc">Loading your profile information...</p>
+          <div className="profile-card skeleton-card" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ width: '110px', height: '110px', borderRadius: '50%', background: 'var(--bg-elevated)' }} className="animate-pulse"></div>
+            <div style={{ height: '1px', background: 'var(--border-default)', width: '100%' }}></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+              <div style={{ height: '40px', background: 'var(--bg-elevated)', borderRadius: '8px' }} className="animate-pulse"></div>
+              <div style={{ height: '40px', background: 'var(--bg-elevated)', borderRadius: '8px' }} className="animate-pulse"></div>
+              <div style={{ height: '40px', background: 'var(--bg-elevated)', borderRadius: '8px' }} className="animate-pulse"></div>
+              <div style={{ height: '40px', background: 'var(--bg-elevated)', borderRadius: '8px' }} className="animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="settings-panel animate-fade-in-up">
@@ -441,61 +606,22 @@ export default function SettingsPanel() {
                 <div className="input-group__wrapper flex-1">
                   <Mail size={16} className="input-group__icon text-tertiary" />
                   <input
-                    type="email"
-                    placeholder="Enter email address"
-                    value={email}
-                    disabled={!isEditingEmail}
-                    onChange={(e) => {
-                      setEmail(e.target.value)
-                      if (emailError) setEmailError('')
-                    }}
-                    className={`input-group__input input-group__input--icon ${!isEditingEmail ? 'input-read-only' : ''}`}
+                    type="text"
+                    value={email || 'Not added'}
+                    readOnly
+                    className="input-group__input input-group__input--icon input-read-only"
                   />
-                  {!isEditingEmail && (
+                  {email && (
                     <div className="verified-badge-wrap">
                       <ShieldCheck size={14} className="text-success" />
                       <span>Verified</span>
                     </div>
                   )}
                 </div>
-                
-                {isEditingEmail ? (
-                  <div className="email-edit-actions">
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      onClick={() => {
-                        setIsEditingEmail(false)
-                        setEmail(memory.personal_info?.email || 'student@university.edu')
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      variant="primary" 
-                      size="sm" 
-                      onClick={() => {
-                        if (!email.trim() || !email.includes('@')) {
-                          setEmailError('Valid email is required')
-                          return
-                        }
-                        setIsEditingEmail(false)
-                      }}
-                    >
-                      Done
-                    </Button>
-                  </div>
-                ) : (
-                  <button 
-                    type="button" 
-                    className="email-change-btn" 
-                    onClick={() => setIsEditingEmail(true)}
-                  >
-                    Change Email
-                  </button>
-                )}
               </div>
-              {emailError && <span className="profile-input-error-msg">{emailError}</span>}
+              <p className="profile-helper-text" style={{ fontSize: '11px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                <Lock size={12} /> Managed by your login account
+              </p>
             </div>
 
             {/* College / University (Autocomplete) */}
@@ -544,58 +670,101 @@ export default function SettingsPanel() {
                 <Phone size={15} />
                 Mobile Number
               </label>
-              <div className="mobile-row">
-                <div className={`input-group__wrapper flex-1 ${phoneError ? 'input-error' : ''}`}>
-                  <Phone size={16} className="input-group__icon text-tertiary" />
-                  <div className="country-code-select-wrapper">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => {
-                        setCountryCode(e.target.value)
-                        const raw = phoneNumber.replace(/[^0-9]/g, '')
-                        validatePhone(e.target.value, raw)
-                      }}
-                      className="country-code-select"
-                    >
-                      <option value="+91">🇮🇳 +91</option>
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+61">🇦🇺 +61</option>
-                      <option value="+65">🇸🇬 +65</option>
-                    </select>
-                    <ChevronDown size={12} className="country-code-chevron" />
+              
+              {!isEditingPhone ? (
+                // View Mode
+                <div className="mobile-row">
+                  <div className="input-group__wrapper flex-1">
+                    <Phone size={16} className="input-group__icon text-tertiary" />
+                    <input
+                      type="text"
+                      value={phoneNumber ? `${countryCode} ${phoneNumber}` : 'Not added'}
+                      readOnly
+                      className="input-group__input input-group__input--icon input-read-only"
+                    />
+                    {isVerified && (
+                      <div className="verified-badge-wrap phone-verified-badge">
+                        <ShieldCheck size={14} className="text-success" />
+                        <span>Verified</span>
+                      </div>
+                    )}
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Enter your mobile number"
-                    value={phoneNumber}
-                    onChange={handlePhoneChange}
-                    className="input-group__input mobile-input-field"
-                  />
-                  {phoneNumber && !phoneError && (
-                    <div className="phone-valid-checkmark" title="Valid Format">
-                      <CheckCircle2 size={16} className="text-success" />
-                    </div>
-                  )}
-                </div>
-                
-                {isVerified ? (
-                  <div className="verified-badge-wrap phone-verified-badge">
-                    <ShieldCheck size={14} className="text-success" />
-                    <span>Verified</span>
-                  </div>
-                ) : (
-                  <button 
-                    type="button" 
-                    className="phone-verify-btn" 
-                    onClick={handleStartVerification}
-                    disabled={!!phoneError || !phoneNumber}
+                  <button
+                    type="button"
+                    className="email-change-btn"
+                    onClick={() => setIsEditingPhone(true)}
                   >
-                    Verify
+                    Change
                   </button>
-                )}
-              </div>
+                </div>
+              ) : (
+                // Edit Mode
+                <div className="mobile-row">
+                  <div className={`input-group__wrapper flex-1 ${phoneError ? 'input-error' : ''}`}>
+                    <Phone size={16} className="input-group__icon text-tertiary" />
+                    <div className="country-code-select-wrapper">
+                      <select
+                        value={countryCode}
+                        onChange={(e) => {
+                          setCountryCode(e.target.value)
+                          setIsVerified(false)
+                        }}
+                        className="country-code-select"
+                      >
+                        <option value="+91">+91</option>
+                        <option value="+1">+1</option>
+                        <option value="+44">+44</option>
+                        <option value="+61">+61</option>
+                        <option value="+65">+65</option>
+                        <option value="+971">+971</option>
+                        <option value="+49">+49</option>
+                        <option value="+33">+33</option>
+                        <option value="+81">+81</option>
+                      </select>
+                      <ChevronDown size={12} className="country-code-chevron" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter mobile number"
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '')
+                        setPhoneNumber(val)
+                        setPhoneError('')
+                        setIsVerified(false)
+                      }}
+                      className="input-group__input input-group__input--icon mobile-input-field"
+                    />
+                  </div>
+                  <div className="email-edit-actions">
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={!phoneNumber || phoneNumber.trim().length < 7 || isSendingOtp}
+                      className="phone-verify-btn"
+                    >
+                      {isSendingOtp ? 'Sending...' : 'Verify'}
+                    </button>
+                    <button
+                      type="button"
+                      className="email-change-btn"
+                      onClick={() => {
+                        setIsEditingPhone(false)
+                        setCountryCode(memory.personal_info?.country_code || '+91')
+                        setPhoneNumber(memory.personal_info?.phone_number || '')
+                        setIsVerified(memory.personal_info?.phone_verified || false)
+                        setPhoneError('')
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
               {phoneError && <span className="profile-input-error-msg">{phoneError}</span>}
+              <p className="profile-helper-text" style={{ fontSize: '11px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                Verify via OTP to secure your account and enable SMS alerts.
+              </p>
             </div>
 
             {/* Target Career (Searchable dropdown) */}
@@ -665,61 +834,6 @@ export default function SettingsPanel() {
                 <ChevronDown size={16} className="select__chevron" />
               </div>
             </div>
-
-            {/* OTP Section (renders inline inside the form layout) */}
-            {otpSent && (
-              <div className="otp-verification-container">
-                <div className="otp-info">
-                  <span>We've sent a mock 4-digit verification code to <strong>{countryCode} {phoneNumber}</strong>.</span>
-                </div>
-                <div className="otp-inputs-row">
-                  <input
-                    type="text"
-                    maxLength="4"
-                    placeholder="Enter 4-digit code (Use 1234)"
-                    value={otpCode}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, '')
-                      setOtpCode(val)
-                      if (otpError) setOtpError('')
-                    }}
-                    className="input-group__input otp-input"
-                    disabled={isVerifyingOtp}
-                  />
-                  <Button 
-                    variant="primary" 
-                    size="sm" 
-                    onClick={handleVerifyOtp}
-                    loading={isVerifyingOtp}
-                  >
-                    Verify Code
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    onClick={() => setOtpSent(false)}
-                    disabled={isVerifyingOtp}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-                {otpError && <span className="profile-input-error-msg">{otpError}</span>}
-                <div className="otp-resend">
-                  <span>Didn't receive the code? </span>
-                  <button 
-                    type="button" 
-                    className="resend-link" 
-                    onClick={() => {
-                      setOtpCode('')
-                      setOtpError('')
-                      alert('Mock OTP code sent! Enter 1234 to verify.')
-                    }}
-                  >
-                    Resend OTP
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Form Action Footer */}
@@ -738,7 +852,7 @@ export default function SettingsPanel() {
                 size="md" 
                 onClick={handleSave}
                 loading={isLoading}
-                disabled={!!nameError || !!phoneError || isLoading}
+                disabled={!!nameError || isLoading}
               >
                 Save Changes
               </Button>
@@ -821,6 +935,95 @@ export default function SettingsPanel() {
           )}
         </Card>
       </div>
+
+      {/* OTP Verification Modal */}
+      {otpModalOpen && (
+        <div className="otp-modal-overlay">
+          <div className="otp-modal-card animate-scale-in">
+            <button 
+              type="button" 
+              className="otp-modal-close" 
+              onClick={handleCloseOtpModal}
+              aria-label="Close modal"
+            >
+              <X size={18} />
+            </button>
+            
+            <div className="otp-modal-header">
+              <div className="theme-card__icon-wrap" style={{ background: 'rgba(79, 70, 229, 0.08)', color: 'var(--accent-primary)', marginBottom: '12px' }}>
+                <Phone size={24} />
+              </div>
+              <h4>Verify Mobile Number</h4>
+              <p>Enter the 6-digit code we sent to your mobile number</p>
+              <span className="otp-masked-number">{countryCode} {phoneNumber}</span>
+            </div>
+            
+            <div className="otp-modal-body">
+              <div className="otp-inputs-grid" onPaste={handleOtpPaste}>
+                {otpDigits.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={(el) => (otpDigitsRef.current[idx] = el)}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                    className="otp-digit-input"
+                  />
+                ))}
+              </div>
+              
+              {otpError && (
+                <span className="profile-input-error-msg" style={{ textAlign: 'center', display: 'block' }}>
+                  {otpError}
+                </span>
+              )}
+              
+              <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+                <span>In development mode? </span>
+                <span style={{ fontWeight: 'semibold', color: 'var(--accent-primary)' }}>Check backend logs</span>
+                <span> for the generated OTP code.</span>
+              </div>
+            </div>
+            
+            <div className="otp-modal-footer">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleVerifyOtp}
+                loading={isVerifyingOtp}
+                disabled={otpDigits.join('').length !== 6}
+                style={{ width: '100%' }}
+              >
+                Verify Code
+              </Button>
+              
+              <div className="otp-modal-actions-row">
+                <button
+                  type="button"
+                  className="otp-resend-action-btn"
+                  onClick={handleSendOtp}
+                  disabled={countdown > 0 || isSendingOtp}
+                >
+                  {countdown > 0 ? `Resend Code (${countdown}s)` : 'Resend Code'}
+                </button>
+                
+                <button
+                  type="button"
+                  className="otp-change-num-btn"
+                  onClick={() => {
+                    handleCloseOtpModal()
+                    setIsEditingPhone(true)
+                  }}
+                >
+                  Change Number
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

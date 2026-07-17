@@ -400,3 +400,40 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
             
         return {"answer": selected_answer, "source": "fallback"}
 
+if __name__ == "__main__":
+    import asyncio
+    
+    async def main():
+        print("Initializing MentorAgent...")
+        agent = MentorAgent()
+        
+        # Test profile
+        profile = {
+            "name": "Alice",
+            "current_role": "Junior Developer",
+            "target_role": "Backend Engineer",
+            "skills": ["Python", "FastAPI"],
+            "experience_years": 1
+        }
+        
+        print("\nGenerating guidance (this may take a moment)...")
+        guidance = await agent.get_guidance(profile=profile)
+        
+        print("\n" + "="*40)
+        print("CAREER GUIDANCE RESULT")
+        print("="*40)
+        
+        if "personalized_advice" in guidance:
+            print(f"\nAdvice:\n{guidance['personalized_advice']}")
+            
+            print("\nWeekly Goals:")
+            for g in guidance.get("weekly_goals", []):
+                print(f"- {g}")
+                
+            print("\nMonthly Goals:")
+            for g in guidance.get("monthly_goals", []):
+                print(f"- {g}")
+        else:
+            print(guidance)
+
+    asyncio.run(main())

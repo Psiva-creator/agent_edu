@@ -65,15 +65,21 @@ export default function MarketPanel({ data, formData }) {
 
       {/* Row 1: Core Metrics */}
       <div className="market-grid-main">
-        <div className="market-col">
-          <SalaryIntelligence data={salary} />
-        </div>
-        <div className="market-col">
-          <HiringDemand data={marketData.hiring_demand} />
-        </div>
-        <div className="market-col">
-          <MarketHealth health={marketData.market_health} growth={marketData.growth_prediction} />
-        </div>
+        {salary && (
+          <div className="market-col">
+            <SalaryIntelligence data={salary} />
+          </div>
+        )}
+        {marketData.hiring_demand && (
+          <div className="market-col">
+            <HiringDemand data={marketData.hiring_demand} />
+          </div>
+        )}
+        {(marketData.market_health || marketData.growth_prediction) && (
+          <div className="market-col">
+            <MarketHealth health={marketData.market_health} growth={marketData.growth_prediction} />
+          </div>
+        )}
       </div>
 
       {/* Row 2: Premium AI Features (New) */}

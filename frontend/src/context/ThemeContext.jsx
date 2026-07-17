@@ -4,11 +4,11 @@ const ThemeContext = createContext()
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
-    return localStorage.getItem('theme-preference') || 'system'
+    return localStorage.getItem('career-guide-theme') || 'system'
   })
 
   const setTheme = (newTheme) => {
-    localStorage.setItem('theme-preference', newTheme)
+    localStorage.setItem('career-guide-theme', newTheme)
     setThemeState(newTheme)
   }
 
@@ -22,13 +22,8 @@ export function ThemeProvider({ children }) {
         activeTheme = systemPrefersDark ? 'dark' : 'light'
       }
 
-      if (activeTheme === 'dark') {
-        root.classList.add('dark')
-        root.setAttribute('data-theme', 'dark')
-      } else {
-        root.classList.remove('dark')
-        root.setAttribute('data-theme', 'light')
-      }
+      root.classList.toggle('dark', activeTheme === 'dark')
+      root.setAttribute('data-theme', activeTheme)
     }
 
     applyTheme()

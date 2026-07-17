@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import mermaid from 'mermaid'
+import { renderMermaidSafe } from '../../utils/mermaidUtils'
 
 // Initialize Mermaid globally
 mermaid.initialize({
@@ -26,14 +27,16 @@ export default function MermaidDiagram({ chart }) {
     const renderChart = async () => {
       try {
         if (!chart) return
-        const { svg: renderedSvg } = await mermaid.render(id, chart)
+        const { svg: renderedSvg } = await renderMermaidSafe(id, chart)
         if (mounted) {
           setSvg(renderedSvg)
         }
       } catch (err) {
-        console.error('Mermaid render error:', err)
         if (mounted) {
-          setSvg(`<div style="color: #ef4444; padding: 16px;">Failed to render diagram</div>`)
+          setSvg(`<div style="color: var(--status-error); padding: 16px; border: 1px dashed var(--status-error); border-radius: 8px; text-align: center; background: rgba(var(--error-rgb), 0.05); font-size: 14px;">
+            <p style="margin: 0; font-weight: 600;">Unable to render diagram</p>
+            <p style="margin: 4px 0 0 0; opacity: 0.8;">The AI generated invalid flowchart syntax.</p>
+          </div>`)
         }
       }
     }

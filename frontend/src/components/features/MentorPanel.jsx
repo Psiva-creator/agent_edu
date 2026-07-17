@@ -4,6 +4,7 @@ import { MessageCircle, Send, Bot, User } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import mermaid from 'mermaid'
+import { renderMermaidSafe } from '../../utils/mermaidUtils'
 import { useApi } from '../../hooks/useApi'
 import { askMentor } from '../../services/api'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
@@ -27,12 +28,14 @@ function MermaidBlock({ code }) {
     let isMounted = true;
     const renderChart = async () => {
       try {
-        const { svg: renderedSvg } = await mermaid.render(id, code);
+        const { svg: renderedSvg } = await renderMermaidSafe(id, code);
         if (isMounted) setSvg(renderedSvg);
       } catch (err) {
-        console.error('Mermaid rendering error:', err);
         if (isMounted) {
-          setSvg(`<div style="color: var(--status-error); padding: var(--space-2); border: 1px dashed var(--status-error); border-radius: var(--radius-md);">[Diagram could not be rendered: Syntax Error]</div>`);
+          setSvg(`<div style="color: var(--status-error); padding: 16px; border: 1px dashed var(--status-error); border-radius: 8px; text-align: center; background: rgba(var(--error-rgb), 0.05); font-size: 14px;">
+            <p style="margin: 0; font-weight: 600;">Unable to render diagram</p>
+            <p style="margin: 4px 0 0 0; opacity: 0.8;">The AI generated invalid flowchart syntax.</p>
+          </div>`);
         }
       }
     };

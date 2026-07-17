@@ -1,9 +1,4 @@
-.theme-switcher {
-  position: relative;
-  display: inline-block;
-}
-
-.theme-switcher__toggle {
+.theme-switcher-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -14,65 +9,30 @@
   color: var(--text-secondary);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
-  text-transform: capitalize;
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
+  outline: none;
 }
 
-.theme-switcher__toggle:hover {
+.theme-switcher-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
   border-color: var(--border-accent);
 }
 
-.theme-switcher__dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  width: 120px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: 4px;
-  box-shadow: var(--shadow-md);
-  z-index: var(--z-dropdown);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.theme-switcher-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--accent-primary);
 }
 
-.theme-switcher__option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  text-align: left;
-  cursor: pointer;
-  transition: all var(--duration-fast);
+.theme-switcher-label {
+  text-transform: capitalize;
 }
 
-.theme-switcher__option:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+.theme-icon {
+  flex-shrink: 0;
+  transition: transform var(--duration-fast);
 }
 
-.theme-switcher__option--active {
-  background: rgba(79, 70, 229, 0.08);
-  color: var(--accent-primary);
-  font-weight: var(--weight-semibold);
-}
-
-.theme-switcher__option--active:hover {
-  background: rgba(79, 70, 229, 0.12);
-  color: var(--accent-primary);
-}
-
-@media (max-width: 640px) {
-  .theme-switcher__current-label {
-    display: none;
-  }
+.theme-switcher-btn:hover .theme-icon {
+  transform: rotate(12deg) scale(1.05);
 }

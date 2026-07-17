@@ -187,4 +187,27 @@ export const compareResumeToJob = async (data) => {
   return res.data
 }
 
+// ── Profile Settings (Fetch and Save DB values) ──
+export const getProfile = async () => {
+  const res = await api.get('/profile')
+  return res.data
+}
+
+export const saveProfile = async (profileData) => {
+  const res = await api.post('/profile', profileData)
+  return res.data
+}
+
+// ── Mobile OTP Verification (Send and Verify) ──
+export const sendMobileOtp = async (phoneNumber) => {
+  const res = await api.post('/profile/mobile/send-otp', { phoneNumber })
+  return res.data
+}
+
+export const verifyMobileOtp = async (phoneNumber, otp) => {
+  const res = await api.post('/profile/mobile/verify-otp', { phoneNumber, otp })
+  return res.data
+}
+
 export default api
+

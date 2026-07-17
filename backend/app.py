@@ -43,6 +43,11 @@ async def lifespan(app: FastAPI):
     """Application lifespan — runs on startup and shutdown."""
     # ── Startup ──────────────────────────────────────────────
     setup_logging()
+    
+    # Initialize SQLite database
+    from services.db_service import init_db
+    init_db()
+    
     settings = get_settings()
     logger = logging.getLogger("app")
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
@@ -172,7 +177,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # ─── Register Routers (API v1) ───────────────────────────────
 
-from routers import career, jobs, roadmap, resume, report, resources, interview, skills, compare, cover_letter
+from routers import career, jobs, roadmap, resume, report, resources, interview, skills, compare, cover_letter, profile
 
 API_PREFIX = settings.API_V1_PREFIX  # /api/v1
 
@@ -186,6 +191,7 @@ app.include_router(interview.router, prefix=API_PREFIX)
 app.include_router(skills.router,    prefix=API_PREFIX)
 app.include_router(compare.router,   prefix=API_PREFIX)
 app.include_router(cover_letter.router, prefix=API_PREFIX)
+app.include_router(profile.router,   prefix=API_PREFIX)
 
 # ─── Root Endpoints ──────────────────────────────────────────
 
