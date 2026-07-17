@@ -48,7 +48,7 @@
 }
 
 .tabs__tab--active .tabs__count {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(79, 70, 229, 0.08);
   color: var(--accent-primary);
 }
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, Map, Briefcase, TrendingUp,
-  MessageCircle, Sparkles, ChevronLeft, ChevronRight, Compass,
+  MessageCircle, Sparkles, ChevronLeft, ChevronRight, Compass, Settings
 } from 'lucide-react'
 import { cn } from '../../utils/helpers'
 import './Sidebar.css'
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { id: 'jobs',      label: 'Jobs',      icon: Briefcase,       path: '/dashboard/jobs' },
   { id: 'market',    label: 'Market',    icon: TrendingUp,      path: '/dashboard/market' },
   { id: 'mentor',    label: 'Mentor',    icon: MessageCircle,   path: '/dashboard/mentor' },
+  { id: 'settings',  label: 'Settings',  icon: Settings,        path: '/dashboard/settings' },
 ]
 
 export { NAV_ITEMS }

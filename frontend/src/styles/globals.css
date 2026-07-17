@@ -35,6 +35,11 @@ body {
   overflow-x: hidden;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+}
+
 #root {
   min-height: 100vh;
   display: flex;
@@ -118,7 +123,7 @@ input, textarea, select {
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(99, 102, 241, 0.3);
+  background: rgba(var(--accent-primary-rgb), 0.3);
   color: var(--text-primary);
 }
 
@@ -136,10 +141,31 @@ input, textarea, select {
 
 /* ── Glass ── */
 .glass {
-  background: rgba(17, 17, 24, 0.6);
+  background: var(--bg-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Mesh Background ── */
+.mesh-bg {
+  background-color: var(--bg-root);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(var(--accent-primary-rgb), 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(var(--info-rgb), 0.04) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(var(--accent-secondary-rgb), 0.05) 0px, transparent 50%);
+  position: relative;
+}
+
+.mesh-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: radial-gradient(var(--grid-dots) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
 }
 
 /* ── Visually Hidden (a11y) ── */

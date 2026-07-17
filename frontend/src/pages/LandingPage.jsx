@@ -3,8 +3,10 @@ import { motion } from 'framer-motion'
 import {
   Sparkles, ArrowRight, Target, Briefcase, Map,
   FileText, TrendingUp, MessageCircle, Zap, Shield, Globe,
+  ShieldCheck, Brain
 } from 'lucide-react'
 import Button from '../components/ui/Button'
+import ThemeSwitcher from '../components/ui/ThemeSwitcher'
 import './LandingPage.css'
 
 const fadeUp = (delay = 0) => ({
@@ -36,6 +38,21 @@ const STATS = [
   { value: '24/7', label: 'AI Mentor' },
 ]
 
+const AI_AGENTS = [
+  { icon: ShieldCheck, name: 'Resume Intelligence Agent', desc: 'Grades your resume against ATS engines, highlights styling flaws, and refines work bullet points.' },
+  { icon: Target, name: 'Skill Gap Profiler Agent', desc: 'Cross-references your skill catalog against real job requirements to map out training needs.' },
+  { icon: Map, name: 'Roadmap Architect Agent', desc: 'Designs a week-by-week personalized learning syllabus complete with exercises and official docs.' },
+  { icon: TrendingUp, name: 'Market Intelligence Agent', desc: 'Delivers real-time reports on local salary scales, job market growth rate, and hot roles.' },
+  { icon: Briefcase, name: 'Smart Job Matcher Agent', desc: 'Aligns your verified skills with current open job listings that represent the best career match.' },
+  { icon: Brain, name: 'AI Coach & Mentor Agent', desc: 'Conducts simulated practice interviews, gives instant feedback, and is available for chats 24/7.' },
+]
+
+const BENEFITS = [
+  { icon: Zap, title: 'Accelerated Learning Curve', desc: 'Don\'t waste time researching where to study. Get linked directly to top-tier docs and video playlists.' },
+  { icon: Shield, title: 'Optimized Job Applications', desc: 'Tailor your application profile for every single target role with specific keywords and cover letters.' },
+  { icon: Globe, title: 'Strategic Decisions', desc: 'Base your next career move on hard market data, projected demand metrics, and salary potential.' },
+]
+
 export default function LandingPage() {
   const navigate = useNavigate()
 
@@ -51,7 +68,10 @@ export default function LandingPage() {
           <div className="landing__nav-links">
             <a href="#features">Features</a>
             <a href="#how-it-works">How It Works</a>
-            <Button variant="primary" size="sm" onClick={() => navigate('/analyze')}>Get Started</Button>
+            <a href="#ai-agents">AI Agents</a>
+            <a href="#benefits">Benefits</a>
+            <Button id="nav-get-started" variant="primary" size="sm" onClick={() => navigate('/analyze')}>Get Started</Button>
+            <ThemeSwitcher />
           </div>
         </div>
       </nav>
@@ -59,25 +79,29 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="landing__hero">
         <div className="landing__hero-bg" />
+        {/* Soft, colorful animated gradient blobs */}
+        <div className="landing__blob landing__blob--1" />
+        <div className="landing__blob landing__blob--2" />
+        <div className="landing__blob landing__blob--3" />
+        
         <div className="container landing__hero-content">
           <motion.div className="landing__hero-badge" {...fadeUp(0)}>
-            <Zap size={14} />
-            <span>Powered by Multi-Agent AI</span>
+            <Sparkles size={14} className="landing__hero-badge-icon" />
+            <span>AI Powered Career Platform</span>
           </motion.div>
           <motion.h1 className="landing__hero-title" {...fadeUp(0.1)}>
-            Your Career Path,<br />
-            <span className="text-gradient">Guided by AI</span>
+            Your Career,<br />
+            <span className="text-gradient">Powered by AI</span>
           </motion.h1>
           <motion.p className="landing__hero-desc" {...fadeUp(0.2)}>
-            Six specialized AI agents analyze your skills, match you with jobs,
-            build career roadmaps, review your resume, and provide personalized mentoring — all in one platform.
+            Discover your strengths, explore career paths, improve your resume, and receive personalized guidance from six intelligent AI agents.
           </motion.p>
           <motion.div className="landing__hero-actions" {...fadeUp(0.3)}>
-            <Button variant="primary" size="xl" iconRight={ArrowRight} onClick={() => navigate('/analyze')}>
-              Start Free Analysis
+            <Button id="hero-start-analysis" variant="primary" size="xl" iconRight={ArrowRight} onClick={() => navigate('/analyze')} className="btn-hero-primary">
+              Start AI Analysis
             </Button>
-            <Button variant="secondary" size="xl" onClick={() => navigate('/dashboard')}>
-              View Dashboard
+            <Button id="hero-explore-dashboard" variant="secondary" size="xl" onClick={() => navigate('/dashboard')} className="btn-hero-secondary">
+              Explore Dashboard
             </Button>
           </motion.div>
         </div>
@@ -126,9 +150,53 @@ export default function LandingPage() {
           <div className="landing__steps">
             {STEPS.map((step, i) => (
               <motion.div key={step.num} className="landing__step" {...fadeUp(i * 0.1)}>
-                <span className="landing__step-num">{step.num}</span>
-                <h3>{step.title}</h3>
-                <p>{step.desc}</p>
+                <div className="landing__step-card">
+                  <span className="landing__step-num">{step.num}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AI Agents */}
+      <section id="ai-agents" className="landing__agents">
+        <div className="container">
+          <motion.div className="landing__section-header" {...fadeUp()}>
+            <h2>Meet Your Specialized <span className="text-gradient">AI Agents</span></h2>
+            <p>A collaborative team of six digital experts, each masterfully trained in a critical domain of career strategy.</p>
+          </motion.div>
+          <div className="landing__agents-grid">
+            {AI_AGENTS.map((agent, i) => (
+              <motion.div key={agent.name} className="landing__agent-card" {...fadeUp(i * 0.06)}>
+                <div className="landing__agent-icon">
+                  <agent.icon size={24} />
+                </div>
+                <h3>{agent.name}</h3>
+                <p>{agent.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits */}
+      <section id="benefits" className="landing__benefits">
+        <div className="container">
+          <motion.div className="landing__section-header" {...fadeUp()}>
+            <h2>Why Choose <span className="text-gradient">Career Guide AI</span></h2>
+            <p>Unlocking professional potential through hyper-personalized, data-backed insights.</p>
+          </motion.div>
+          <div className="landing__benefits-grid">
+            {BENEFITS.map((benefit, i) => (
+              <motion.div key={benefit.title} className="landing__benefit-card" {...fadeUp(i * 0.08)}>
+                <div className="landing__benefit-icon-wrapper">
+                  <benefit.icon size={26} />
+                </div>
+                <h3>{benefit.title}</h3>
+                <p>{benefit.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -141,7 +209,7 @@ export default function LandingPage() {
           <motion.div className="landing__cta-inner" {...fadeUp()}>
             <h2>Ready to shape your career?</h2>
             <p>Start your free AI-powered career analysis today.</p>
-            <Button variant="primary" size="xl" iconRight={ArrowRight} onClick={() => navigate('/analyze')}>
+            <Button id="cta-get-started" variant="primary" size="xl" iconRight={ArrowRight} onClick={() => navigate('/analyze')}>
               Get Started Now
             </Button>
           </motion.div>
@@ -158,6 +226,8 @@ export default function LandingPage() {
           <div className="landing__footer-links">
             <a href="#features">Features</a>
             <a href="#how-it-works">How It Works</a>
+            <a href="#ai-agents">AI Agents</a>
+            <a href="#benefits">Benefits</a>
           </div>
           <p className="landing__footer-copy">© 2026 Career Guide AI. Built with ❤️ and AI.</p>
         </div>

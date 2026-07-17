@@ -37,9 +37,9 @@ export default function SkillGraph({ skills, targetRole }) {
     })
 
     code += `\n  %% Styles\n`
-    code += `  classDef target fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff;\n`
-    code += `  classDef current fill:#1e3a8a,stroke:#3b82f6,stroke-width:1px,color:#fff;\n`
-    code += `  classDef gap fill:#7f1d1d,stroke:#ef4444,stroke-width:1px,color:#fff;\n`
+    code += `  classDef target fill:var(--bg-active),stroke:var(--accent-primary),stroke-width:2px,color:var(--text-primary);\n`
+    code += `  classDef current fill:var(--bg-surface),stroke:var(--accent-primary),stroke-width:1px,color:var(--text-primary);\n`
+    code += `  classDef gap fill:var(--error-bg),stroke:var(--error),stroke-width:1px,color:var(--text-primary);\n`
 
     return code
   }, [skills, targetRole])

@@ -37,7 +37,7 @@
 
 .rh-overview__stat-card {
   background: var(--bg-surface);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -47,9 +47,9 @@
 }
 
 .rh-overview__stat-card:hover {
-  border-color: var(--brand-primary);
+  border-color: var(--accent-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .rh-overview__stat-label {
@@ -76,7 +76,7 @@
 
 .rh-overview__widget {
   background: var(--bg-surface);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-default);
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -87,8 +87,8 @@
 }
 
 .rh-overview__widget:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-lg);
 }
 
 .rh-overview__widget-header {
@@ -108,7 +108,7 @@
 }
 
 .rh-overview__widget-title svg {
-  color: var(--brand-primary);
+  color: var(--accent-primary);
 }
 
 .rh-overview__widget-content {
@@ -150,7 +150,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-default);
   padding-bottom: 12px;
 }
 .rh-widget-row:last-child {
@@ -172,7 +172,7 @@
 /* Progress bar inside roadmap widget */
 .rh-progress-container {
   width: 100%;
-  background: var(--bg-surface-elevated);
+  background: var(--bg-elevated);
   height: 8px;
   border-radius: 4px;
   overflow: hidden;
@@ -181,7 +181,7 @@
 
 .rh-progress-fill {
   height: 100%;
-  background: var(--brand-primary);
+  background: var(--accent-primary);
   border-radius: 4px;
   transition: width 0.4s ease;
 }
@@ -199,8 +199,8 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-light);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   color: var(--text-primary);
   font-weight: 500;
@@ -211,8 +211,8 @@
 }
 
 .rh-quick-action-btn:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--brand-primary);
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
   transform: translateY(-2px);
 }
 

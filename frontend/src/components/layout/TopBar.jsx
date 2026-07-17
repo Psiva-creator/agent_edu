@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Menu, ArrowLeft } from 'lucide-react'
 import { cn } from '../../utils/helpers'
+import ThemeSwitcher from '../ui/ThemeSwitcher'
 import './TopBar.css'
 
 const TITLE_MAP = {
@@ -10,6 +11,7 @@ const TITLE_MAP = {
   '/dashboard/jobs': 'Job Search',
   '/dashboard/market': 'Market Insights',
   '/dashboard/mentor': 'AI Mentor',
+  '/dashboard/settings': 'Settings',
   '/analyze': 'Career Analysis',
 }
 
@@ -37,6 +39,7 @@ export default function TopBar({ onMenuClick, className }) {
           <span className="topbar__status-dot" />
           <span className="topbar__status-text">AI Ready</span>
         </div>
+        <ThemeSwitcher />
       </div>
     </header>
   )

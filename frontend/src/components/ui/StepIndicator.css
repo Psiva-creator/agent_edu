@@ -35,7 +35,7 @@
 .step-indicator__circle--active {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
 }
 
 .step-indicator__circle--completed {

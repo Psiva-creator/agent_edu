@@ -2,54 +2,69 @@
    Design Tokens — Career Guide AI
    
    All visual decisions centralized as CSS custom properties.
-   Dark-mode-first palette inspired by Vercel/Linear.
+   Light-mode-first premium AI SaaS palette.
    ============================================================ */
 
 :root {
   /* ── Background Layers ── */
-  --bg-root:        #0a0a0f;
-  --bg-surface:     #111118;
-  --bg-elevated:    #1a1a24;
-  --bg-overlay:     rgba(10, 10, 15, 0.85);
-  --bg-hover:       #1f1f2e;
-  --bg-active:      #25253a;
+  --bg-root:        #F8FAFC; /* slate-50 */
+  --bg-surface:     #FFFFFF; /* white card */
+  --bg-elevated:    #F1F5F9; /* slate-100 */
+  --bg-secondary-rgb: 241, 245, 249;
+  --bg-overlay:     rgba(15, 23, 42, 0.3); /* slate-900 with opacity */
+  --bg-hover:       #F1F5F9; /* slate-100 */
+  --bg-active:      #E2E8F0; /* slate-200 */
+  --bg-glass:       rgba(255, 255, 255, 0.7);
+  --border-glass:   rgba(226, 232, 240, 0.8);
+  --grid-dots:      rgba(15, 23, 42, 0.015);
 
   /* ── Border ── */
-  --border-default: #1e1e2e;
-  --border-subtle:  #16161f;
-  --border-accent:  rgba(99, 102, 241, 0.3);
-  --border-focus:   rgba(99, 102, 241, 0.6);
+  --border-default: #E2E8F0; /* slate-200 */
+  --border-subtle:  #F1F5F9; /* slate-100 */
+  --border-accent:  rgba(79, 70, 229, 0.15);
+  --border-focus:   rgba(79, 70, 229, 0.4);
 
   /* ── Text ── */
-  --text-primary:   #f0f0f5;
-  --text-secondary: #a0a0b8;
-  --text-tertiary:  #6b6b82;
-  --text-inverse:   #0a0a0f;
+  --text-primary:   #0F172A; /* slate-900 */
+  --text-secondary: #475569; /* slate-600 */
+  --text-tertiary:  #64748B; /* slate-500 */
+  --text-inverse:   #FFFFFF;
 
-  /* ── Accent (Indigo → Cyan gradient) ── */
-  --accent-primary:    #6366f1;
-  --accent-primary-hover: #7c7ff7;
-  --accent-secondary:  #06b6d4;
-  --accent-gradient:   linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
-  --accent-gradient-text: linear-gradient(135deg, #818cf8 0%, #22d3ee 100%);
-  --accent-glow:       0 0 24px rgba(99, 102, 241, 0.25);
+  /* ── Accent (Indigo → Purple gradient) ── */
+  --accent-primary:    #4F46E5; /* Indigo-600 */
+  --accent-primary-rgb: 79, 70, 229;
+  --accent-primary-hover: #4338CA; /* Indigo-700 */
+  --accent-secondary:  #7C3AED; /* Purple-600 */
+  --accent-secondary-rgb: 124, 58, 237;
+  --accent-cyan:       #06B6D4; /* Cyan-500 */
+  --accent-gradient:   linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  --accent-gradient-text: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  --accent-glow:       0 0 24px rgba(79, 70, 229, 0.15);
 
   /* ── Semantic ── */
-  --success:         #22c55e;
-  --success-bg:      rgba(34, 197, 94, 0.1);
-  --success-border:  rgba(34, 197, 94, 0.2);
-  --warning:         #f59e0b;
-  --warning-bg:      rgba(245, 158, 11, 0.1);
-  --warning-border:  rgba(245, 158, 11, 0.2);
-  --error:           #ef4444;
-  --error-bg:        rgba(239, 68, 68, 0.1);
-  --error-border:    rgba(239, 68, 68, 0.2);
-  --info:            #3b82f6;
-  --info-bg:         rgba(59, 130, 246, 0.1);
-  --info-border:     rgba(59, 130, 246, 0.2);
+  --success:         #10B981; /* Success */
+  --success-rgb:      16, 185, 129;
+  --accent-success-rgb: 16, 185, 129;
+  --success-bg:      rgba(16, 185, 129, 0.08);
+  --success-border:  rgba(16, 185, 129, 0.15);
+  --warning:         #F59E0B;
+  --warning-rgb:      245, 158, 11;
+  --accent-warning-rgb: 245, 158, 11;
+  --warning-bg:      rgba(245, 158, 11, 0.08);
+  --warning-border:  rgba(245, 158, 11, 0.15);
+  --error:           #EF4444;
+  --error-rgb:        239, 68, 68;
+  --accent-danger-rgb: 239, 68, 68;
+  --error-bg:        rgba(239, 68, 68, 0.08);
+  --error-border:    rgba(239, 68, 68, 0.15);
+  --info:            #06B6D4;
+  --info-rgb:        6, 182, 212;
+  --info-bg:         rgba(6, 182, 212, 0.08);
+  --info-border:     rgba(6, 182, 212, 0.15);
 
   /* ── Typography ── */
   --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Space Grotesk', 'Inter', -apple-system, sans-serif;
   --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
 
   --text-xs:    0.75rem;    /* 12px */
@@ -100,10 +115,10 @@
   --radius-full: 9999px;
 
   /* ── Shadows ── */
-  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg:   0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+  --shadow-sm:   0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md:   0 4px 12px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-lg:   0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.08);
 
   /* ── Transitions ── */
   --ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
@@ -125,4 +140,73 @@
   --z-overlay: 300;
   --z-modal:   400;
   --z-toast:   500;
+
+  /* ── Legacy Aliases to prevent visual regressions ── */
+  --bg-card:           var(--bg-surface);
+  --border:            var(--border-default);
+  --bg-modifier-hover: var(--bg-hover);
+}
+
+html[data-theme="dark"], .dark {
+  /* ── Background Layers ── */
+  --bg-root:        #0B1020;
+  --bg-surface:     #151D2F;
+  --bg-elevated:    #1B263B;
+  --bg-secondary-rgb: 17, 24, 39; /* #111827 */
+  --bg-overlay:     rgba(11, 16, 32, 0.6);
+  --bg-hover:       #1C253B;
+  --bg-active:      #22304A;
+  --bg-glass:       rgba(21, 29, 47, 0.75);
+  --border-glass:   rgba(148, 163, 184, 0.15);
+  --grid-dots:      rgba(248, 250, 252, 0.02);
+
+  /* ── Border ── */
+  --border-default: rgba(148, 163, 184, 0.18);
+  --border-subtle:  rgba(148, 163, 184, 0.1);
+  --border-accent:  rgba(129, 140, 248, 0.2);
+  --border-focus:   rgba(129, 140, 248, 0.5);
+
+  /* ── Text ── */
+  --text-primary:   #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-tertiary:  #94A3B8;
+  --text-inverse:   #0B1020;
+
+  /* ── Accent (Indigo → Purple gradient) ── */
+  --accent-primary:    #818CF8;
+  --accent-primary-rgb: 129, 140, 248;
+  --accent-primary-hover: #6366F1;
+  --accent-secondary:  #A78BFA;
+  --accent-secondary-rgb: 167, 139, 250;
+  --accent-cyan:       #22D3EE;
+  --accent-gradient:   linear-gradient(135deg, #818CF8 0%, #A78BFA 100%);
+  --accent-gradient-text: linear-gradient(135deg, #818CF8 0%, #A78BFA 100%);
+  --accent-glow:       0 0 24px rgba(129, 140, 248, 0.25);
+
+  /* ── Semantic ── */
+  --success:         #34D399;
+  --success-rgb:      52, 211, 153;
+  --accent-success-rgb: 52, 211, 153;
+  --success-bg:      rgba(52, 211, 153, 0.1);
+  --success-border:  rgba(52, 211, 153, 0.2);
+  --warning:         #FBBF24;
+  --warning-rgb:      251, 191, 36;
+  --accent-warning-rgb: 251, 191, 36;
+  --warning-bg:      rgba(251, 191, 36, 0.1);
+  --warning-border:  rgba(251, 191, 36, 0.2);
+  --error:           #F87171;
+  --error-rgb:        248, 113, 113;
+  --accent-danger-rgb: 248, 113, 113;
+  --error-bg:        rgba(248, 113, 113, 0.1);
+  --error-border:    rgba(248, 113, 113, 0.2);
+  --info:            #22D3EE;
+  --info-rgb:        34, 211, 238;
+  --info-bg:         rgba(34, 211, 238, 0.1);
+  --info-border:     rgba(34, 211, 238, 0.2);
+
+  /* ── Shadows ── */
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg:   0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(129, 140, 248, 0.15);
 }

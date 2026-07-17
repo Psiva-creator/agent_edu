@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { NAV_ITEMS } from './Sidebar'
 import { Compass } from 'lucide-react'
 import { cn } from '../../utils/helpers'
+import ThemeSwitcher from '../ui/ThemeSwitcher'
 import './MobileNav.css'
 
 export default function MobileNav() {
@@ -30,6 +31,9 @@ export default function MobileNav() {
           <span>{item.label}</span>
         </button>
       ))}
+      <div className="mobile-nav__theme-wrap">
+        <ThemeSwitcher />
+      </div>
     </nav>
   )
 }

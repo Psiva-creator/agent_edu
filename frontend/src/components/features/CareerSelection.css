@@ -82,7 +82,7 @@
 
 .rh-career-sel__search-input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
 .rh-career-sel__cats {
@@ -116,12 +116,12 @@
 
 .rh-career-sel__cat--active {
   background: var(--text-primary);
-  color: var(--bg-primary);
+  color: var(--bg-surface);
   border-color: var(--text-primary);
 }
 .rh-career-sel__cat--active:hover {
   background: var(--text-primary);
-  color: var(--bg-primary);
+  color: var(--bg-surface);
 }
 
 .rh-career-sel__grid {

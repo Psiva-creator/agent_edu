@@ -38,7 +38,7 @@
   padding: var(--space-5);
   display: flex; flex-direction: column;
 }
-.bento-card--hero { grid-column: span 12; flex-direction: row; align-items: center; justify-content: space-between; background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, transparent 100%); border-color: rgba(99,102,241,0.2); }
+.bento-card--hero { grid-column: span 12; flex-direction: row; align-items: center; justify-content: space-between; background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, transparent 100%); border-color: rgba(79, 70, 229, 0.15); }
 .bento-card--radar { grid-column: span 5; grid-row: span 2; align-items: center; justify-content: center; }
 .bento-card--heatmap { grid-column: span 7; grid-row: span 2; }
 .bento-card--list { grid-column: span 12; }
@@ -78,7 +78,7 @@
 .badge--current { background: rgba(59,130,246,0.1); color: #3b82f6; }
 
 .skill-list-item__progress-wrap { display: flex; flex-direction: column; gap: 4px; }
-.skill-list-item__progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 4px; position: relative; overflow: hidden; }
+.skill-list-item__progress-bar { width: 100%; height: 6px; background: var(--bg-active); border-radius: 4px; position: relative; overflow: hidden; }
 .skill-list-item__progress-fill { position: absolute; height: 100%; background: var(--accent-gradient); border-radius: 4px; }
 .skill-list-item__progress-target { position: absolute; height: 10px; width: 2px; background: #10b981; top: -2px; z-index: 2; }
 .skill-list-item__progress-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-tertiary); }

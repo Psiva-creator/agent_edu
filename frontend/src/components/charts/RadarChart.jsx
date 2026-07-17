@@ -53,16 +53,16 @@ export default function RadarChart({ data, size = 300 }) {
       })}
 
       {/* Target Area (Ideal) */}
-      <polygon points={targetPath} fill="rgba(16, 185, 129, 0.1)" stroke="#10b981" strokeWidth={2} strokeDasharray="4,4" />
+      <polygon points={targetPath} fill="rgba(var(--success-rgb), 0.1)" stroke="var(--success)" strokeWidth={2} strokeDasharray="4,4" />
 
       {/* Current Area (Actual) */}
-      <polygon points={currentPath} fill="rgba(99, 102, 241, 0.3)" stroke="#6366f1" strokeWidth={2} />
+      <polygon points={currentPath} fill="rgba(var(--accent-primary-rgb), 0.25)" stroke="var(--accent-primary)" strokeWidth={2} />
 
       {/* Data Points */}
       {points.map((p, i) => (
         <g key={`pts-${i}`}>
-          <circle cx={p.targetX} cy={p.targetY} r={3} fill="#10b981" />
-          <circle cx={p.currentX} cy={p.currentY} r={4} fill="#6366f1" />
+          <circle cx={p.targetX} cy={p.targetY} r={3} fill="var(--success)" />
+          <circle cx={p.currentX} cy={p.currentY} r={4} fill="var(--accent-primary)" />
         </g>
       ))}
 

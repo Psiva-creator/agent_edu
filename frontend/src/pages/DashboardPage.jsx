@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain, Target, GitCompare, Sparkles,
+  LayoutDashboard, FileText, Map, Briefcase, TrendingUp, MessageCircle, CheckCircle2, ShieldCheck, Clock, Brain, Target, GitCompare, Sparkles, Settings,
 } from 'lucide-react'
 import Tabs from '../components/ui/Tabs'
 import EmptyState from '../components/ui/EmptyState'
@@ -17,6 +17,7 @@ import SkillPanel from '../components/features/SkillPanel'
 import ComparePanel from '../components/features/ComparePanel'
 import ResumeRewriteStudio from '../components/features/ResumeRewriteStudio'
 import CoverLetterStudio from '../components/features/CoverLetterStudio'
+import SettingsPanel from '../components/features/SettingsPanel'
 import { useCareerMemory } from '../hooks/useCareerMemory'
 import './DashboardPage.css'
 
@@ -32,6 +33,7 @@ const TAB_LIST = [
   { id: 'skills',    label: 'Skills',    icon: Target },
   { id: 'mentor',    label: 'Mentor',    icon: MessageCircle },
   { id: 'interview', label: 'Interview', icon: Brain },
+  { id: 'settings',  label: 'Settings',  icon: Settings },
 ]
 
 export default function DashboardPage() {
@@ -91,6 +93,8 @@ export default function DashboardPage() {
         return <MentorPanel data={data} formData={formData} />
       case 'interview':
         return <InterviewPanel data={data} formData={formData} />
+      case 'settings':
+        return <SettingsPanel />
       default:
         return <EmptyState title="Tab not found" description="Select a tab from the navigation." />
     }

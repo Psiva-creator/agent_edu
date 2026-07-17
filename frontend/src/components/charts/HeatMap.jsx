@@ -22,8 +22,8 @@ export default function HeatMap({ data, width = 300, height = 200 }) {
       <text x={width - padding} y={height - padding + 15} textAnchor="middle" fill="var(--text-tertiary)" fontSize="10">{maxTime}h+</text>
 
       {/* Quadrant backgrounds */}
-      <rect x={padding} y={padding} width={w/2} height={h/2} fill="rgba(16,185,129,0.05)" /> {/* High Demand, Fast */}
-      <rect x={padding+w/2} y={padding} width={w/2} height={h/2} fill="rgba(245,158,11,0.05)" /> {/* High Demand, Slow */}
+      <rect x={padding} y={padding} width={w/2} height={h/2} fill="rgba(var(--success-rgb), 0.05)" /> {/* High Demand, Fast */}
+      <rect x={padding+w/2} y={padding} width={w/2} height={h/2} fill="rgba(var(--warning-rgb), 0.05)" /> {/* High Demand, Slow */}
       
       {/* Points */}
       {data.map((d, i) => {
@@ -33,7 +33,7 @@ export default function HeatMap({ data, width = 300, height = 200 }) {
         const y = padding + (1 - d.market_demand / maxDemand) * h
         
         const isHot = d.market_demand >= 80 && d.time_required_hours <= 40
-        const color = isHot ? '#10b981' : (d.market_demand >= 60 ? '#6366f1' : '#f59e0b')
+        const color = isHot ? 'var(--success)' : (d.market_demand >= 60 ? 'var(--accent-primary)' : 'var(--warning)')
 
         return (
           <g key={i} className="group cursor-pointer">
