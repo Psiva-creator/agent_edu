@@ -38,10 +38,12 @@ from pydantic import BaseModel
 from config import get_settings
 
 try:
-    import google.generativeai as genai
-    from google.api_core.exceptions import GoogleAPIError
+    from google import genai
+    from google.genai import types as genai_types
+    from google.genai.errors import APIError as GoogleAPIError
 except ImportError:
     genai = None
+    genai_types = None
     GoogleAPIError = Exception
 
 logger = logging.getLogger(__name__)
@@ -207,7 +209,7 @@ class LLMService:
         self.retry_config = retry_config or RetryConfig()
 
         self.client = None
-        self.gemini_model = None
+        self.gemini_client = None
         self.provider = None
 
         # ── Gemini key rotation setup ─────────────────────────
@@ -217,8 +219,7 @@ class LLMService:
         if self._gemini_api_keys:
             if genai:
                 try:
-                    genai.configure(api_key=self._gemini_api_keys[0])
-                    self.gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
+                    self.gemini_client = genai.Client(api_key=self._gemini_api_keys[0])
                     self.provider = "gemini"
                     self.model = settings.GEMINI_MODEL
                     logger.info(
@@ -229,7 +230,7 @@ class LLMService:
                 except Exception as e:
                     logger.error(f"Failed to initialize Gemini async client: {e}")
             else:
-                logger.error("google-generativeai package not installed, cannot use Gemini.")
+                logger.error("google-genai package not installed, cannot use Gemini.")
         
         if not self.provider and settings.OPENAI_API_KEY and settings.OPENAI_API_KEY != "your_api_key_here":
             try:
@@ -523,7 +524,11 @@ class LLMService:
                 error_name = type(e).__name__
 
                 # ── Key rotation on quota exhaustion ────────
-                if "ResourceExhausted" in error_name and self.provider == "gemini":
+                is_quota_error = (
+                    "ResourceExhausted" in error_name
+                    or getattr(e, "code", None) == 429
+                )
+                if is_quota_error and self.provider == "gemini":
                     if self._rotate_gemini_key():
                         self.stats.total_retries += 1
                         # Retry immediately with the new key — no sleep needed
@@ -569,7 +574,7 @@ class LLMService:
         if next_index < len(self._gemini_api_keys):
             self._current_key_index = next_index
             new_key = self._gemini_api_keys[next_index]
-            genai.configure(api_key=new_key)
+            self.gemini_client = genai.Client(api_key=new_key)
             logger.warning(
                 f"Gemini ResourceExhausted — rotated to API key "
                 f"#{next_index + 1} of {len(self._gemini_api_keys)}"
@@ -591,14 +596,21 @@ class LLMService:
         # Rate limit / quota — handled via key rotation, still retryable
         if "RateLimitError" in error_name or "ResourceExhausted" in error_name:
             return True
+        if getattr(error, "code", None) == 429:
+            return True
 
         # Server errors
         if "APIStatusError" in error_name:
             status = getattr(error, "status_code", 0)
             return status in self.retry_config.retryable_status_codes
 
-        # Gemini / Google API errors
+        # Gemini / Google API errors (google-genai SDK: ClientError/ServerError,
+        # both subclasses of APIError, expose an HTTP `code` attribute)
         if "GoogleAPIError" in error_name or "InternalServerError" in error_name:
+            return True
+        if "ServerError" in error_name and self.provider == "gemini":
+            return True
+        if "ClientError" in error_name and getattr(error, "code", 0) in self.retry_config.retryable_status_codes:
             return True
 
         # Connection errors
@@ -613,46 +625,46 @@ class LLMService:
         temperature: float,
         max_tokens: int,
     ) -> LLMResponse:
-        """Call the Gemini API using google-generativeai."""
-        import google.generativeai as genai
-        
+        """Call the Gemini API using the google-genai SDK."""
+
         # Convert OpenAI messages format to Gemini format
         system_instruction = None
         gemini_messages = []
-        
+
         for msg in messages:
             if msg["role"] == "system":
                 system_instruction = msg["content"]
             elif msg["role"] == "user":
-                gemini_messages.append({"role": "user", "parts": [msg["content"]]})
+                gemini_messages.append(
+                    genai_types.Content(role="user", parts=[genai_types.Part(text=msg["content"])])
+                )
             elif msg["role"] == "assistant":
-                gemini_messages.append({"role": "model", "parts": [msg["content"]]})
+                gemini_messages.append(
+                    genai_types.Content(role="model", parts=[genai_types.Part(text=msg["content"])])
+                )
 
-        generation_config = genai.GenerationConfig(
+        generation_config = genai_types.GenerateContentConfig(
             temperature=temperature,
             max_output_tokens=max_tokens,
-        )
-
-        model = genai.GenerativeModel(
-            model_name=self.model,
             system_instruction=system_instruction,
-            generation_config=generation_config
         )
 
-        # Handle async call - if SDK doesn't natively support full async for chat, we run in executor
-        # We'll use the native generate_content_async
-        completion = await model.generate_content_async(gemini_messages)
+        completion = await self.gemini_client.aio.models.generate_content(
+            model=self.model,
+            contents=gemini_messages,
+            config=generation_config,
+        )
 
-        content = completion.text if completion.parts else ""
-        
+        content = completion.text or ""
+
         # Extract token usage if available
         prompt_tokens = 0
         completion_tokens = 0
         total_tokens = 0
-        if hasattr(completion, "usage_metadata") and completion.usage_metadata:
-            prompt_tokens = completion.usage_metadata.prompt_token_count
-            completion_tokens = completion.usage_metadata.candidates_token_count
-            total_tokens = completion.usage_metadata.total_token_count
+        if getattr(completion, "usage_metadata", None):
+            prompt_tokens = completion.usage_metadata.prompt_token_count or 0
+            completion_tokens = completion.usage_metadata.candidates_token_count or 0
+            total_tokens = completion.usage_metadata.total_token_count or 0
 
         return LLMResponse(
             content=content,

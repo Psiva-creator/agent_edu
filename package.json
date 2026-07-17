@@ -1,8 +1,5 @@
 {
   "scripts": {
     "build": "cd frontend && npm install && npm run build"
-  },
-  "dependencies": {
-    "i": "^0.3.7"
   }
 }
