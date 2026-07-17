@@ -223,7 +223,23 @@ class LLMService:
         self._gemini_cooldown_until: float = 0.0
         self._gemini_cooldown_seconds: float = 60.0
 
-        if self._gemini_api_keys:
+        if settings.OPENAI_API_KEY and settings.OPENAI_API_KEY not in ["your_api_key_here", "your_openai_api_key_here", ""]:
+            try:
+                from openai import AsyncOpenAI
+                self.client = AsyncOpenAI(
+                    api_key=settings.OPENAI_API_KEY,
+                    timeout=self.timeout,
+                )
+                self.provider = "openai"
+                self.model = settings.OPENAI_MODEL
+                logger.info(
+                    f"OpenAI async client initialized — model={self.model}, "
+                    f"temp={self.temperature}, timeout={self.timeout}s"
+                )
+            except Exception as e:
+                logger.error(f"Failed to initialize OpenAI async client: {e}")
+
+        if not self.provider and self._gemini_api_keys:
             if genai:
                 try:
                     self.gemini_client = genai.Client(api_key=self._gemini_api_keys[0])
@@ -238,21 +254,6 @@ class LLMService:
                     logger.error(f"Failed to initialize Gemini async client: {e}")
             else:
                 logger.error("google-genai package not installed, cannot use Gemini.")
-        
-        if not self.provider and settings.OPENAI_API_KEY and settings.OPENAI_API_KEY != "your_api_key_here":
-            try:
-                from openai import AsyncOpenAI
-                self.client = AsyncOpenAI(
-                    api_key=settings.OPENAI_API_KEY,
-                    timeout=self.timeout,
-                )
-                self.provider = "openai"
-                logger.info(
-                    f"OpenAI async client initialized — model={self.model}, "
-                    f"temp={self.temperature}, timeout={self.timeout}s"
-                )
-            except Exception as e:
-                logger.error(f"Failed to initialize OpenAI async client: {e}")
 
         if not self.provider:
             logger.info(
