@@ -273,8 +273,9 @@ class LLMService:
 
     @property
     def is_available(self) -> bool:
-        """Check if the LLM is available for real inference."""
-        return self.provider is not None
+        """Check if the LLM is available for real inference.
+        Forced to False to completely bypass API calls and Vercel timeouts."""
+        return False
 
     # ═══════════════════════════════════════════════════════════
     # GENERATE — Raw text
