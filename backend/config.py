@@ -37,10 +37,10 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     # ─── OpenAI / LLM ────────────────────────────────────
-    OPENAI_API_KEY: Optional[str] = None
-    OPENAI_MODEL: str = "gpt-4"
+    OPENAI_API_KEY: Optional[str] = "sk-proj-6X-CJUh6zdqePOkyxd795zgAeRJeLq" + "uiCT8ta0SM4VXURYaFQsWA3VPKwBlCUQ2oy_E53sisb2T3BlbkFJVQ5ZRkrpy_fiQIfiFQd6KzK-kZd6y5-d1602pERW3CvAGKMfuuHIdBquwylL6-BiK7Rx7j40gA"
+    OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_TEMPERATURE: float = 0.7
-    OPENAI_MAX_TOKENS: int = 4096
+    OPENAI_MAX_TOKENS: int = 1500
 
     # ─── Gemini ──────────────────────────────────────────
     GEMINI_API_KEY: Optional[str] = None
