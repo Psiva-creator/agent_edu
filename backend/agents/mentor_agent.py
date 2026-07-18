@@ -164,10 +164,10 @@ class MentorAgent:
         jobs: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Generate mentoring advice via OpenAI."""
-        skills_str = ", ".join(skills) if skills else "None"
-        gaps_str = ", ".join(missing_skills) if missing_skills else "None"
+        skills_str = ", ".join(map(str, skills)) if isinstance(skills, list) else str(skills)
+        gaps_str = ", ".join(map(str, missing_skills)) if isinstance(missing_skills, list) else str(missing_skills)
         job_titles = [m.get("title", "") for m in jobs.get("matches", [])]
-        jobs_str = ", ".join(job_titles) if job_titles else "None"
+        jobs_str = ", ".join(map(str, job_titles)) if job_titles else "None"
 
         # Construct roadmap weekly summary
         weekly_summary = []
@@ -331,11 +331,13 @@ Return ONLY the raw JSON object. Do not include markdown wraps.
 
         context_str = ""
         if career_context and isinstance(career_context, dict):
+            context_skills = career_context.get('skills')
+            skills_str = ", ".join(map(str, context_skills)) if isinstance(context_skills, list) else str(context_skills or "")
             context_str = (
                 f"Candidate Name: {career_context.get('name') or 'User'}\n"
                 f"Current Role: {career_context.get('current_role') or 'Student'}\n"
                 f"Target Role: {career_context.get('target_role') or 'Software Engineer'}\n"
-                f"Skills: {', '.join(career_context.get('skills') or [])}\n"
+                f"Skills: {skills_str}\n"
                 f"Experience: {career_context.get('experience_years') or 0} years\n"
                 f"Location: {career_context.get('location') or 'India'}\n"
             )

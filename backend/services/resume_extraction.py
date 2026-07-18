@@ -404,56 +404,48 @@ class ResumeExtractionService:
         self, resume_text: str
     ) -> Optional[StructuredResume]:
         """
-        Extract structured fields from resume text via LLM.
-
-        Args:
-            resume_text: Raw resume text.
-
-        Returns:
-            StructuredResume with parsed fields, or None on failure.
+        Extract structured fields from resume text using regex and heuristics.
+        Does not depend on the LLM.
         """
         if not resume_text or len(resume_text.strip()) < 30:
             return None
-        if not self.llm_service or not self.llm_service.is_available:
-            return None
 
-        prompt = (
-            "Extract structured information from the following resume text.\n"
-            "Return a JSON object with these exact keys:\n"
-            '- "name": string (full name)\n'
-            '- "email": string (email address, "" if not found)\n'
-            '- "phone": string (phone number, "" if not found)\n'
-            '- "linkedin": string (LinkedIn URL, "" if not found)\n'
-            '- "github": string (GitHub URL, "" if not found)\n'
-            '- "summary": string (professional summary/objective, "" if not found)\n'
-            '- "skills": array of strings (ALL technical and soft skills)\n'
-            '- "experience": array of objects with keys '
-            '"role", "company", "dates", "bullets" (array of strings)\n'
-            '- "education": array of objects with keys '
-            '"degree", "institution", "year"\n'
-            '- "projects": array of objects with keys '
-            '"name", "description", "technologies" (array of strings)\n'
-            '- "certifications": array of strings\n\n'
-            "Be thorough — extract ALL information present. "
-            "If a field is not found, use empty string or empty array.\n\n"
-            f"RESUME TEXT:\n{resume_text}\n\n"
-            "Return ONLY valid JSON, no markdown formatting or explanations."
+        import re
+        
+        # Helper to extract email
+        email_match = re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", resume_text)
+        email = email_match.group(0) if email_match else ""
+
+        # Helper to extract phone
+        phone_match = re.search(r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", resume_text)
+        phone = phone_match.group(0) if phone_match else ""
+        
+        # URLs
+        linkedin_match = re.search(r"linkedin\.com/in/[a-zA-Z0-9_-]+", resume_text)
+        linkedin = f"https://www.{linkedin_match.group(0)}" if linkedin_match else ""
+        
+        github_match = re.search(r"github\.com/[a-zA-Z0-9_-]+", resume_text)
+        github = f"https://{github_match.group(0)}" if github_match else ""
+
+        # Name (heuristic: first non-empty line)
+        lines = [line.strip() for line in resume_text.splitlines() if line.strip()]
+        name = lines[0] if lines else "Candidate"
+        
+        # Skills (heuristic: look for known skills)
+        known_skills = ["python", "javascript", "java", "c++", "c#", "react", "node.js", "sql", "docker", "aws", "machine learning", "html", "css", "git", "linux", "agile"]
+        skills = list({skill for skill in known_skills if re.search(r'\b' + re.escape(skill) + r'\b', resume_text.lower())})
+        
+        # Fallback empty structures for complex fields
+        return StructuredResume(
+            name=name[:50],
+            email=email,
+            phone=phone,
+            linkedin=linkedin,
+            github=github,
+            summary="Extracted via heuristic fallback. Please refine manually.",
+            skills=skills,
+            experience=[],
+            education=[],
+            projects=[],
+            certifications=[]
         )
-
-        system_msg = (
-            "You are a precise resume parser. Extract structured data "
-            "from resume text. Return ONLY valid JSON."
-        )
-
-        try:
-            data = await self.llm_service.generate_json(
-                prompt=prompt,
-                system_message=system_msg,
-                use_cache=False,
-            )
-            if data and isinstance(data, dict):
-                return StructuredResume.model_validate(data)
-        except Exception as e:
-            logger.error(f"Structured extraction failed: {e}")
-
-        return None

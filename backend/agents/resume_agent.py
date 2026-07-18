@@ -140,45 +140,13 @@ class ResumeAgent:
     ) -> dict:
         """
         Analyze a resume and return comprehensive feedback.
-
-        Args:
-            resume_text: Raw resume text content.
-            target_role: The role the user is targeting.
-
-        Returns:
-            Dict with extracted_skills, missing_skills, readiness_score,
-            career_path, strengths, improvements, ats_suggestions, summary.
+        Operates entirely via heuristic fallback (no API keys required).
         """
         if not resume_text or not resume_text.strip():
             return {"error": "Empty resume text provided."}
 
-        # ── Try LLM-based analysis ───────────────────────────
-        if self.llm.is_available:
-            try:
-                result = await self._analyze_with_llm(resume_text, target_role)
-                if result and result.get("extracted_skills"):
-                    logger.info("Resume analyzed via LLM.")
-                    return result
-            except Exception as e:
-                error_msg = str(e).lower()
-                reason = "unknown_error"
-                if "quota" in error_msg or "429" in error_msg:
-                    reason = "quota_exhausted"
-                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
-                    reason = "auth_error"
-                elif "timeout" in error_msg:
-                    reason = "timeout"
-                    
-                logger.warning(
-                    f"[Fallback] ResumeAgent using fallback due to LLM error. Reason: {reason}. Details: {e}",
-                    extra={"agent": "ResumeAgent", "source": "fallback", "reason": reason}
-                )
-
         # ── Fallback analysis ────────────────────────────────
-        logger.warning(
-            "[Fallback] ResumeAgent using fallback because LLM is unavailable.",
-            extra={"agent": "ResumeAgent", "source": "fallback", "reason": "llm_unavailable"}
-        )
+        logger.info("[Fallback] ResumeAgent using heuristic analysis (independent of API keys).")
         return self._analyze_fallback(resume_text, target_role)
 
     async def _analyze_with_llm(

@@ -122,6 +122,9 @@ async def upload_resume_base64(
         result = await extractor.extract(content, data.filename)
         return result
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"B64 ERROR: {e}")
         return Response(content=f'{{"error": "Failed to parse base64 file: {str(e)}"}}', status_code=400, media_type="application/json")
 
 
