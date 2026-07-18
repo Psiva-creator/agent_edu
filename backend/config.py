@@ -77,10 +77,9 @@ class Settings(BaseSettings):
 
     @property
     def is_llm_available(self) -> bool:
-        """Check if a valid LLM API key (OpenAI or Gemini) is configured."""
-        has_openai = bool(self.OPENAI_API_KEY and self.OPENAI_API_KEY != "your_api_key_here")
-        has_gemini = bool(self.GEMINI_API_KEY and self.GEMINI_API_KEY != "your_api_key_here")
-        return has_openai or has_gemini
+        """Check if a valid LLM API key (OpenAI or Gemini) is configured.
+        Forced to False to prevent Vercel Serverless timeouts and ensure the app is 100% independent of API keys."""
+        return False
 
 
 @lru_cache()
