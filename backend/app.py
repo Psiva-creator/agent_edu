@@ -14,11 +14,13 @@ FastAPI application with:
 
 import time
 import logging
+import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from config import get_settings
 from utils.logging import setup_logging
@@ -196,9 +198,16 @@ app.include_router(profile.router,   prefix=API_PREFIX)
 # ─── Root Endpoints ──────────────────────────────────────────
 
 
-@app.get("/", tags=["System"])
+# Get path to frontend/dist relative to app.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIST_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend", "dist"))
+
+@app.get("/", tags=["System"], include_in_schema=False)
 async def root():
-    """API overview and endpoint directory."""
+    """Serve SPA index.html or API overview if frontend/dist doesn't exist."""
+    index_path = os.path.join(FRONTEND_DIST_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -259,3 +268,38 @@ async def metrics():
             sorted(_metrics["endpoints_hit"].items(), key=lambda x: x[1], reverse=True)[:10]
         ),
     }
+
+# ─── Serve Frontend SPA ───────────────────────────────────────
+
+if os.path.exists(FRONTEND_DIST_DIR):
+    # Mount assets folder
+    assets_dir = os.path.join(FRONTEND_DIST_DIR, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        
+    # Expose root-level files directly
+    @app.get("/favicon.svg", include_in_schema=False)
+    async def favicon():
+        return FileResponse(os.path.join(FRONTEND_DIST_DIR, "favicon.svg"))
+        
+    @app.get("/icons.svg", include_in_schema=False)
+    async def icons():
+        return FileResponse(os.path.join(FRONTEND_DIST_DIR, "icons.svg"))
+
+    # Catch-all route to serve index.html for React Router SPA routes
+    @app.get("/{catchall:path}", include_in_schema=False)
+    async def serve_spa(request: Request, catchall: str):
+        if (
+            catchall.startswith("api/") or 
+            catchall.startswith("docs") or 
+            catchall.startswith("redoc") or 
+            catchall == "health" or 
+            catchall == "metrics" or
+            catchall.startswith("openapi.json")
+        ):
+            raise HTTPException(status_code=404, detail="Not found")
+            
+        index_path = os.path.join(FRONTEND_DIST_DIR, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        raise HTTPException(status_code=404, detail="SPA index file not found")
