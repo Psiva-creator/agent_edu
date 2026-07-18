@@ -602,8 +602,7 @@ async def start_analysis(
         "resume_extracted" if request.mode == "upload" else "career_intelligence_generated"
     )
     
-    background_tasks.add_task(
-        run_analysis_pipeline,
+    await run_analysis_pipeline(
         job_id,
         user_id,
         request.mode,
@@ -639,8 +638,7 @@ async def retry_analysis(
         "resume_extracted" if request.mode == "upload" else "career_intelligence_generated"
     )
     
-    background_tasks.add_task(
-        run_analysis_pipeline,
+    await run_analysis_pipeline(
         job_id,
         user_id,
         request.mode,
