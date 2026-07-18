@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
+import { useAuth } from '../../context/AuthContext'
 import { 
   Sun, Moon, Laptop, Trash2, User, Sparkles, Camera, Upload, X, CheckCircle2,
   Mail, ShieldCheck, GraduationCap, Briefcase, Calendar, ChevronDown, Search, Phone, Lock
@@ -60,17 +61,29 @@ const GRADUATION_YEARS = Array.from({ length: 16 }, (_, i) => String(2020 + i))
 export default function SettingsPanel() {
   const { theme, setTheme } = useTheme()
   const { memory, clearMemory, updatePersonalInfo } = useCareerMemory()
+  const { userData } = useAuth()
 
   // State fields
-  const [name, setName] = useState(memory.personal_info?.name || '')
-  const [email, setEmail] = useState(memory.personal_info?.email || '')
+  const [name, setName] = useState(memory.personal_info?.name || userData?.fullName || '')
+  const [email, setEmail] = useState(userData?.email || memory.personal_info?.email || '')
   const [university, setUniversity] = useState(memory.personal_info?.education || '')
   const [graduationYear, setGraduationYear] = useState(memory.personal_info?.graduationYear || '')
   const [targetCareer, setTargetCareer] = useState(memory.personal_info?.target_role || '')
-  const [avatarPreview, setAvatarPreview] = useState(memory.personal_info?.avatarUrl || '')
+  const [avatarPreview, setAvatarPreview] = useState(memory.personal_info?.avatarUrl || userData?.profilePicture || '')
   const [countryCode, setCountryCode] = useState(memory.personal_info?.country_code || '+91')
-  const [phoneNumber, setPhoneNumber] = useState(memory.personal_info?.phone_number || '')
-  const [isVerified, setIsVerified] = useState(memory.personal_info?.phone_verified || false)
+  const [phoneNumber, setPhoneNumber] = useState(memory.personal_info?.phone_number || userData?.phone || '')
+  const [isVerified, setIsVerified] = useState(memory.personal_info?.phone_verified || (userData?.phone ? true : false) || false)
+  const [initialProfile, setInitialProfile] = useState({
+    name: '',
+    email: '',
+    education: '',
+    graduationYear: '',
+    target_role: '',
+    avatarUrl: '',
+    country_code: '+91',
+    phone_number: '',
+    phone_verified: false
+  })
 
   // UI state
   const [nameError, setNameError] = useState('')
@@ -113,20 +126,52 @@ export default function SettingsPanel() {
     const fetchProfile = async () => {
       try {
         const data = await getProfile()
-        if (data) {
-          setName(data.name || '')
-          setEmail(data.email || '')
-          setUniversity(data.education || '')
-          setUniversityQuery(data.education || '')
-          setGraduationYear(data.graduationYear || '')
-          setTargetCareer(data.target_role || '')
-          setAvatarPreview(data.avatarUrl || '')
-          setCountryCode(data.country_code || '+91')
-          setPhoneNumber(data.phone_number || '')
-          setIsVerified(data.phone_verified || false)
-          
-          updatePersonalInfo(data)
-        }
+        
+        // Determine values prioritizing database, then oauth userData, then existing career memory
+        const nameVal = data?.name || userData?.fullName || memory.personal_info?.name || ''
+        const emailVal = userData?.email || data?.email || memory.personal_info?.email || ''
+        const univVal = data?.education || memory.personal_info?.education || ''
+        const gradVal = data?.graduationYear || memory.personal_info?.graduationYear || ''
+        const careerVal = data?.target_role || memory.personal_info?.target_role || ''
+        const avatarVal = data?.avatarUrl || userData?.profilePicture || memory.personal_info?.avatarUrl || ''
+        const countryVal = data?.country_code || memory.personal_info?.country_code || '+91'
+        const phoneVal = data?.phone_number || userData?.phone || memory.personal_info?.phone_number || ''
+        const verifiedVal = data?.phone_verified || (userData?.phone ? true : false) || memory.personal_info?.phone_verified || false
+
+        setName(nameVal)
+        setEmail(emailVal)
+        setUniversity(univVal)
+        setUniversityQuery(univVal)
+        setGraduationYear(gradVal)
+        setTargetCareer(careerVal)
+        setAvatarPreview(avatarVal)
+        setCountryCode(countryVal)
+        setPhoneNumber(phoneVal)
+        setIsVerified(verifiedVal)
+        
+        updatePersonalInfo({
+          name: nameVal,
+          email: emailVal,
+          education: univVal,
+          graduationYear: gradVal,
+          target_role: careerVal,
+          avatarUrl: avatarVal,
+          country_code: countryVal,
+          phone_number: phoneVal,
+          phone_verified: verifiedVal
+        })
+
+        setInitialProfile({
+          name: nameVal,
+          email: emailVal,
+          education: univVal,
+          graduationYear: gradVal,
+          target_role: careerVal,
+          avatarUrl: avatarVal,
+          country_code: countryVal,
+          phone_number: phoneVal,
+          phone_verified: verifiedVal
+        })
       } catch (err) {
         console.error('Failed to load profile from database:', err)
       } finally {
@@ -134,21 +179,21 @@ export default function SettingsPanel() {
       }
     }
     fetchProfile()
-  }, [])
+  }, [userData])
 
-  // Sync state if memory changes externally
+  // Sync state if memory or userData changes externally
   useEffect(() => {
-    setName(memory.personal_info?.name || '')
-    setEmail(memory.personal_info?.email || 'student@university.edu')
+    setName(memory.personal_info?.name || userData?.fullName || '')
+    setEmail(userData?.email || memory.personal_info?.email || '')
     setUniversity(memory.personal_info?.education || '')
     setUniversityQuery(memory.personal_info?.education || '')
     setGraduationYear(memory.personal_info?.graduationYear || '')
     setTargetCareer(memory.personal_info?.target_role || '')
-    setAvatarPreview(memory.personal_info?.avatarUrl || '')
+    setAvatarPreview(memory.personal_info?.avatarUrl || userData?.profilePicture || '')
     setCountryCode(memory.personal_info?.country_code || '+91')
-    setPhoneNumber(memory.personal_info?.phone_number || '')
-    setIsVerified(memory.personal_info?.phone_verified || false)
-  }, [memory.personal_info])
+    setPhoneNumber(memory.personal_info?.phone_number || userData?.phone || '')
+    setIsVerified(memory.personal_info?.phone_verified || (userData?.phone ? true : false) || false)
+  }, [memory.personal_info, userData])
 
   // Click outside listener to close autocomplete dropdowns
   useEffect(() => {
@@ -182,26 +227,17 @@ export default function SettingsPanel() {
 
   // Dirty check to show Save / Cancel buttons
   const isDirty = useMemo(() => {
-    const origName = memory.personal_info?.name || ''
-    const origUniv = memory.personal_info?.education || ''
-    const origGrad = memory.personal_info?.graduationYear || ''
-    const origCareer = memory.personal_info?.target_role || ''
-    const origAvatar = memory.personal_info?.avatarUrl || ''
-    const origCountry = memory.personal_info?.country_code || '+91'
-    const origPhone = memory.personal_info?.phone_number || ''
-    const origVerified = memory.personal_info?.phone_verified || false
-
     return (
-      name !== origName ||
-      university !== origUniv ||
-      graduationYear !== origGrad ||
-      targetCareer !== origCareer ||
-      avatarPreview !== origAvatar ||
-      countryCode !== origCountry ||
-      phoneNumber !== origPhone ||
-      isVerified !== origVerified
+      name !== initialProfile.name ||
+      university !== initialProfile.education ||
+      graduationYear !== initialProfile.graduationYear ||
+      targetCareer !== initialProfile.target_role ||
+      avatarPreview !== initialProfile.avatarUrl ||
+      countryCode !== initialProfile.country_code ||
+      phoneNumber !== initialProfile.phone_number ||
+      isVerified !== initialProfile.phone_verified
     )
-  }, [name, university, graduationYear, targetCareer, avatarPreview, countryCode, phoneNumber, isVerified, memory.personal_info])
+  }, [name, university, graduationYear, targetCareer, avatarPreview, countryCode, phoneNumber, isVerified, initialProfile])
 
   // Validation
   const handleNameChange = (e) => {
@@ -257,16 +293,16 @@ export default function SettingsPanel() {
 
 
   const handleCancel = () => {
-    setName(memory.personal_info?.name || '')
-    setEmail(memory.personal_info?.email || '')
-    setUniversity(memory.personal_info?.education || '')
-    setUniversityQuery(memory.personal_info?.education || '')
-    setGraduationYear(memory.personal_info?.graduationYear || '')
-    setTargetCareer(memory.personal_info?.target_role || '')
-    setAvatarPreview(memory.personal_info?.avatarUrl || '')
-    setCountryCode(memory.personal_info?.country_code || '+91')
-    setPhoneNumber(memory.personal_info?.phone_number || '')
-    setIsVerified(memory.personal_info?.phone_verified || false)
+    setName(initialProfile.name)
+    setEmail(initialProfile.email)
+    setUniversity(initialProfile.education)
+    setUniversityQuery(initialProfile.education)
+    setGraduationYear(initialProfile.graduationYear)
+    setTargetCareer(initialProfile.target_role)
+    setAvatarPreview(initialProfile.avatarUrl)
+    setCountryCode(initialProfile.country_code)
+    setPhoneNumber(initialProfile.phone_number)
+    setIsVerified(initialProfile.phone_verified)
     setNameError('')
     setPhoneError('')
     setIsEditingPhone(false)
@@ -400,6 +436,18 @@ export default function SettingsPanel() {
             phone_number: phoneNumber,
             phone_verified: true
           })
+
+          setInitialProfile({
+            name,
+            email,
+            education: university,
+            graduationYear,
+            target_role: targetCareer,
+            avatarUrl: avatarPreview,
+            country_code: countryCode,
+            phone_number: phoneNumber,
+            phone_verified: true
+          })
         } catch (saveErr) {
           console.error("Auto-save failed after verification:", saveErr)
         }
@@ -452,6 +500,18 @@ export default function SettingsPanel() {
     await new Promise(resolve => setTimeout(resolve, 1200))
 
     updatePersonalInfo({
+      name,
+      email,
+      education: university,
+      graduationYear,
+      target_role: targetCareer,
+      avatarUrl: avatarPreview,
+      country_code: countryCode,
+      phone_number: phoneNumber,
+      phone_verified: isVerified
+    })
+
+    setInitialProfile({
       name,
       email,
       education: university,
@@ -593,7 +653,7 @@ export default function SettingsPanel() {
                 <User size={16} className="input-group__icon text-tertiary" />
                 <input
                   type="text"
-                  placeholder="Enter full name"
+                  placeholder="Add your full name"
                   value={name}
                   onChange={handleNameChange}
                   className="input-group__input input-group__input--icon"
@@ -613,11 +673,12 @@ export default function SettingsPanel() {
                   <Mail size={16} className="input-group__icon text-tertiary" />
                   <input
                     type="text"
-                    value={email || 'Not added'}
+                    value={email}
+                    placeholder="Not added"
                     readOnly
                     className="input-group__input input-group__input--icon input-read-only"
                   />
-                  {email && (
+                  {(userData?.emailVerified || isVerified) && (
                     <div className="verified-badge-wrap">
                       <ShieldCheck size={14} className="text-success" />
                       <span>Verified</span>
@@ -640,7 +701,7 @@ export default function SettingsPanel() {
                 <Search size={16} className="input-group__icon text-tertiary" />
                 <input
                   type="text"
-                  placeholder="Type to search college or university..."
+                  placeholder="Select your college"
                   value={universityQuery}
                   onChange={(e) => {
                     setUniversityQuery(e.target.value)
@@ -684,7 +745,8 @@ export default function SettingsPanel() {
                     <Phone size={16} className="input-group__icon text-tertiary" />
                     <input
                       type="text"
-                      value={phoneNumber ? `${countryCode} ${phoneNumber}` : 'Not added'}
+                      value={phoneNumber ? `${countryCode} ${phoneNumber}` : ''}
+                      placeholder="Add your phone number"
                       readOnly
                       className="input-group__input input-group__input--icon input-read-only"
                     />

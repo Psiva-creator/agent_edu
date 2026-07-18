@@ -7,6 +7,7 @@ import {
 import Button from '../ui/Button'
 import FallbackBanner from '../ui/FallbackBanner'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
+import { useAuth } from '../../context/AuthContext'
 import './OverviewPanel.css'
 
 const fadeUp = {
@@ -17,6 +18,7 @@ const fadeUp = {
 
 export default function OverviewPanel() {
   const { memory } = useCareerMemory()
+  const { userData } = useAuth()
 
   // Navigation dispatcher
   const handleNav = (tabId) => {
@@ -24,7 +26,7 @@ export default function OverviewPanel() {
   }
 
   // --- Derived Statistics ---
-  const userName = memory?.personal_info?.name || 'User'
+  const userName = userData?.fullName || memory?.personal_info?.name || 'User'
   const targetRole = memory?.personal_info?.target_role || 'Not Set'
   
   const roadmapData = memory?.career_analysis?.roadmap

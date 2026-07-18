@@ -19,7 +19,7 @@ const TITLE_MAP = {
 export default function TopBar({ onMenuClick, className }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { signOut } = useAuth()
+  const { signOut, userData } = useAuth()
   const title = TITLE_MAP[location.pathname] || 'Career Guide AI'
   const showBack = location.pathname !== '/dashboard' && location.pathname !== '/'
 
@@ -37,6 +37,20 @@ export default function TopBar({ onMenuClick, className }) {
         <h1 className="topbar__title">{title}</h1>
       </div>
       <div className="topbar__right">
+        {userData && (
+          <div className="topbar__user" onClick={() => navigate('/dashboard/settings')} style={{ cursor: 'pointer' }}>
+            {userData.profilePicture ? (
+              <img src={userData.profilePicture} alt={userData.fullName} className="topbar__user-avatar" />
+            ) : (
+              <div className="topbar__user-initials">
+                {userData.fullName
+                  ? userData.fullName.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                  : 'U'}
+              </div>
+            )}
+            <span className="topbar__user-name">{userData.fullName || 'User'}</span>
+          </div>
+        )}
         <div className="topbar__status">
           <span className="topbar__status-dot" />
           <span className="topbar__status-text">AI Ready</span>
