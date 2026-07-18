@@ -5,10 +5,13 @@ import {
   XCircle, ChevronRight, BarChart2, Crosshair, 
   Target, Briefcase, Zap, AlertTriangle, ArrowRight,
   TrendingUp, Award, UserCheck, Search, Info, Paperclip,
-  RefreshCw, Eye, EyeOff, ArrowUp, ArrowDown, Edit3
+  RefreshCw, Eye, EyeOff, ArrowUp, ArrowDown, Edit3, Clock, Trash2, Globe
 } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
-import { analyzeResumeText, uploadResume, exportResumePdf, enhanceProjectDescription } from '../../services/api'
+import { 
+  analyzeResumeText, uploadResume, exportResumePdf, enhanceProjectDescription,
+  getResumeVersions, setActiveResumeVersion, renameResumeVersion, deleteResumeVersion
+} from '../../services/api'
 import { usePlatformSync } from '../../hooks/usePlatformSync'
 import { useCareerMemory } from '../../hooks/useCareerMemory'
 import Button from '../ui/Button'
@@ -30,6 +33,19 @@ export default function ResumePanel({ data: existingData, formData }) {
   const [uploadError, setUploadError] = useState(null)
   const fileInputRef = useRef(null)
   
+  // Versions and Syncing States
+  const [versions, setVersions] = useState([])
+  const [showSuggestionModal, setShowSuggestionModal] = useState(false)
+  const [suggestedProfile, setSuggestedProfile] = useState(null)
+  const [confirmedProfileFields, setConfirmedProfileFields] = useState({
+    name: true, education: true, experience_years: true, skills: true
+  })
+  
+  const [renamingId, setRenamingId] = useState(null)
+  const [renamingName, setRenamingName] = useState('')
+  const [viewingResumeText, setViewingResumeText] = useState(null)
+  const [isSyncingState, setIsSyncingState] = useState(false)
+
   const [localResumeData, setLocalResumeData] = useState(() => {
     try {
       const raw = sessionStorage.getItem('resumeAnalysis')
@@ -40,7 +56,7 @@ export default function ResumePanel({ data: existingData, formData }) {
   })
 
   const { data, loading, error, execute, reset } = useApi(analyzeResumeText)
-  const { memory } = useCareerMemory()
+  const { memory, syncActiveResumeState, updatePersonalInfo } = useCareerMemory()
   
   const memoryAnalysis = memory?.resume_intelligence?.raw_analysis
   const result = memoryAnalysis || data || localResumeData || existingData
@@ -52,23 +68,39 @@ export default function ResumePanel({ data: existingData, formData }) {
   const [isExporting, setIsExporting] = useState(false)
   const [enhancingIndex, setEnhancingIndex] = useState(null)
 
-  // Fetch initial profile data on mount
+  // Fetch initial profile data & load versions list on mount
   useEffect(() => {
     if (formData?.target_role) {
       setTargetRole(formData.target_role)
     }
+    const loadVersions = async () => {
+      try {
+        const list = await getResumeVersions()
+        setVersions(list)
+      } catch (err) {
+        console.error("Failed to load versions:", err)
+      }
+    }
+    loadVersions()
   }, [formData])
 
   const handleAnalyze = async () => {
     if (!resumeText.trim()) return
-    const analysisResult = await execute({ resume_text: resumeText, target_role: targetRole || null })
-    // Store in sessionStorage and dispatch event → CareerScoreEngine auto-updates
-    if (analysisResult) {
-      try {
-        sessionStorage.setItem('resumeAnalysis', JSON.stringify(analysisResult))
-        setLocalResumeData(analysisResult)
-        window.dispatchEvent(new CustomEvent('career-score-update', { detail: analysisResult }))
-      } catch {}
+    setIsSyncingState(true)
+    try {
+      const analysisResult = await execute({ resume_text: resumeText, target_role: targetRole || null })
+      if (analysisResult) {
+        // Sync active state across all panels!
+        await syncActiveResumeState(resumeText, targetRole || null)
+        
+        // Refresh versions list
+        const latestVersions = await getResumeVersions()
+        setVersions(latestVersions)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsSyncingState(false)
     }
   }
 
@@ -83,19 +115,18 @@ export default function ResumePanel({ data: existingData, formData }) {
       if (res.text && res.text.trim()) {
         setResumeText(res.text)
         
-        // Auto-run analysis
-        const analysisResult = await execute({ 
-          resume_text: res.text, 
-          target_role: targetRole || null 
-        })
+        // Sync active state across all panels!
+        await syncActiveResumeState(res.text, targetRole, res.profile_suggestion)
         
-        if (analysisResult) {
-          try {
-            sessionStorage.setItem('resumeAnalysis', JSON.stringify(analysisResult))
-            setLocalResumeData(analysisResult)
-            window.dispatchEvent(new CustomEvent('career-score-update', { detail: analysisResult }))
-          } catch {}
+        // Setup Smart Profile suggestions
+        if (res.profile_suggestion) {
+          setSuggestedProfile(res.profile_suggestion)
+          setShowSuggestionModal(true)
         }
+        
+        // Refresh versions list
+        const latestVersions = await getResumeVersions()
+        setVersions(latestVersions)
       } else {
         setUploadError("Could not extract any text from the PDF. Please make sure the file is not scanned or upload a text file.")
       }
@@ -107,6 +138,80 @@ export default function ResumePanel({ data: existingData, formData }) {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const handleSetActive = async (version) => {
+    setIsSyncingState(true)
+    try {
+      await setActiveResumeVersion(version.id)
+      
+      // Update global context state!
+      await syncActiveResumeState(version.text, version.career_domain)
+      
+      // Refresh list
+      const list = await getResumeVersions()
+      setVersions(list)
+    } catch (err) {
+      console.error("Failed to set active resume:", err)
+      alert("Failed to switch active resume version.")
+    } finally {
+      setIsSyncingState(false)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this resume version?")) return
+    try {
+      await deleteResumeVersion(id)
+      const list = await getResumeVersions()
+      setVersions(list)
+      
+      const active = list.find(v => v.active)
+      if (active) {
+        await syncActiveResumeState(active.text, active.career_domain)
+      }
+    } catch (err) {
+      console.error("Failed to delete version:", err)
+    }
+  }
+
+  const triggerRename = (version) => {
+    setRenamingId(version.id)
+    setRenamingName(version.name)
+  }
+
+  const submitRename = async (id) => {
+    if (!renamingName.trim()) return
+    try {
+      await renameResumeVersion(id, renamingName.trim())
+      setRenamingId(null)
+      setRenamingName('')
+      const list = await getResumeVersions()
+      setVersions(list)
+    } catch (err) {
+      console.error("Failed to rename version:", err)
+    }
+  }
+
+  const handleAcceptProfileSuggestions = () => {
+    if (!suggestedProfile) return
+    const updates = {}
+    if (confirmedProfileFields.name && suggestedProfile.name) {
+      updates.name = suggestedProfile.name
+    }
+    if (confirmedProfileFields.education && suggestedProfile.education) {
+      updates.education = suggestedProfile.education
+    }
+    if (confirmedProfileFields.experience_years && suggestedProfile.experience_years !== undefined) {
+      updates.experience_years = suggestedProfile.experience_years
+    }
+    if (confirmedProfileFields.skills && suggestedProfile.skills?.length > 0) {
+      updates.skills = suggestedProfile.skills
+    }
+    
+    updatePersonalInfo(updates)
+    setShowSuggestionModal(false)
+    setSuggestedProfile(null)
   }
 
   const loadSample = () => {
@@ -228,7 +333,132 @@ University of Technology | 2014 - 2018`)
     }
   }
 
+  const renderVersions = () => {
+    if (activeTab !== 'versions') return null;
+
+    return (
+      <motion.div 
+        className="resume-versions-list"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}
+      >
+        <Card padding="lg">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+            <div>
+              <h3 style={{ margin: 0 }}>Recent Resumes & Versions</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', margin: '4px 0 0 0' }}>
+                Manage previous uploads, toggle active resume configurations, and review scoring histories.
+              </p>
+            </div>
+            <Button variant="outline" icon={Paperclip} loading={isUploading} onClick={() => fileInputRef.current?.click()}>
+              Upload New Version
+            </Button>
+          </div>
+
+          {versions.length === 0 ? (
+            <EmptyState icon={Clock} title="No Versions Recorded" description="Upload a resume file to automatically track and manage version histories." />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              {versions.map((ver, idx) => (
+                <div 
+                  key={ver.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: 'var(--space-4)',
+                    background: ver.active ? 'rgba(99, 102, 241, 0.05)' : 'var(--bg-secondary)',
+                    border: ver.active ? '1px solid var(--accent-primary)' : '1px solid var(--border-light)',
+                    borderRadius: 'var(--radius-lg)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', flex: 1 }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: 'var(--radius-md)',
+                      background: ver.active ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: ver.active ? '#fff' : 'var(--text-secondary)'
+                    }}>
+                      <FileText size={20} />
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                        {renamingId === ver.id ? (
+                          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                            <input 
+                              type="text" 
+                              value={renamingName} 
+                              onChange={(e) => setRenamingName(e.target.value)}
+                              style={{
+                                background: 'var(--bg-surface)',
+                                border: '1px solid var(--accent-primary)',
+                                borderRadius: 'var(--radius-sm)',
+                                padding: '2px 6px',
+                                color: 'var(--text-primary)',
+                                fontSize: 'var(--text-sm)'
+                              }}
+                            />
+                            <Button size="sm" variant="primary" onClick={() => submitRename(ver.id)}>Save</Button>
+                            <Button size="sm" variant="ghost" onClick={() => setRenamingId(null)}>Cancel</Button>
+                          </div>
+                        ) : (
+                          <span style={{ fontWeight: 'var(--weight-semibold)', color: 'var(--text-primary)' }}>
+                            {ver.name}
+                          </span>
+                        )}
+                        <Badge variant="outline" size="sm">v{ver.version}</Badge>
+                        {ver.active && <Badge variant="success" size="sm">Active Source</Badge>}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 'var(--space-4)', marginTop: '4px', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+                        <span>Uploaded: {ver.upload_date}</span>
+                        <span>Size: {ver.file_size}</span>
+                        <span>Domain: {ver.career_domain}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <div style={{ marginRight: 'var(--space-4)', textAlign: 'right' }}>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', display: 'block' }}>ATS Score</span>
+                      <span style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--weight-bold)', color: ver.ats_score > 80 ? 'var(--accent-success)' : 'var(--accent-warning)' }}>
+                        {ver.ats_score}%
+                      </span>
+                    </div>
+
+                    <Button 
+                      size="sm" 
+                      variant={ver.active ? "secondary" : "primary"}
+                      disabled={ver.active || isSyncingState} 
+                      onClick={() => handleSetActive(ver)}
+                    >
+                      {ver.active ? "Active" : "Set Active"}
+                    </Button>
+                    
+                    <Button size="sm" variant="outline" onClick={() => triggerRename(ver)}>Rename</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setViewingResumeText(ver.text)}>View Text</Button>
+                    <Button size="sm" variant="ghost" onClick={() => window.open(`/api/v1/resume/download/${ver.id}`, '_blank')}>Download</Button>
+                    <Button size="sm" variant="ghost" style={{ color: 'var(--accent-danger)' }} onClick={() => handleDelete(ver.id)}><Trash2 size={14} /></Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </motion.div>
+    )
+  }
+
   const renderAnalysisDashboard = () => {
+    if (activeTab !== 'analysis') return null;
     if (!result) return (
       <EmptyState icon={Info} title="No Analysis Available" description="Upload or paste your resume to get deep ATS insights." />
     )
@@ -321,6 +551,7 @@ University of Technology | 2014 - 2018`)
   }
 
   const renderBuilder = () => {
+    if (activeTab !== 'builder') return null;
     return (
       <motion.div className="resume-builder" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="builder-header">
@@ -463,7 +694,8 @@ University of Technology | 2014 - 2018`)
         <Tabs 
           tabs={[
             { id: 'analysis', label: 'Resume Analysis', icon: BarChart2 },
-            { id: 'builder', label: 'Auto Portfolio Builder', icon: FileText }
+            { id: 'builder', label: 'Auto Portfolio Builder', icon: FileText },
+            { id: 'versions', label: 'Recent Resumes', icon: Clock }
           ]} 
           activeTab={activeTab} 
           onChange={setActiveTab} 
@@ -501,7 +733,114 @@ University of Technology | 2014 - 2018`)
         <EmptyState icon={AlertTriangle} title="Analysis Failed" description="Could not process the resume. Please check the text and try again." />
       )}
 
-      {activeTab === 'analysis' ? renderAnalysisDashboard() : renderBuilder()}
+      {renderVersions()}
+
+      {/* Smart Profile Updates Modal */}
+      {showSuggestionModal && suggestedProfile && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 'var(--space-4)'
+        }}>
+          <Card padding="xl" style={{ maxWidth: '600px', width: '100%', border: '1px solid var(--accent-primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+              <Sparkles size={24} style={{ color: 'var(--accent-primary)' }} />
+              <h3 style={{ margin: 0 }}>Smart Profile Updates Suggested</h3>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-6)' }}>
+              We extracted new information from your uploaded resume. Choose which sections you'd like to sync to your profile:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginBottom: 'var(--space-8)' }}>
+              {suggestedProfile.name && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={confirmedProfileFields.name} onChange={e => setConfirmedProfileFields(prev => ({ ...prev, name: e.target.checked }))} />
+                  <div>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', display: 'block' }}>Name</span>
+                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: '500' }}>{suggestedProfile.name}</span>
+                  </div>
+                </label>
+              )}
+
+              {suggestedProfile.education && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={confirmedProfileFields.education} onChange={e => setConfirmedProfileFields(prev => ({ ...prev, education: e.target.checked }))} />
+                  <div>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', display: 'block' }}>Education</span>
+                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: '500' }}>{suggestedProfile.education}</span>
+                  </div>
+                </label>
+              )}
+
+              {suggestedProfile.experience_years !== undefined && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={confirmedProfileFields.experience_years} onChange={e => setConfirmedProfileFields(prev => ({ ...prev, experience_years: e.target.checked }))} />
+                  <div>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', display: 'block' }}>Experience Years</span>
+                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: '500' }}>{suggestedProfile.experience_years} years</span>
+                  </div>
+                </label>
+              )}
+
+              {suggestedProfile.skills && suggestedProfile.skills.length > 0 && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={confirmedProfileFields.skills} onChange={e => setConfirmedProfileFields(prev => ({ ...prev, skills: e.target.checked }))} />
+                  <div>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', display: 'block' }}>Skills Extracted</span>
+                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: '500' }}>{suggestedProfile.skills.join(', ')}</span>
+                  </div>
+                </label>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
+              <Button variant="ghost" onClick={() => setShowSuggestionModal(false)}>Keep Existing</Button>
+              <Button variant="primary" onClick={handleAcceptProfileSuggestions}>Sync Selected to Profile</Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Raw Text Preview Modal */}
+      {viewingResumeText && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 'var(--space-4)'
+        }}>
+          <Card padding="lg" style={{ maxWidth: '800px', width: '100%', display: 'flex', flexDirection: 'column', maxHeight: '80vh' }}>
+            <h3>Resume Raw Text Preview</h3>
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              margin: 'var(--space-4) 0',
+              padding: 'var(--space-3)',
+              background: 'var(--bg-secondary)',
+              borderRadius: 'var(--radius-md)',
+              fontFamily: 'monospace',
+              fontSize: 'var(--text-sm)',
+              whiteSpace: 'pre-wrap'
+            }}>
+              {viewingResumeText}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button variant="primary" onClick={() => setViewingResumeText(null)}>Close Preview</Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AnimatePresence } from 'framer-motion'
 import AppLayout from './components/layout/AppLayout'
 import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
 import AnalyzePage from './pages/AnalyzePage'
 import DashboardPage from './pages/DashboardPage'
 import AuthPage from './pages/AuthPage'
@@ -28,6 +29,9 @@ function App() {
             <Routes>
               {/* Landing page — standalone (no sidebar) */}
               <Route path="/" element={<LandingPage />} />
+
+              {/* Interactive Login Experience */}
+              <Route path="/login" element={<LoginPage />} />
 
               {/* Analysis wizard — standalone (no sidebar) */}
               <Route path="/analyze" element={

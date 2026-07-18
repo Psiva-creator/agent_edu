@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Map, Clock, BookOpen, Sparkles, ChevronDown, CheckCircle2,
@@ -8,7 +9,7 @@ import {
   X, Brain, RotateCcw, CheckSquare, AlertCircle, Upload, Link2,
   Layers, Timer, BarChart2, GraduationCap, Rocket, Play, Heart,
   Bookmark, BookMarked, Filter, FolderOpen, Package, MonitorPlay,
-  Terminal, PenLine, Eye, ThumbsUp, Send, Trophy
+  Terminal, PenLine, Eye, ThumbsUp, Send, Trophy, ArrowLeft
 } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { generateRoadmap } from '../../services/api'
@@ -750,9 +751,12 @@ function RoadmapSidebar({ progressPercent, completedCount, totalTasks, result, f
 
 export default function RoadmapPanel({ data: existingData, formData }) {
   const { memory, updateMemory } = useCareerMemory()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const view = searchParams.get('view')
 
   // ── Form state ──────────────────────────────────────────
-  const [mode, setMode] = useState('selection')
   const [currentRole, setCurrentRole] = useState(
     memory?.personal_info?.current_role || formData?.current_role || 'Student'
   )
@@ -764,12 +768,48 @@ export default function RoadmapPanel({ data: existingData, formData }) {
   const { data, loading, error, execute } = useApi(generateRoadmap)
   const result = data || memory?.career_analysis?.roadmap || (existingData?.weeks ? existingData : null)
 
-  useEffect(() => {
-    if (result?.weeks) {
-      setMode('roadmap')
-    }
-  }, [result])
+  // Derive mode from URL parameter and availability of result data
+  const mode = (view === 'details' && result?.weeks) ? 'roadmap' : 'selection'
 
+  // Selection filters (preserved across component lifecycle via URL/state sync)
+  const [selSearchQuery, setSelSearchQuery] = useState(() => {
+    return location.state?.searchQuery || ''
+  })
+  const [selActiveCategory, setSelActiveCategory] = useState(() => {
+    return location.state?.activeCategory || 'all'
+  })
+
+  // Sync selection filter states when browser back/forward changes location state
+  useEffect(() => {
+    if (location.state) {
+      if (location.state.searchQuery !== undefined) {
+        setSelSearchQuery(location.state.searchQuery)
+      }
+      if (location.state.activeCategory !== undefined) {
+        setSelActiveCategory(location.state.activeCategory)
+      }
+    }
+  }, [location.state])
+
+  // Scroll restoration when returning to selection mode
+  useEffect(() => {
+    if (mode === 'selection' && location.state?.scrollY) {
+      const timer = setTimeout(() => {
+        window.scrollTo({
+          top: location.state.scrollY,
+          behavior: 'instant'
+        })
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [mode, location.state])
+
+  // Redirect to base path if we hit ?view=details directly without a cached roadmap
+  useEffect(() => {
+    if (view === 'details' && !result?.weeks && !loading) {
+      navigate('/dashboard/roadmap', { replace: true })
+    }
+  }, [view, result, loading, navigate])
 
   // Auto-generate (preserved exactly)
   useEffect(() => {
@@ -819,7 +859,7 @@ export default function RoadmapPanel({ data: existingData, formData }) {
     })
   }, [])
 
-  // ── Handlers (preserved exactly) ───────────────────────────
+  // ── Handlers (modified for navigation/context-preservation) ──
   const handleGenerate = async (target, customCurrentRole, customTimeline) => {
     const roleToUse = target || targetRole
     const currentToUse = customCurrentRole || currentRole
@@ -843,13 +883,36 @@ export default function RoadmapPanel({ data: existingData, formData }) {
             roadmap: res
           }
         })
+        
+        // Transition to details view with routing state preserved
+        navigate('/dashboard/roadmap?view=details', {
+          state: {
+            from: '/dashboard/roadmap',
+            searchQuery: selSearchQuery,
+            activeCategory: selActiveCategory,
+            scrollY: window.scrollY
+          }
+        })
       }
       
       setCompletedTasks({})
       setExpandedWeeks([])
-      setMode('roadmap')
     } catch (err) {
       console.error("Failed to generate roadmap", err)
+    }
+  }
+
+  const handleBack = () => {
+    if (location.state && location.state.from) {
+      navigate(location.state.from, {
+        state: {
+          searchQuery: location.state.searchQuery,
+          activeCategory: location.state.activeCategory,
+          scrollY: location.state.scrollY
+        }
+      })
+    } else {
+      navigate('/dashboard/roadmap')
     }
   }
 
@@ -903,6 +966,10 @@ export default function RoadmapPanel({ data: existingData, formData }) {
         {/* Career Selection Step */}
         {mode === 'selection' && (
           <CareerSelection 
+            searchQuery={selSearchQuery}
+            setSearchQuery={setSelSearchQuery}
+            activeCategory={selActiveCategory}
+            setActiveCategory={setSelActiveCategory}
             onSelect={(careerTitle) => handleGenerate(careerTitle, currentRole, timeline)} 
             onGenerateCustom={(role, target, time) => handleGenerate(target, role, time)}
             loading={loading}
@@ -914,7 +981,14 @@ export default function RoadmapPanel({ data: existingData, formData }) {
 
         {mode === 'roadmap' && (
           <div className="roadmap-panel__actions-top">
-            <Button variant="outline" onClick={() => setMode('selection')}>
+            <button
+              className="roadmap-panel__back-btn"
+              onClick={handleBack}
+              aria-label="Go back to Roadmap"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <Button variant="outline" onClick={handleBack}>
               <RotateCcw size={14} style={{ marginRight: 6 }} /> Change Career
             </Button>
           </div>

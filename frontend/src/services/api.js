@@ -200,5 +200,26 @@ export const verifyMobileOtp = async (phoneNumber, otp) => {
   return res.data
 }
 
+// ── Resume Versions Controls ──
+export const getResumeVersions = async () => {
+  const res = await api.get('/resume/versions')
+  return res.data
+}
+
+export const setActiveResumeVersion = async (id) => {
+  const res = await api.post(`/resume/set-active/${id}`)
+  return res.data
+}
+
+export const renameResumeVersion = async (id, name) => {
+  const res = await api.put(`/resume/rename/${id}`, { name })
+  return res.data
+}
+
+export const deleteResumeVersion = async (id) => {
+  const res = await api.delete(`/resume/delete/${id}`)
+  return res.data
+}
+
 export default api
 

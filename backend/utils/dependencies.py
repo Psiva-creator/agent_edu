@@ -79,3 +79,33 @@ def get_cover_letter_agent():
     """Inject Cover Letter agent with shared LLM service."""
     from agents.cover_letter_agent import CoverLetterAgent
     return CoverLetterAgent()
+
+_resume_service = None
+_roadmap_service = None
+_mentor_service = None
+
+def get_resume_service():
+    """Inject Resume service singleton."""
+    global _resume_service
+    if _resume_service is None:
+        from services.resume_service import ResumeService
+        _resume_service = ResumeService(llm_service=get_llm())
+    return _resume_service
+
+def get_roadmap_service():
+    """Inject Roadmap service singleton."""
+    global _roadmap_service
+    if _roadmap_service is None:
+        from services.roadmap_service import RoadmapService
+        _roadmap_service = RoadmapService(llm_service=get_llm(), resource_service=get_resources())
+    return _roadmap_service
+
+def get_mentor_service():
+    """Inject Mentor service singleton."""
+    global _mentor_service
+    if _mentor_service is None:
+        from services.mentor_service import MentorService
+        _mentor_service = MentorService(llm_service=get_llm())
+    return _mentor_service
+
+

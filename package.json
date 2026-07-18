@@ -1,5 +1,9 @@
 {
   "scripts": {
+    "dev": "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"cyan,magenta\" \"cd backend && .venv/bin/uvicorn app:app --host 127.0.0.1 --port 8000\" \"cd frontend && npm run dev\"",
     "build": "cd frontend && npm install && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

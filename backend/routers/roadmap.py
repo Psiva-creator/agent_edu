@@ -7,8 +7,8 @@ POST /roadmap — Generate a personalized career roadmap with week-by-week break
 from fastapi import APIRouter, Depends, status
 
 from schemas.models import RoadmapRequest, RoadmapResponse
-from agents.roadmap_agent import RoadmapAgent
-from utils.dependencies import get_roadmap_agent
+from services.roadmap_service import RoadmapService
+from utils.dependencies import get_roadmap_service
 
 router = APIRouter(tags=["Roadmap"])
 
@@ -33,9 +33,9 @@ router = APIRouter(tags=["Roadmap"])
 )
 async def generate_roadmap(
     data: RoadmapRequest,
-    agent: RoadmapAgent = Depends(get_roadmap_agent),
+    service: RoadmapService = Depends(get_roadmap_service),
 ):
-    result = await agent.generate_roadmap(
+    result = await service.generate(
         skill_gaps=data.skill_gaps,
         hours_per_week=data.hours_per_week,
         deadline_weeks=data.deadline_weeks,
@@ -43,3 +43,4 @@ async def generate_roadmap(
         target_role=data.target_role,
     )
     return result
+

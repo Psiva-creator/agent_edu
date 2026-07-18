@@ -1,4 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { analyzeResumeText, analyzeProfile, generateRoadmap, searchJobs } from '../services/api';
+import { transformReportToMemory } from '../utils/profileTransformer';
 
 export const CareerMemoryContext = createContext(null);
 
@@ -135,6 +137,66 @@ export function CareerMemoryProvider({ children }) {
     }));
   }, []);
 
+  const syncActiveResumeState = useCallback(async (resumeText, targetRole, profileSuggestion = null) => {
+    // 1. Analyze Resume text
+    const analysis = await analyzeResumeText({
+      resume_text: resumeText,
+      target_role: targetRole || memory.personal_info?.target_role || 'Software Engineer'
+    });
+
+    // 2. Analyze Profile
+    const payload = {
+      name: profileSuggestion?.name || memory.personal_info?.name || 'Resume Candidate',
+      current_role: profileSuggestion?.current_role || memory.personal_info?.current_role || 'Candidate',
+      target_role: targetRole || profileSuggestion?.target_role || memory.personal_info?.target_role || analysis.target_role || 'Software Engineer',
+      skills: analysis.extracted_skills || [],
+      experience_years: profileSuggestion?.experience_years !== undefined ? profileSuggestion.experience_years : (memory.personal_info?.experience_years || analysis.experience_years || 0),
+      education: profileSuggestion?.education || memory.personal_info?.education || '',
+      location: profileSuggestion?.location || memory.personal_info?.location || '',
+    };
+    
+    const reportResult = await analyzeProfile(payload);
+    reportResult.resume_analysis = analysis;
+    reportResult.resume_text = resumeText;
+    reportResult.resume_score = analysis.score || 85;
+    reportResult.ats_score = analysis.score || 80;
+    reportResult.strengths = analysis.strengths || [];
+    reportResult.weaknesses = analysis.improvements || [];
+
+    // 3. Generate Roadmap
+    const skillGaps = reportResult.skill_gaps || reportResult.missing_skills || [];
+    try {
+      const roadmapRes = await generateRoadmap({
+        current_role: reportResult.current_role || 'Candidate',
+        target_role: reportResult.target_role,
+        skill_gaps: skillGaps,
+        hours_per_week: 10,
+        deadline_weeks: 12,
+        skills: reportResult.skills || []
+      });
+      reportResult.roadmap = roadmapRes;
+    } catch (e) {
+      console.error("Roadmap sync failed:", e);
+    }
+
+    // 4. Match Jobs
+    try {
+      const jobsRes = await searchJobs(reportResult.target_role, reportResult.location || '');
+      reportResult.jobs = jobsRes;
+    } catch (e) {
+      console.error("Jobs sync failed:", e);
+    }
+
+    // 5. Update Memory State
+    const newMemory = transformReportToMemory(reportResult);
+    setMemory(newMemory);
+
+    return {
+      newMemory,
+      profileSuggestion
+    };
+  }, [memory]);
+
   const value = {
     memory,
     updateMemory,
@@ -144,6 +206,7 @@ export function CareerMemoryProvider({ children }) {
     updateCareerAnalysis,
     addInterviewSession,
     updateSkillIntelligence,
+    syncActiveResumeState,
   };
 
   return (

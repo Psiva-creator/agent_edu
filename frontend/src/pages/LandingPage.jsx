@@ -70,6 +70,7 @@ export default function LandingPage() {
             <a href="#how-it-works">How It Works</a>
             <a href="#ai-agents">AI Agents</a>
             <a href="#benefits">Benefits</a>
+            <a href="#" className="landing__signin-link" onClick={(e) => { e.preventDefault(); navigate('/login') }}>Sign In</a>
             <Button id="nav-get-started" variant="primary" size="sm" onClick={() => navigate('/auth')}>Get Started</Button>
             <ThemeSwitcher />
           </div>

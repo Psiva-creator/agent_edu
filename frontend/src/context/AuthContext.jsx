@@ -9,21 +9,35 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+      } catch (err) {
+        console.error("Failed to retrieve initial session from Supabase:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    initAuth();
 
-    return () => subscription.unsubscribe();
+    let subscription;
+    try {
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      });
+      subscription = data?.subscription;
+    } catch (err) {
+      console.error("Failed to subscribe to Supabase auth state changes:", err);
+    }
+
+    return () => {
+      if (subscription) subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email, password, fullName) => {

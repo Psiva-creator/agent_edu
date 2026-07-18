@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, status
 
 from schemas.models import MentorQuestionRequest, MentorQuestionResponse
-from agents.mentor_agent import MentorAgent
-from utils.dependencies import get_mentor_agent
+from services.mentor_service import MentorService
+from utils.dependencies import get_mentor_service
 
 router = APIRouter(tags=["career"])
 
@@ -23,8 +23,9 @@ async def analyze_career(data: dict):
 )
 async def ask_mentor(
     data: MentorQuestionRequest,
-    agent: MentorAgent = Depends(get_mentor_agent),
+    service: MentorService = Depends(get_mentor_service),
 ):
-    res = await agent.answer_question(data.question, data.career_context)
+    res = await service.answer_question(data.question, data.career_context)
     return res
+
 
