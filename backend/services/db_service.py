@@ -1,9 +1,10 @@
 import sqlite3
 import os
+import tempfile
 from typing import Dict, Any, Optional
 from datetime import datetime
 
-DB_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "app.db")
+DB_FILE = os.path.join(tempfile.gettempdir(), "app.db")
 
 def init_db():
     """Initialize SQLite database tables."""
