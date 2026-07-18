@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Security
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Security, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
@@ -303,3 +303,353 @@ async def get_career_guidance(current_user: Dict[str, Any] = Depends(get_current
     except Exception as e:
         logger.error(f"Error generating guidance: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate career guidance.")
+
+
+# ─── Analysis Job Pipeline & Endpoints ──────────────────────────
+
+async def run_analysis_pipeline(job_id: str, user_id: str, mode: str, resume_text: str, form: dict):
+    try:
+        from services import db_service
+        from utils.dependencies import get_llm, get_resources, get_resume_agent, get_roadmap_agent, get_job_agent, get_mentor_agent
+        from agents.skill_gap_agent import SkillGapAgent
+        from agents.market_agent import MarketAgent
+        from services.report_service import ReportService
+        from datetime import datetime
+        
+        # 1. Update SQLite to processing, and starting step
+        if mode == "upload":
+            db_service.save_analysis_job(job_id, user_id, "processing", "resume_extracted")
+        else:
+            db_service.save_analysis_job(job_id, user_id, "processing", "career_intelligence_generated")
+            
+        name = form.get("name", "User")
+        current_role = form.get("current_role", "Student")
+        target_role = form.get("target_role", "Software Engineer")
+        skills = form.get("skills", [])
+        experience_years = int(form.get("experience_years", 0))
+        education = form.get("education", "Not specified")
+        location = form.get("location", "India")
+        
+        llm = get_llm()
+        
+        # Step: Resume Analyzed
+        if mode == "upload":
+            db_service.save_analysis_job(job_id, user_id, "processing", "resume_analyzed")
+            resume_agent = get_resume_agent()
+            resume_analysis = await resume_agent.analyze_resume(resume_text, target_role)
+            extracted_skills = resume_analysis.get("extracted_skills", skills) or skills
+        else:
+            resume_analysis = {}
+            extracted_skills = skills
+            db_service.save_analysis_job(job_id, user_id, "processing", "resume_analyzed")
+            
+        # Step: Career Intelligence Generated
+        db_service.save_analysis_job(job_id, user_id, "processing", "career_intelligence_generated")
+        skill_gap_agent = SkillGapAgent(llm_service=llm)
+        skill_gap_analysis = await skill_gap_agent.analyze_gaps(extracted_skills, target_role)
+        missing_skills = skill_gap_analysis.get("missing_skills", [])
+        
+        # Step: Roadmap Created
+        db_service.save_analysis_job(job_id, user_id, "processing", "roadmap_created")
+        roadmap_agent = get_roadmap_agent()
+        roadmap = await roadmap_agent.generate_roadmap(
+            skill_gaps=missing_skills,
+            hours_per_week=15,
+            deadline_weeks=8,
+            current_role=current_role,
+            target_role=target_role
+        )
+        
+        # Step: Jobs Matched
+        db_service.save_analysis_job(job_id, user_id, "processing", "jobs_matched")
+        job_agent = get_job_agent()
+        merged_profile = {
+            **resume_analysis,
+            "name": name,
+            "current_role": current_role,
+            "target_role": target_role,
+            "skills": extracted_skills,
+            "experience_years": experience_years,
+            "education": education,
+            "location": location,
+        }
+        jobs = await job_agent.find_jobs(profile=merged_profile, preferences={"remote": True})
+        
+        # Step: Mentor Initialized
+        db_service.save_analysis_job(job_id, user_id, "processing", "mentor_initialized")
+        market_agent = MarketAgent(llm_service=llm)
+        try:
+            market_analysis = await market_agent.analyze_market(industry=target_role, location=location)
+        except Exception:
+            market_analysis = {}
+            
+        mentor_agent = get_mentor_agent()
+        mentor_advice = await mentor_agent.get_guidance(
+            profile=merged_profile,
+            target_role=target_role,
+            resume_analysis=resume_analysis,
+            skill_gap_analysis=skill_gap_analysis,
+            roadmap=roadmap,
+            jobs=jobs
+        )
+        
+        # Step: Career Memory Saved
+        db_service.save_analysis_job(job_id, user_id, "processing", "career_memory_saved")
+        
+        report_service = ReportService(llm_service=llm)
+        
+        # Readiness score
+        readiness_score = float(resume_analysis.get("readiness_score", 0.0))
+        if readiness_score == 0.0:
+            readiness_score = float(skill_gap_analysis.get("confidence_score", 0.85) * 100)
+        readiness_label = report_service._score_to_label(int(readiness_score))
+        
+        candidate_summary = resume_analysis.get("summary", "")
+        if not candidate_summary:
+            candidate_summary = (
+                f"{name} is a {current_role} targeting the {target_role} role. "
+                f"They currently possess {len(extracted_skills)} technical skills and "
+                f"have {experience_years} years of professional experience."
+            )
+            
+        strengths = resume_analysis.get("strengths", [])
+        if not strengths:
+            strengths = report_service._analyze_strengths(extracted_skills, experience_years, [], target_role)
+            
+        weaknesses = resume_analysis.get("improvements", [])
+        if not weaknesses:
+            weaknesses = report_service._analyze_weaknesses(extracted_skills, experience_years, [], set())
+            
+        expected_salary = {
+            "currency": "INR",
+            "min": 0,
+            "max": 0,
+            "median": 0
+        }
+        if jobs and jobs.get("matches"):
+            first_match = jobs["matches"][0]
+            if "salary_range" in first_match:
+                expected_salary = first_match["salary_range"]
+        from services.report_service import SALARY_MAP, CERTIFICATIONS_MAP, HIRING_COMPANIES_MAP
+        if expected_salary.get("median", 0) == 0:
+            expected_salary = SALARY_MAP.get(target_role.lower(), {"min": 500000, "max": 2000000, "median": 1000000})
+            expected_salary["currency"] = "INR"
+            
+        target_roles = []
+        for match in jobs.get("matches", []):
+            req_skills = match.get("required_skills", [])
+            matched_len = len(set(extracted_skills) & set(req_skills))
+            target_roles.append({
+                "title": match.get("title", ""),
+                "match": int(match.get("match_percentage", 0)),
+                "matched_skills": matched_len,
+                "total_required": len(req_skills),
+                "is_primary": match.get("title", "").lower() == target_role.lower()
+            })
+        if not target_roles:
+            target_roles = report_service._compute_target_roles({s.lower() for s in extracted_skills}, target_role)
+            
+        roadmap_summary = ""
+        if roadmap and roadmap.get("weeks"):
+            weeks = roadmap["weeks"]
+            total_w = len(weeks)
+            phase_themes = [w.get("theme", "") for w in weeks if w.get("theme")]
+            unique_themes = []
+            for t in phase_themes:
+                if t not in unique_themes:
+                    unique_themes.append(t)
+            roadmap_summary = (
+                f"Personalized {total_w}-week learning plan. "
+                f"Focus areas: {', '.join(unique_themes[:3])}. "
+                f"Total estimated effort: {roadmap.get('total_estimated_hours', total_w * 10)} hours."
+            )
+        if not roadmap_summary:
+            timeline = max(8, 20 - experience_years * 2)
+            roadmap_summary = (
+                f"Phase 1: Build foundations. Phase 2: Hands-on projects. Phase 3: Portfolio and applications. Total: {timeline} weeks."
+            )
+            
+        certifications = CERTIFICATIONS_MAP.get(target_role.lower(), [])
+        if not certifications:
+            certifications = ["AWS Certified Cloud Practitioner", "Google IT Support Certificate"]
+            
+        companies = []
+        for match in jobs.get("matches", []):
+            for c in match.get("hiring_companies", []):
+                if c not in companies:
+                    companies.append(c)
+        if not companies:
+            companies = HIRING_COMPANIES_MAP.get(target_role.lower(), [])
+        hiring_companies = companies[:5]
+        
+        next_steps = mentor_advice.get("weekly_goals", [])[:3] + mentor_advice.get("monthly_goals", [])[:2]
+        if not next_steps:
+            next_steps = [
+                f"Complete an online course in {missing_skills[0]}" if missing_skills else "Review your skills",
+                "Build 2–3 portfolio projects showcasing your target skills"
+            ]
+            
+        overall_recommendation = mentor_advice.get("learning_strategy", "")
+        if not overall_recommendation:
+            overall_recommendation = report_service._generate_recommendation(
+                int(readiness_score), target_role, missing_skills, experience_years
+            )
+            
+        report = {
+            "name": name,
+            "current_role": current_role,
+            "target_role": target_role,
+            "generated_at": datetime.now().strftime("%B %d, %Y at %I:%M %p"),
+            "candidate_summary": candidate_summary,
+            "readiness_score": readiness_score,
+            "readiness_label": readiness_label,
+            "strengths": strengths,
+            "weaknesses": weaknesses,
+            "skill_gaps": missing_skills,
+            "expected_salary": expected_salary,
+            "target_roles": target_roles,
+            "roadmap_summary": roadmap_summary,
+            "mentor_advice": mentor_advice.get("personalized_advice", ""),
+            "certifications": certifications,
+            "hiring_companies": hiring_companies,
+            "overall_recommendation": overall_recommendation,
+            "next_steps": next_steps,
+            "market_data": market_analysis,
+            "resume_text": resume_text,
+            "skills": extracted_skills,
+            "experience_years": experience_years,
+            "projects": form.get("projects", []),
+            "source": "ai",
+            "roadmap": roadmap,
+            "jobs": jobs,
+            "mentor_context": mentor_advice
+        }
+        
+        # Save profile
+        profile_dict = {
+            "name": name,
+            "email": form.get("email") or "student@university.edu",
+            "education": education,
+            "graduationYear": form.get("graduationYear") or "",
+            "target_role": target_role,
+            "avatarUrl": form.get("avatarUrl") or "",
+            "country_code": form.get("country_code") or "+91",
+            "phone_number": form.get("phone_number") or "",
+            "phone_verified": 1 if form.get("phone_verified") else 0,
+            "phone_verified_at": form.get("phone_verified_at")
+        }
+        db_service.save_profile(user_id, profile_dict)
+        
+        # Complete
+        db_service.save_analysis_job(job_id, user_id, "completed", "career_memory_saved", result_dict=report)
+        
+    except Exception as e:
+        import traceback
+        error_msg = f"Pipeline failed: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        db_service.save_analysis_job(job_id, user_id, "failed", "career_memory_saved", error_message=error_msg)
+
+
+class StartAnalysisRequest(BaseModel):
+    mode: str
+    resume_text: Optional[str] = ""
+    form: Dict[str, Any]
+
+class RetryAnalysisRequest(BaseModel):
+    mode: str
+    resume_text: Optional[str] = ""
+    form: Dict[str, Any]
+
+@router.post("/analyze/start")
+async def start_analysis(
+    request: StartAnalysisRequest,
+    background_tasks: BackgroundTasks,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    user_id = current_user["id"]
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User is not authenticated.")
+        
+    # Check if there is an active job
+    active_job = db_service.get_active_analysis_job_by_user(user_id)
+    if active_job:
+        return active_job
+        
+    # Create new job
+    import uuid
+    job_id = str(uuid.uuid4())
+    db_service.save_analysis_job(
+        job_id, 
+        user_id, 
+        "pending", 
+        "resume_extracted" if request.mode == "upload" else "career_intelligence_generated"
+    )
+    
+    background_tasks.add_task(
+        run_analysis_pipeline,
+        job_id,
+        user_id,
+        request.mode,
+        request.resume_text,
+        request.form
+    )
+    
+    return db_service.get_analysis_job(job_id)
+
+@router.post("/analyze/retry/{job_id}")
+async def retry_analysis(
+    job_id: str,
+    request: RetryAnalysisRequest,
+    background_tasks: BackgroundTasks,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    user_id = current_user["id"]
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User is not authenticated.")
+        
+    job = db_service.get_analysis_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found.")
+        
+    if job["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized.")
+        
+    # Reset status to pending
+    db_service.save_analysis_job(
+        job_id, 
+        user_id, 
+        "pending", 
+        "resume_extracted" if request.mode == "upload" else "career_intelligence_generated"
+    )
+    
+    background_tasks.add_task(
+        run_analysis_pipeline,
+        job_id,
+        user_id,
+        request.mode,
+        request.resume_text,
+        request.form
+    )
+    
+    return db_service.get_analysis_job(job_id)
+
+@router.get("/analyze/active")
+async def get_active_job(current_user: Dict[str, Any] = Depends(get_current_user)):
+    user_id = current_user["id"]
+    job = db_service.get_active_analysis_job_by_user(user_id)
+    return job
+
+@router.get("/analyze/latest")
+async def get_latest_job(current_user: Dict[str, Any] = Depends(get_current_user)):
+    user_id = current_user["id"]
+    job = db_service.get_latest_job_by_user(user_id)
+    return job
+
+@router.get("/analyze/job/{job_id}")
+async def get_job_by_id(job_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    user_id = current_user["id"]
+    job = db_service.get_analysis_job(job_id)
+    if job and job["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    return job

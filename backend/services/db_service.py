@@ -42,6 +42,21 @@ def init_db():
             createdAt TEXT
         )
     """)
+
+    # Analysis Jobs table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS analysis_jobs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            status TEXT,
+            current_step TEXT,
+            error_message TEXT,
+            result TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            completed_at TEXT
+        )
+    """)
     
     conn.commit()
     conn.close()
@@ -211,3 +226,101 @@ def is_phone_number_verified_by_other(user_id: str, phone_number: str) -> bool:
     row = cursor.fetchone()
     conn.close()
     return row is not None
+
+def save_analysis_job(job_id: str, user_id: str, status: str, current_step: str, error_message: str = None, result_dict: dict = None):
+    """Insert or update an analysis job."""
+    import json
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    now_str = datetime.utcnow().isoformat()
+    result_str = json.dumps(result_dict) if result_dict else None
+    completed_at_str = now_str if status == "completed" else None
+    
+    cursor.execute("SELECT 1 FROM analysis_jobs WHERE id = ?", (job_id,))
+    exists = cursor.fetchone()
+    
+    if exists:
+        cursor.execute("""
+            UPDATE analysis_jobs SET
+                status = ?,
+                current_step = ?,
+                error_message = ?,
+                result = ?,
+                updated_at = ?,
+                completed_at = COALESCE(completed_at, ?)
+            WHERE id = ?
+        """, (status, current_step, error_message, result_str, now_str, completed_at_str, job_id))
+    else:
+        cursor.execute("""
+            INSERT INTO analysis_jobs (
+                id, user_id, status, current_step, error_message, result, created_at, updated_at, completed_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (job_id, user_id, status, current_step, error_message, result_str, now_str, now_str, completed_at_str))
+        
+    conn.commit()
+    conn.close()
+
+def get_analysis_job(job_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve an analysis job by its ID."""
+    import json
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM analysis_jobs WHERE id = ?", (job_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        res = dict(row)
+        if res.get("result"):
+            try:
+                res["result"] = json.loads(res["result"])
+            except Exception:
+                pass
+        return res
+    return None
+
+def get_active_analysis_job_by_user(user_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve the latest active (pending or processing) analysis job for a user."""
+    import json
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT * FROM analysis_jobs 
+        WHERE user_id = ? AND status IN ('pending', 'processing')
+        ORDER BY created_at DESC LIMIT 1
+    """, (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        res = dict(row)
+        if res.get("result"):
+            try:
+                res["result"] = json.loads(res["result"])
+            except Exception:
+                pass
+        return res
+    return None
+
+def get_latest_job_by_user(user_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve the latest job for a user regardless of status."""
+    import json
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT * FROM analysis_jobs 
+        WHERE user_id = ?
+        ORDER BY created_at DESC LIMIT 1
+    """, (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        res = dict(row)
+        if res.get("result"):
+            try:
+                res["result"] = json.loads(res["result"])
+            except Exception:
+                pass
+        return res
+    return None

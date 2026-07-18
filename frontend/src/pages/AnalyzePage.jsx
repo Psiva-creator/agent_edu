@@ -1,8 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Sparkles, User, Code, Compass, CheckCircle, Upload, FileText, AlertTriangle, Loader } from 'lucide-react'
-import { analyzeProfile, uploadResume, analyzeResumeText, generateRoadmap, searchJobs, askMentor, reparseResumeText } from '../services/api'
+import { 
+  uploadResume, reparseResumeText, getProfile,
+  startAnalysisJob, retryAnalysisJob, getAnalysisJobStatus
+} from '../services/api'
+import { supabase } from '../lib/supabase'
 import { useCareerMemory } from '../hooks/useCareerMemory'
 import { transformReportToMemory } from '../utils/profileTransformer'
 import Button from '../components/ui/Button'
@@ -12,7 +16,6 @@ import StepIndicator from '../components/ui/StepIndicator'
 import Badge from '../components/ui/Badge'
 import Card from '../components/ui/Card'
 import './AnalyzePage.css'
-import axios from 'axios'
 
 const STEPS = ['Mode', 'Personal Info', 'Skills & Interests', 'Career Goals', 'Review']
 
@@ -35,7 +38,9 @@ export default function AnalyzePage() {
   const [isExtracting, setIsExtracting] = useState(false)
   
   const [isProcessing, setIsProcessing] = useState(false)
-  const [progress, setProgress] = useState({})
+  const [isStarting, setIsStarting] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [activeJob, setActiveJob] = useState(null)
   const [globalError, setGlobalError] = useState(null)
   
   const [form, setForm] = useState({
@@ -52,6 +57,8 @@ export default function AnalyzePage() {
   
   const { updateMemory, clearMemory } = useCareerMemory()
   const fileInputRef = useRef(null)
+  const pollIntervalRef = useRef(null)
+  const pollingStartTimeRef = useRef(0)
 
   const update = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -118,6 +125,17 @@ export default function AnalyzePage() {
         setFile(null);
       } else {
         setExtractedData(res);
+        if (res.structured) {
+          setForm(prev => ({
+            ...prev,
+            name: res.structured.name || prev.name,
+            current_role: res.structured.current_role || prev.current_role,
+            target_role: res.structured.target_role || prev.target_role,
+            skills: res.structured.skills || res.structured.extracted_skills || prev.skills,
+            experience_years: res.structured.experience_years !== undefined ? String(res.structured.experience_years) : prev.experience_years,
+            education: res.structured.education || prev.education,
+          }));
+        }
       }
     } catch (err) {
       setGlobalError(err.message || 'Failed to upload and extract resume.');
@@ -156,178 +174,329 @@ export default function AnalyzePage() {
   
   const prev = () => setStep(s => Math.max(s - 1, 0))
 
-  const updateProgress = (stageId, status) => {
-    setProgress(prev => ({ ...prev, [stageId]: status }))
-  }
+  const stopPolling = () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  };
 
-  const handlePipelineSubmit = async () => {
-    if (mode === 'upload' && !file) return
-    if (mode === 'manual' && !validateStep()) return
-
-    setIsProcessing(true)
-    setGlobalError(null)
-    setProgress({})
-
-    try {
-      let reportResult
-      let analysis
-      let targetRole = "Software Engineer"
-      let skills = []
-      let skillGaps = []
-      let text = ""
-
-      if (mode === 'upload') {
-        // 1. Extraction was done in previous step
-        updateProgress('upload', 'success')
-        text = extractedData.text
-        if (!text || !text.trim()) {
-          throw new Error("Resume text is empty. Please check the extracted text.")
+  const startPolling = (jobId) => {
+    stopPolling();
+    pollingStartTimeRef.current = Date.now();
+    
+    pollIntervalRef.current = setInterval(async () => {
+      const elapsed = (Date.now() - pollingStartTimeRef.current) / 1000;
+      if (elapsed > 90) {
+        stopPolling();
+        setGlobalError("Analysis is taking longer than expected. Please retry.");
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            await supabase
+              .from('analysis_jobs')
+              .update({
+                status: 'failed',
+                error_message: 'Analysis is taking longer than expected. Please retry.',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', jobId);
+          }
+        } catch (err) {
+          console.error("Failed to update timeout status in Supabase", err);
+        }
+        return;
+      }
+      
+      try {
+        const job = await getAnalysisJobStatus(jobId);
+        if (!job) return;
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          await supabase
+            .from('analysis_jobs')
+            .upsert({
+              id: job.id,
+              user_id: session.user.id,
+              status: job.status,
+              current_step: job.current_step,
+              error_message: job.error_message || null,
+              result: job.result || null,
+              created_at: job.created_at,
+              updated_at: new Date().toISOString(),
+              completed_at: job.completed_at || null
+            });
         }
         
+        setActiveJob(job);
+        
+        if (job.status === 'completed') {
+          stopPolling();
+          const memoryData = transformReportToMemory(job.result);
+          clearMemory();
+          updateMemory(memoryData);
+          navigate('/dashboard', { replace: true });
+        } else if (job.status === 'failed') {
+          stopPolling();
+          setGlobalError(job.error_message || "Pipeline failed. Please try again.");
+        }
+      } catch (err) {
+        console.error("Error polling job status:", err);
+      }
+    }, 2500);
+  };
+
+  useEffect(() => {
+    let active = true;
+    
+    const checkExistingJobAndProfile = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          setInitialLoading(false);
+          return;
+        }
+        
+        const { data: job } = await supabase
+          .from('analysis_jobs')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+          
+        if (job) {
+          setActiveJob(job);
+          
+          if (job.status === 'completed') {
+            const memoryData = transformReportToMemory(job.result);
+            clearMemory();
+            updateMemory(memoryData);
+            navigate('/dashboard', { replace: true });
+            return;
+          } else if (job.status === 'pending' || job.status === 'processing') {
+            setIsProcessing(true);
+            startPolling(job.id);
+          } else if (job.status === 'failed') {
+            setGlobalError(job.error_message || "Analysis failed. Please retry.");
+            setStep(4);
+          }
+        }
+        
+        const profileData = await getProfile();
+        if (profileData && active) {
+          setForm(prev => ({
+            ...prev,
+            name: profileData.name || prev.name,
+            education: profileData.education || prev.education,
+            current_role: profileData.current_role || prev.current_role,
+            target_role: profileData.target_role || prev.target_role,
+            skills: profileData.skills || prev.skills,
+            location: profileData.location || prev.location,
+            experience_years: profileData.experience_years !== undefined ? String(profileData.experience_years) : prev.experience_years
+          }));
+        }
+      } catch (err) {
+        console.error("Error on page load:", err);
+      } finally {
+        if (active) {
+          setInitialLoading(false);
+        }
+      }
+    };
+    
+    checkExistingJobAndProfile();
+    
+    return () => {
+      active = false;
+      stopPolling();
+    };
+  }, []);
+
+  const handlePipelineSubmit = async () => {
+    if (mode === 'manual' && !validateStep()) return;
+    
+    setIsStarting(true);
+    setGlobalError(null);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        throw new Error("User session not found. Please log in.");
+      }
+      
+      const targetRole = mode === 'upload' ? (extractedData?.structured?.target_role || form.target_role || "Software Engineer") : form.target_role;
+      if (!targetRole || !targetRole.trim()) {
+        throw new Error("Target role is required to run the career analysis.");
+      }
+      
+      let resumeText = "";
+      if (mode === 'upload') {
+        resumeText = extractedData?.text;
+        if (!resumeText || !resumeText.trim()) {
+          throw new Error("Resume text is empty. Please check the extracted text.");
+        }
         try {
-          // Reparse to ensure structured data is fresh if user edited text
-          await reparseResumeText(text);
+          await reparseResumeText(resumeText);
         } catch (e) {
           console.warn("Reparse failed, continuing with raw text", e);
         }
-
-        // 2. Analyze Resume
-        updateProgress('analyze', 'loading')
-        try {
-          const analyzeRes = await analyzeResumeText({
-            resume_text: text,
-            target_role: "Software Engineer" // Fallback target role to extract base info
-          })
-          analysis = analyzeRes
-          updateProgress('analyze', 'success')
-        } catch (e) {
-          console.error("Analysis failed:", e)
-          throw new Error("Failed to analyze resume.") // Critical failure
-        }
-
-        // 3. Generate Report / Profile Analysis
-        updateProgress('report', 'loading')
-        try {
-          const payload = {
-            name: "Resume Candidate",
-            current_role: "Candidate",
-            target_role: analysis.target_role || "Software Engineer",
-            skills: analysis.extracted_skills || [],
-            experience_years: analysis.experience_years || 0,
-            education: "",
-            location: ""
-          }
-          reportResult = await analyzeProfile(payload)
-          
-          // Merge specific resume intelligence directly into the report result
-          reportResult.resume_analysis = analysis
-          reportResult.resume_text = text
-          reportResult.resume_score = analysis.score || 85
-          reportResult.ats_score = analysis.score || 80
-          reportResult.strengths = analysis.strengths || []
-          reportResult.weaknesses = analysis.improvements || []
-          
-          updateProgress('report', 'success')
-        } catch (e) {
-          console.error("Report failed:", e)
-          throw new Error("Failed to generate career report.") // Critical failure
-        }
-      } else {
-        // MANUAL MODE
-        updateProgress('upload', 'success') // Skip
-        updateProgress('analyze', 'success') // Skip
+      }
+      
+      const formPayload = {
+        name: form.name.trim() || session.user.user_metadata?.full_name || "Candidate",
+        current_role: form.current_role.trim() || (mode === 'upload' ? "Candidate" : ""),
+        target_role: targetRole.trim(),
+        skills: form.skills,
+        experience_years: parseInt(form.experience_years) || 0,
+        education: form.education || (form.degree ? `${form.degree} ${form.branch || ''}`.trim() : ""),
+        location: form.location || ""
+      };
+      
+      const job = await startAnalysisJob(mode, resumeText, formPayload);
+      if (!job || !job.id) {
+        throw new Error("Failed to initialize analysis job on the server.");
+      }
+      
+      const { error: insertErr } = await supabase
+        .from('analysis_jobs')
+        .upsert({
+          id: job.id,
+          user_id: session.user.id,
+          status: job.status,
+          current_step: job.current_step,
+          error_message: job.error_message || null,
+          result: job.result || null,
+          created_at: job.created_at,
+          updated_at: new Date().toISOString()
+        });
         
-        updateProgress('report', 'loading')
-        try {
-          const payload = {
-            name: form.name.trim(),
-            current_role: form.current_role.trim(),
-            target_role: form.target_role.trim(),
-            skills: form.skills,
-            experience_years: parseInt(form.experience_years) || 0,
-            education: form.education || (form.degree ? `${form.degree} ${form.branch || ''}`.trim() : null),
-            location: form.location || null,
-          }
-          reportResult = await analyzeProfile(payload)
-          reportResult.resume_text = "" // No text available in manual mode
-          updateProgress('report', 'success')
-        } catch (e) {
-          console.error("Report failed:", e)
-          throw new Error("Failed to generate career report.")
+      if (insertErr) {
+        throw new Error(`Failed to save job to Supabase: ${insertErr.message}`);
+      }
+      
+      setActiveJob(job);
+      setIsStarting(false);
+      setIsProcessing(true);
+      startPolling(job.id);
+      
+    } catch (err) {
+      console.error("Failed to start analysis:", err);
+      setGlobalError(err.message || "Failed to start analysis. Please try again.");
+      setIsStarting(false);
+    }
+  };
+
+  const handleRetrySubmit = async () => {
+    if (!activeJob?.id) return;
+    
+    setIsStarting(true);
+    setGlobalError(null);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        throw new Error("User session not found. Please log in.");
+      }
+      
+      const targetRole = mode === 'upload' ? (extractedData?.structured?.target_role || form.target_role || "Software Engineer") : form.target_role;
+      if (!targetRole || !targetRole.trim()) {
+        throw new Error("Target role is required to run the career analysis.");
+      }
+      
+      let resumeText = "";
+      if (mode === 'upload') {
+        resumeText = extractedData?.text;
+        if (!resumeText || !resumeText.trim()) {
+          throw new Error("Resume text is empty. Please check the extracted text.");
         }
       }
-
-      // Extract details for remaining agents
-      targetRole = reportResult.target_role || "Software Engineer"
-      skills = reportResult.skills || []
-      skillGaps = reportResult.skill_gaps || reportResult.missing_skills || []
-
-      // 4. Generate Roadmap (Non-blocking)
-      updateProgress('roadmap', 'loading')
-      try {
-        const roadmapRes = await generateRoadmap({
-          current_role: reportResult.current_role || "Candidate",
-          target_role: targetRole,
-          skill_gaps: skillGaps,
-          hours_per_week: 10,
-          deadline_weeks: 12,
-          skills: skills
-        })
-        reportResult.roadmap = roadmapRes
-        updateProgress('roadmap', 'success')
-      } catch (e) {
-        console.warn("Roadmap generation failed, continuing...", e)
-        updateProgress('roadmap', 'error')
+      
+      const formPayload = {
+        name: form.name.trim() || session.user.user_metadata?.full_name || "Candidate",
+        current_role: form.current_role.trim() || (mode === 'upload' ? "Candidate" : ""),
+        target_role: targetRole.trim(),
+        skills: form.skills,
+        experience_years: parseInt(form.experience_years) || 0,
+        education: form.education || (form.degree ? `${form.degree} ${form.branch || ''}`.trim() : ""),
+        location: form.location || ""
+      };
+      
+      const job = await retryAnalysisJob(activeJob.id, mode, resumeText, formPayload);
+      if (!job || !job.id) {
+        throw new Error("Failed to restart analysis job on the server.");
       }
-
-      // 5. Search Jobs (Non-blocking)
-      updateProgress('jobs', 'loading')
-      try {
-        const jobsRes = await searchJobs(targetRole, reportResult.location || '')
-        reportResult.jobs = jobsRes
-        updateProgress('jobs', 'success')
-      } catch (e) {
-        console.warn("Jobs fetch failed, continuing...", e)
-        updateProgress('jobs', 'error')
+      
+      const { error: updateErr } = await supabase
+        .from('analysis_jobs')
+        .upsert({
+          id: job.id,
+          user_id: session.user.id,
+          status: job.status,
+          current_step: job.current_step,
+          error_message: null,
+          result: null,
+          created_at: job.created_at,
+          updated_at: new Date().toISOString()
+        });
+        
+      if (updateErr) {
+        throw new Error(`Failed to update job status in Supabase: ${updateErr.message}`);
       }
-
-      // 6. Initialize Mentor (Non-blocking)
-      updateProgress('mentor', 'loading')
-      try {
-        const mentorPrompt = `I have just uploaded my profile for the role of ${targetRole}. My top skills are ${skills.slice(0,3).join(', ')}. Please introduce yourself as my AI Career Mentor.`
-        const mentorRes = await askMentor({
-          question: mentorPrompt,
-          career_context: {
-            target_role: targetRole,
-            skills: skills,
-            skill_gaps: skillGaps
-          }
-        })
-        reportResult.mentor_context = mentorRes
-        updateProgress('mentor', 'success')
-      } catch (e) {
-        console.warn("Mentor initialization failed, continuing...", e)
-        updateProgress('mentor', 'error')
-      }
-
-      // 7. Save to Career Memory
-      updateProgress('memory', 'loading')
-      const memoryData = transformReportToMemory(reportResult)
-      clearMemory()
-      updateMemory(memoryData)
-      updateProgress('memory', 'success')
-
-      // Redirect to Dashboard automatically
-      setTimeout(() => {
-        navigate('/dashboard')
-      }, 1500)
-
+      
+      setActiveJob(job);
+      setIsStarting(false);
+      setIsProcessing(true);
+      startPolling(job.id);
+      
     } catch (err) {
-      console.error(err)
-      setIsProcessing(false)
-      setGlobalError(err.message || 'Pipeline failed. Please try again.')
+      console.error("Failed to retry analysis:", err);
+      setGlobalError(err.message || "Failed to retry analysis. Please try again.");
+      setIsStarting(false);
     }
-  }
+  };
+
+  const getProgressStatus = (currentStep, stageId, overallStatus, mode) => {
+    if (overallStatus === 'completed') return 'success';
+    
+    if (mode === 'manual' && (stageId === 'upload' || stageId === 'analyze')) {
+      return 'success';
+    }
+    
+    const stepOrder = [
+      'resume_extracted',
+      'resume_analyzed',
+      'career_intelligence_generated',
+      'roadmap_created',
+      'jobs_matched',
+      'mentor_initialized',
+      'career_memory_saved'
+    ];
+    
+    const stageStepMap = {
+      'upload': 'resume_extracted',
+      'analyze': 'resume_analyzed',
+      'report': 'career_intelligence_generated',
+      'roadmap': 'roadmap_created',
+      'jobs': 'jobs_matched',
+      'mentor': 'mentor_initialized',
+      'memory': 'career_memory_saved'
+    };
+    
+    const currentIdx = stepOrder.indexOf(currentStep);
+    const stageStep = stageStepMap[stageId];
+    const stageIdx = stepOrder.indexOf(stageStep);
+    
+    if (stageIdx < currentIdx) {
+      return 'success';
+    } else if (stageIdx === currentIdx) {
+      if (overallStatus === 'failed') return 'error';
+      return 'loading';
+    } else {
+      return 'pending';
+    }
+  };
 
   const renderStageIcon = (status) => {
     switch(status) {
@@ -342,6 +511,24 @@ export default function AnalyzePage() {
     enter: { x: 30, opacity: 0 },
     center: { x: 0, opacity: 1 },
     exit: { x: -30, opacity: 0 },
+  }
+
+  if (initialLoading) {
+    return (
+      <div className="analyze-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+        <Loader size={36} className="text-blue-500 animate-spin" />
+        <span style={{ marginLeft: '1rem', color: 'var(--text-secondary)' }}>Loading your profile status...</span>
+      </div>
+    );
+  }
+
+  if (isStarting) {
+    return (
+      <div className="analyze-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+        <Loader size={36} className="text-blue-500 animate-spin" />
+        <span style={{ marginLeft: '1rem', color: 'var(--text-secondary)' }}>Starting analysis...</span>
+      </div>
+    );
   }
 
   return (
@@ -459,6 +646,19 @@ export default function AnalyzePage() {
                 {step === 4 && (
                   <div className="analyze-page__fields">
                     <div className="analyze-page__icon-title"><CheckCircle size={20} style={{ color: 'var(--success)' }} /><h3>Review Your Profile</h3></div>
+                    {globalError && (
+                      <div style={{ padding: '1rem', background: 'var(--error-bg)', color: 'var(--error)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <AlertTriangle size={18} />
+                          <span>{globalError}</span>
+                        </div>
+                        {activeJob?.status === 'failed' && (
+                          <Button variant="primary" size="sm" style={{ width: 'fit-content' }} onClick={handleRetrySubmit} disabled={isStarting}>
+                            {isStarting ? 'Retrying...' : 'Retry Analysis'}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                     <div className="analyze-page__review">
                       <div className="analyze-page__review-row"><span>Name</span><span>{form.name || '—'}</span></div>
                       <div className="analyze-page__review-row"><span>Current Role</span><span>{form.current_role || '—'}</span></div>
@@ -479,9 +679,21 @@ export default function AnalyzePage() {
                 <h3>Building Your Career Memory...</h3>
               </div>
               
+              {globalError && (
+                <div style={{ padding: '1rem', background: 'var(--error-bg)', color: 'var(--error)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertTriangle size={18} />
+                    <span>{globalError}</span>
+                  </div>
+                  <Button variant="primary" style={{ width: 'fit-content' }} onClick={handleRetrySubmit} disabled={isStarting}>
+                    {isStarting ? 'Retrying...' : 'Retry Analysis'}
+                  </Button>
+                </div>
+              )}
+              
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {PIPELINE_STAGES.map((stage) => {
-                  const status = progress[stage.id] || 'pending'
+                  const status = getProgressStatus(activeJob?.current_step, stage.id, activeJob?.status, mode)
                   return (
                     <motion.div 
                       key={stage.id}
@@ -523,9 +735,9 @@ export default function AnalyzePage() {
                   variant="primary" 
                   icon={mode === 'upload' && !extractedData ? Upload : Sparkles} 
                   onClick={mode === 'upload' && !extractedData ? handleExtractOnly : handlePipelineSubmit} 
-                  disabled={(mode === 'upload' && !file) || isExtracting}
+                  disabled={(mode === 'upload' && !file) || isExtracting || isStarting}
                 >
-                  {isExtracting ? 'Extracting...' : (mode === 'upload' ? (!extractedData ? 'Upload & Extract Resume' : 'Confirm & Analyze Resume') : 'Run AI Analysis')}
+                  {isExtracting ? 'Extracting...' : isStarting ? 'Starting...' : (mode === 'upload' ? (!extractedData ? 'Upload & Extract Resume' : 'Confirm & Analyze Resume') : 'Run AI Analysis')}
                 </Button>
               )}
             </div>

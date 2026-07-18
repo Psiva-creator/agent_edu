@@ -101,10 +101,12 @@ export default function SettingsPanel() {
   const [showUnivDropdown, setShowUnivDropdown] = useState(false)
   const [careerQuery, setCareerQuery] = useState('')
   const [showCareerDropdown, setShowCareerDropdown] = useState(false)
+  const [showGradDropdown, setShowGradDropdown] = useState(false)
 
   // Refs for click outside
   const universityRef = useRef(null)
   const careerRef = useRef(null)
+  const gradRef = useRef(null)
 
   // Fetch profile database values on mount
   useEffect(() => {
@@ -156,6 +158,9 @@ export default function SettingsPanel() {
       }
       if (careerRef.current && !careerRef.current.contains(event.target)) {
         setShowCareerDropdown(false)
+      }
+      if (gradRef.current && !gradRef.current.contains(event.target)) {
+        setShowGradDropdown(false)
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -265,6 +270,7 @@ export default function SettingsPanel() {
     setNameError('')
     setPhoneError('')
     setIsEditingPhone(false)
+    setShowGradDropdown(false)
   }
 
   // Resend OTP Countdown Timer
@@ -815,24 +821,37 @@ export default function SettingsPanel() {
             </div>
 
             {/* Graduation Year */}
-            <div className="profile-field-group">
+            <div className="profile-field-group relative" ref={gradRef}>
               <label className="profile-field-label">
                 <Calendar size={15} />
                 Graduation Year
               </label>
-              <div className="select-wrapper">
-                <select
-                  value={graduationYear}
-                  onChange={(e) => setGraduationYear(e.target.value)}
-                  className="select__input"
-                >
-                  <option value="" disabled>Select graduation year</option>
-                  {GRADUATION_YEARS.map(y => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="select__chevron" />
+              <div 
+                className="select-custom-wrapper"
+                onClick={() => setShowGradDropdown(!showGradDropdown)}
+              >
+                <div className={`select-custom-input ${!graduationYear ? 'placeholder' : ''}`}>
+                  {graduationYear ? graduationYear : "Select graduation year"}
+                </div>
+                <ChevronDown size={16} className="select-custom-chevron" />
               </div>
+              {showGradDropdown && (
+                <div className="select-custom-dropdown">
+                  {GRADUATION_YEARS.map(y => (
+                    <div
+                      key={y}
+                      className={`select-custom-item ${y === graduationYear ? 'selected' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setGraduationYear(y)
+                        setShowGradDropdown(false)
+                      }}
+                    >
+                      {y}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

@@ -1,10 +1,26 @@
 import axios from 'axios'
+import { supabase } from '../lib/supabase'
 
 const api = axios.create({
   baseURL: '/api/v1',
   headers: { 'Content-Type': 'application/json' },
   timeout: 120000,
 })
+
+// Automatically set the Bearer token with the Supabase user ID/token
+api.interceptors.request.use(async (config) => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      config.headers['Authorization'] = `Bearer ${session.user.id}`;
+    }
+  } catch (err) {
+    console.error("Error setting auth header", err);
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 
 // ── Career Intelligence Report (main analysis endpoint) ──
 // Backend: POST /api/v1/report → CareerReportRequest → CareerReportResponse
@@ -218,6 +234,32 @@ export const renameResumeVersion = async (id, name) => {
 
 export const deleteResumeVersion = async (id) => {
   const res = await api.delete(`/resume/delete/${id}`)
+  return res.data
+}
+
+// ── Analysis Job Endpoints ──
+export const startAnalysisJob = async (mode, resumeText, form) => {
+  const res = await api.post('/profile/analyze/start', { mode, resume_text: resumeText, form })
+  return res.data
+}
+
+export const retryAnalysisJob = async (jobId, mode, resumeText, form) => {
+  const res = await api.post(`/profile/analyze/retry/${jobId}`, { mode, resume_text: resumeText, form })
+  return res.data
+}
+
+export const getAnalysisJobStatus = async (jobId) => {
+  const res = await api.get(`/profile/analyze/job/${jobId}`)
+  return res.data
+}
+
+export const getActiveAnalysisJob = async () => {
+  const res = await api.get('/profile/analyze/active')
+  return res.data
+}
+
+export const getLatestAnalysisJob = async () => {
+  const res = await api.get('/profile/analyze/latest')
   return res.data
 }
 
