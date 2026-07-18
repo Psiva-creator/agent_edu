@@ -733,6 +733,8 @@ University of Technology | 2014 - 2018`)
         <EmptyState icon={AlertTriangle} title="Analysis Failed" description="Could not process the resume. Please check the text and try again." />
       )}
 
+      {renderAnalysisDashboard()}
+      {renderBuilder()}
       {renderVersions()}
 
       {/* Smart Profile Updates Modal */}
