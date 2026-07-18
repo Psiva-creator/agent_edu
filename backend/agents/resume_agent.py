@@ -29,7 +29,6 @@ from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
 
-from services.llm_service import LLMService
 from prompts.templates import RESUME_ANALYSIS_PROMPT, RESUME_EXPORT_PROMPT, RESUME_REWRITE_PROMPT
 logger = logging.getLogger(__name__)
 
@@ -116,15 +115,10 @@ class ResumeAgent:
         pdf  = agent.render_pdf(data)
     """
 
-    def __init__(self, llm_service: Optional[LLMService] = None):
+    def __init__(self):
         """
         Initialize the ResumeAgent.
-
-        Args:
-            llm_service: Injected LLM service (or creates its own).
         """
-        self.llm = llm_service or LLMService()
-
         # Set up Jinja2 environment
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(TEMPLATES_DIR)),
@@ -149,23 +143,7 @@ class ResumeAgent:
         logger.info("[Fallback] ResumeAgent using heuristic analysis (independent of API keys).")
         return self._analyze_fallback(resume_text, target_role)
 
-    async def _analyze_with_llm(
-        self, resume_text: str, target_role: str,
-    ) -> dict:
-        """Analyze resume using OpenAI."""
-        prompt = RESUME_ANALYSIS_PROMPT.format(
-            resume_text=resume_text[:4000],  # Limit to avoid token overflow
-            target_role=target_role,
-        )
-        result = await self.llm.generate_json(prompt)
-        if isinstance(result, dict) and result:
-            # Ensure required fields
-            result.setdefault("target_role", target_role)
-            result.setdefault("missing_skills", [])
-            result.setdefault("career_path", [])
-            result["source"] = "ai"
-            return result
-        return {}
+
 
     def _analyze_fallback(
         self, resume_text: str, target_role: str,
@@ -700,30 +678,6 @@ class ResumeAgent:
         if not text or not text.strip():
             return text
 
-        if self.llm.is_available:
-            prompt = (
-                "You are an expert resume writer. Rewrite the following project description "
-                "to be professional, ATS-friendly, and impactful. Use strong action verbs "
-                "and ensure it highlights measurable impact if possible. Keep it concise (1-2 sentences max).\n\n"
-                f"Original: {text}\n\n"
-                "Return ONLY the rewritten text, with no preamble or quotes."
-            )
-            try:
-                # generate_text isn't explicitly shown, assuming it exists or using completion pattern
-                # If generate_text isn't in LLMService, we can use generate_json and parse.
-                # Let's check LLMService interface safely or use a fallback logic.
-                prompt_json = (
-                    "You are an expert resume writer. Rewrite the following project description "
-                    "to be professional, ATS-friendly, and impactful. Use strong action verbs. "
-                    "Return a JSON object with the key 'enhanced_description'.\n\n"
-                    f"Original: {text}"
-                )
-                result = await self.llm.generate_json(prompt_json)
-                if isinstance(result, dict) and "enhanced_description" in result:
-                    return result["enhanced_description"]
-            except Exception as e:
-                logger.warning(f"LLM project enhancement failed: {e}")
-
         # Fallback simple enhancement
         words = text.split()
         if words and words[0].lower() in ["did", "made", "worked", "built"]:
@@ -739,41 +693,11 @@ class ResumeAgent:
 
     async def rewrite_resume_bullets(self, resume_text: str, target_role: str) -> dict:
         """
-        Extract and rewrite weak bullet points from the resume.
+        Extract and rewrite weak bullet points from the resume using code heuristics.
         """
         if not resume_text or not resume_text.strip():
             return {"rewrites": []}
 
-        if self.llm.is_available:
-            prompt = RESUME_REWRITE_PROMPT.format(
-                resume_text=resume_text[:4000],
-                target_role=target_role
-            )
-            try:
-                result = await self.llm.generate_json(prompt)
-                if isinstance(result, dict) and "rewrites" in result:
-                    result["source"] = "ai"
-                    return result
-            except Exception as e:
-                error_msg = str(e).lower()
-                reason = "unknown_error"
-                if "quota" in error_msg or "429" in error_msg:
-                    reason = "quota_exhausted"
-                elif "auth" in error_msg or "401" in error_msg or "403" in error_msg:
-                    reason = "auth_error"
-                elif "timeout" in error_msg:
-                    reason = "timeout"
-                    
-                logger.warning(
-                    f"[Fallback] ResumeAgent (rewrite) using fallback due to LLM error. Reason: {reason}. Details: {e}",
-                    extra={"agent": "ResumeAgent", "source": "fallback", "reason": reason, "operation": "rewrite"}
-                )
-
-        logger.warning(
-            "[Fallback] ResumeAgent (rewrite) using fallback because LLM is unavailable.",
-            extra={"agent": "ResumeAgent", "source": "fallback", "reason": "llm_unavailable", "operation": "rewrite"}
-        )
-        
         # Fallback: dynamic logic based on input
         sentences = [s.strip() for s in resume_text.replace('\n', '.').split('.') if len(s.strip()) > 30]
         weakest = sentences[:3] if sentences else [f"Worked on a {target_role} project to improve performance."]

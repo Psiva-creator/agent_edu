@@ -58,7 +58,7 @@ def report_service(mock_llm):
 @pytest.fixture
 def resume_agent(mock_llm):
     """Resume agent in fallback mode."""
-    return ResumeAgent(llm_service=mock_llm)
+    return ResumeAgent()
 
 
 @pytest.fixture

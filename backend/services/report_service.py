@@ -177,7 +177,7 @@ class ReportService:
             f"- {education}\n"
         )
         from agents.resume_agent import ResumeAgent
-        resume_agent = ResumeAgent(llm_service=self.llm)
+        resume_agent = ResumeAgent()
         resume_analysis = await resume_agent.analyze_resume(resume_text, target_role)
 
         # ── 2. Skill Gap Agent ──────────────────────────────

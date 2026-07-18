@@ -76,14 +76,13 @@ async def analyze_resume(
 )
 async def upload_resume(
     file: UploadFile = File(...),
-    llm: LLMService = Depends(get_llm),
 ):
     if not file.filename:
         return Response(content='{"error": "No file uploaded"}', status_code=400, media_type="application/json")
     
     try:
         content = await file.read()
-        extractor = ResumeExtractionService(llm_service=llm)
+        extractor = ResumeExtractionService()
         result = await extractor.extract(content, file.filename)
         return result
     except Exception as e:
@@ -114,11 +113,10 @@ async def rewrite_resume(
 )
 async def upload_resume_base64(
     data: ResumeUploadBase64Request,
-    llm: LLMService = Depends(get_llm),
 ):
     try:
         content = base64.b64decode(data.content_base64)
-        extractor = ResumeExtractionService(llm_service=llm)
+        extractor = ResumeExtractionService()
         result = await extractor.extract(content, data.filename)
         return result
     except Exception as e:
@@ -137,10 +135,9 @@ async def upload_resume_base64(
 )
 async def reparse_resume_text(
     data: ReparseRequest,
-    llm: LLMService = Depends(get_llm),
 ):
     try:
-        extractor = ResumeExtractionService(llm_service=llm)
+        extractor = ResumeExtractionService()
         structured = await extractor.extract_structured(data.text)
         
         return {

@@ -313,7 +313,7 @@ class JobAgent:
 
             # Use ResumeAgent for extraction
             from agents.resume_agent import ResumeAgent
-            resume_agent = ResumeAgent(llm_service=self.llm)
+            resume_agent = ResumeAgent()
             resume_data = await resume_agent.analyze_resume(stripped, target_role=target_role)
             if isinstance(resume_data, dict):
                 result["skills"] = resume_data.get("extracted_skills", [])

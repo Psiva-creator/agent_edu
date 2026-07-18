@@ -94,7 +94,7 @@ class SkillGapAgent:
         
         # Local import to avoid circular dependency
         from agents.resume_agent import ResumeAgent
-        self.resume_agent = resume_agent or ResumeAgent(llm_service=self.llm)
+        self.resume_agent = resume_agent or ResumeAgent()
 
     async def analyze_gaps(
         self,

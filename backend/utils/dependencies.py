@@ -61,8 +61,8 @@ def get_roadmap_agent() -> RoadmapAgent:
 
 
 def get_resume_agent() -> ResumeAgent:
-    """Inject Resume agent with shared LLM service."""
-    return ResumeAgent(llm_service=get_llm())
+    """Inject Resume agent."""
+    return ResumeAgent()
 
 
 def get_mentor_agent():

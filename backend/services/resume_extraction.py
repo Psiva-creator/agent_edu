@@ -162,80 +162,7 @@ def _extract_plain_text(content: bytes) -> str:
         return ""
 
 
-# ═══════════════════════════════════════════════════════════════
-# OCR Helpers
-# ═══════════════════════════════════════════════════════════════
 
-def _render_pdf_pages_to_images(
-    pdf_bytes: bytes, max_pages: int = MAX_OCR_PAGES
-) -> list[bytes]:
-    """Render PDF pages to PNG byte buffers using pypdfium2."""
-    try:
-        import pypdfium2 as pdfium
-
-        pdf = pdfium.PdfDocument(pdf_bytes)
-        images: list[bytes] = []
-        for i in range(min(len(pdf), max_pages)):
-            page = pdf[i]
-            bitmap = page.render(scale=200 / 72)  # 200 DPI
-            pil_image = bitmap.to_pil()
-            buf = io.BytesIO()
-            pil_image.save(buf, format="PNG")
-            images.append(buf.getvalue())
-        pdf.close()
-        return images
-    except Exception as e:
-        logger.error(f"PDF → image rendering failed: {e}")
-        return []
-
-
-async def _ocr_with_gemini(
-    images: list[bytes], llm_service
-) -> str:
-    """
-    OCR via Gemini Vision API.
-
-    Sends page images in parallel (asyncio.gather) and concatenates
-    the transcribed text.  Capped at MAX_OCR_PAGES.
-    """
-    if not images or not llm_service or not llm_service.is_available:
-        return ""
-
-    if llm_service.provider != "gemini":
-        logger.warning("OCR fallback requires Gemini provider — skipping")
-        return ""
-
-    try:
-        import google.generativeai as genai
-        from PIL import Image
-
-        async def _ocr_page(image_bytes: bytes, page_num: int) -> str:
-            try:
-                img = Image.open(io.BytesIO(image_bytes))
-                model = genai.GenerativeModel(model_name=llm_service.model)
-                prompt = (
-                    "You are an OCR engine. Transcribe ALL visible text from "
-                    "this resume image faithfully and completely. Preserve the "
-                    "section structure (headings, bullet points, paragraphs). "
-                    "Do NOT summarize, interpret, or add any commentary. "
-                    "Output ONLY the transcribed text."
-                )
-                response = await model.generate_content_async([prompt, img])
-                return response.text if response.parts else ""
-            except Exception as e:
-                logger.error(f"Gemini OCR page {page_num} failed: {e}")
-                return ""
-
-        tasks = [_ocr_page(img, i) for i, img in enumerate(images)]
-        results = await asyncio.gather(*tasks)
-        return "\n\n".join(r for r in results if r.strip()).strip()
-
-    except ImportError:
-        logger.error("Pillow (PIL) not available — cannot run vision OCR")
-        return ""
-    except Exception as e:
-        logger.error(f"Gemini OCR pipeline failed: {e}")
-        return ""
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -254,8 +181,8 @@ class ResumeExtractionService:
         structured = await svc.extract_structured(result.text)
     """
 
-    def __init__(self, llm_service=None):
-        self.llm_service = llm_service
+    def __init__(self):
+        pass
 
     # ─── Public: extract raw text ────────────────────────────
 
@@ -326,25 +253,14 @@ class ResumeExtractionService:
 
         # ── Image (PNG / JPG / JPEG) ─────────────────────────
         if ext in IMAGE_EXTENSIONS:
-            text = await _ocr_with_gemini([content], self.llm_service)
-            if text and not is_garbage_text(text):
-                return ResumeExtractionResponse(
-                    text=text,
-                    confidence=ConfidenceLevel.MEDIUM,
-                    warning=(
-                        "This resume was processed using OCR from an image. "
-                        "Please review the extracted text for accuracy."
-                    ),
-                    extraction_method="gemini_vision_ocr",
-                )
             return ResumeExtractionResponse(
-                text=text,
+                text="",
                 confidence=ConfidenceLevel.LOW,
                 warning=(
-                    "Could not extract readable text from this image. "
-                    "Please paste your resume text manually."
+                    "Image-based resumes are no longer supported via OCR. "
+                    "Please upload a PDF or text document, or paste manually."
                 ),
-                extraction_method="gemini_vision_ocr",
+                extraction_method="none",
             )
 
         # ── PDF — layered text extraction ────────────────────
@@ -367,25 +283,7 @@ class ResumeExtractionService:
                 "empty text — trying next…"
             )
 
-        # ── OCR fallback for scanned / image-only PDFs ───────
-        logger.info(
-            "All text-based PDF strategies failed. "
-            "Attempting Gemini Vision OCR…"
-        )
-        images = _render_pdf_pages_to_images(content, max_pages=MAX_OCR_PAGES)
-        if images:
-            text = await _ocr_with_gemini(images, self.llm_service)
-            if text and not is_garbage_text(text):
-                return ResumeExtractionResponse(
-                    text=text,
-                    confidence=ConfidenceLevel.MEDIUM,
-                    warning=(
-                        "This looks like a scanned resume — we used OCR. "
-                        "Please double-check the extracted text before "
-                        "continuing."
-                    ),
-                    extraction_method="gemini_vision_ocr",
-                )
+
 
         # ── All strategies exhausted ─────────────────────────
         return ResumeExtractionResponse(

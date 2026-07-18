@@ -54,7 +54,7 @@ class MentorAgent:
         from agents.roadmap_agent import RoadmapAgent
         from agents.job_agent import JobAgent
 
-        res_agent = self._resume_agent or ResumeAgent(llm_service=self.llm)
+        res_agent = self._resume_agent or ResumeAgent()
         sg_agent = self._skill_gap_agent or SkillGapAgent(llm_service=self.llm)
         rm_agent = self._roadmap_agent or RoadmapAgent(llm_service=self.llm)
         j_agent = self._job_agent or JobAgent(llm_service=self.llm)
