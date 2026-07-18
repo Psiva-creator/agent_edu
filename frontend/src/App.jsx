@@ -5,7 +5,6 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import AnalyzePage from './pages/AnalyzePage'
 import DashboardPage from './pages/DashboardPage'
-import AuthPage from './pages/AuthPage'
 import { CareerMemoryProvider } from './context/CareerMemoryContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -14,7 +13,7 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   
   if (loading) return null;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/login" replace />;
   
   return children;
 }
@@ -43,8 +42,7 @@ function App() {
               {/* Onboarding redirect mapped to analyze */}
               <Route path="/onboarding" element={<Navigate to="/analyze" replace />} />
 
-              {/* Authentication */}
-              <Route path="/auth" element={<AuthPage />} />
+
 
               {/* Dashboard — uses sidebar layout */}
               <Route element={

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, Mail, Lock, Eye, EyeOff, Github,
-  Coffee, Headphones, Sun, Moon, AlertCircle
+  Coffee, Headphones, Sun, Moon, AlertCircle,
+  User, ArrowLeft, Loader2
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import './LoginPage.css'
@@ -196,18 +197,27 @@ function AIAssistantOrb({ mousePos }) {
 // ─── LoginPage Component ───
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { signIn, signInWithGoogle } = useAuth()
+  const [searchParams] = useSearchParams()
+  const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword } = useAuth()
 
   // Form states
+  const isResetMode = searchParams.get('type') === 'reset'
+  const [mode, setMode] = useState(isResetMode ? 'reset' : 'signin') // 'signin', 'signup', 'forgot', 'reset'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   
   const [emailFocused, setEmailFocused] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
+  const [fullNameFocused, setFullNameFocused] = useState(false)
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false)
   const [emailValid, setEmailValid] = useState(false)
   const [formError, setFormError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [loginStatus, setLoginStatus] = useState('idle') // idle, loading, success, failed
   
   // Terminal logs state
@@ -592,81 +602,190 @@ export default function LoginPage() {
     }
   }
 
+  const validateForm = () => {
+    setFormError('')
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      setFormError('Please enter a valid email address.')
+      return false
+    }
+    
+    if (mode !== 'forgot') {
+      if (!password || password.length < 8) {
+        setFormError('Password must be at least 8 characters long.')
+        return false
+      }
+    }
+
+    if (mode === 'signup') {
+      if (!fullName.trim()) {
+        setFormError('Full name is required.')
+        return false
+      }
+      if (password !== confirmPassword) {
+        setFormError('Passwords do not match.')
+        return false
+      }
+      if (!termsAccepted) {
+        setFormError('You must accept the Terms and Privacy Policy.')
+        return false
+      }
+    }
+    return true
+  }
+
   // ─── Login Form Submission Handler ───
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setFormError('')
-    setLoginStatus('loading')
-    setTerminalLogs(["Establishing handshake with neural host...", "Checking credentials packet..."])
-    setBootProgress(10)
+    if (!validateForm()) return
 
-    // Simulate logs updates
-    const bootStates = [
-      { prg: 30, log: "Decrypting payload signatures..." },
-      { prg: 60, log: "Checking credentials database link..." },
-      { prg: 90, log: "Authenticating token variables..." },
-      { prg: 100, log: "Mounting user dashboard environment..." }
-    ]
+    setFormError('')
+    setSuccessMessage('')
+    setLoginStatus('loading')
+
+    // Customize logs depending on mode
+    let initialLogs = []
+    let bootStates = []
+    if (mode === 'signin') {
+      initialLogs = ["Establishing handshake with neural host...", "Checking credentials packet..."]
+      bootStates = [
+        { prg: 30, log: "Decrypting payload signatures..." },
+        { prg: 60, log: "Checking credentials database link..." },
+        { prg: 90, log: "Authenticating token variables..." },
+        { prg: 100, log: "Mounting user dashboard environment..." }
+      ]
+    } else if (mode === 'signup') {
+      initialLogs = ["Establishing handshake with neural host...", "Registering new credentials packet..."]
+      bootStates = [
+        { prg: 30, log: "Encrypting credentials signatures..." },
+        { prg: 60, log: "Creating database user record..." },
+        { prg: 90, log: "Initializing user workspace..." },
+        { prg: 100, log: "Workspace created successfully..." }
+      ]
+    } else if (mode === 'forgot') {
+      initialLogs = ["Establishing handshake with neural host...", "Sending password reset packet..."]
+      bootStates = [
+        { prg: 50, log: "Dispatching reset email request..." },
+        { prg: 100, log: "Awaiting mail server handshake..." }
+      ]
+    } else if (mode === 'reset') {
+      initialLogs = ["Establishing handshake with neural host...", "Updating credentials key..."]
+      bootStates = [
+        { prg: 50, log: "Re-hashing security password..." },
+        { prg: 100, log: "Updating authentication records..." }
+      ]
+    }
+
+    setTerminalLogs(initialLogs)
+    setBootProgress(10)
 
     bootStates.forEach((st, idx) => {
       setTimeout(() => {
         setBootProgress(st.prg)
         setTerminalLogs(prev => [...prev, st.log])
-      }, (idx + 1) * 350)
+      }, (idx + 1) * 300)
     })
 
     setTimeout(async () => {
       try {
-        const { error } = await signIn(email, password)
-        if (error) {
-          setFailureCount(prev => prev + 1)
-          setLoginStatus('failed')
-          setScratching(true)
-          setTimeout(() => setScratching(false), 2000)
+        if (mode === 'signin') {
+          const { error } = await signIn(email, password)
+          if (error) {
+            setFailureCount(prev => prev + 1)
+            setLoginStatus('failed')
+            setScratching(true)
+            setTimeout(() => setScratching(false), 2000)
 
-          const nextFail = failureCount + 1
-          if (nextFail === 1) {
-            triggerSpeech("Hmm...Something isn't right. 🔍", 4000)
-            setFormError("Hmm...Something isn't right.")
-          } else if (nextFail === 2) {
-            triggerSpeech("Check your password. 🔐", 4000)
-            setFormError("Check your password.")
+            const nextFail = failureCount + 1
+            if (nextFail === 1) {
+              triggerSpeech("Hmm...Something isn't right. 🔍", 4000)
+              setFormError("Hmm...Something isn't right.")
+            } else if (nextFail === 2) {
+              triggerSpeech("Check your password. 🔐", 4000)
+              setFormError("Check your password.")
+            } else {
+              triggerSpeech("It happens 😊 Try demo details!", 4000)
+              setFormError("It happens 😊")
+            }
           } else {
-            triggerSpeech("It happens 😊 Try demo details!", 4000)
-            setFormError("It happens 😊")
+            setLoginStatus('success')
+            triggerSpeech("Access granted! Establishing link... 🚀", 3000)
+
+            // Confetti explosion
+            const confettiContainer = document.createElement('div')
+            confettiContainer.className = 'confetti-wrapper'
+            document.body.appendChild(confettiContainer)
+            for (let i = 0; i < 50; i++) {
+              const particle = document.createElement('div')
+              particle.className = 'confetti-p'
+              particle.style.left = `${Math.random() * 100}%`
+              particle.style.animationDelay = `${Math.random() * 0.8}s`
+              particle.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 60%)`
+              confettiContainer.appendChild(particle)
+            }
+            setTimeout(() => confettiContainer.remove(), 2500)
+
+            setTimeout(() => {
+              setZoomActive(true)
+            }, 1100)
+
+            setTimeout(() => {
+              navigate('/dashboard')
+            }, 3100)
           }
-        } else {
-          setLoginStatus('success')
-          triggerSpeech("Access granted! Establishing link... 🚀", 3000)
-
-          // Confetti explosion
-          const confettiContainer = document.createElement('div')
-          confettiContainer.className = 'confetti-wrapper'
-          document.body.appendChild(confettiContainer)
-          for (let i = 0; i < 50; i++) {
-            const particle = document.createElement('div')
-            particle.className = 'confetti-p'
-            particle.style.left = `${Math.random() * 100}%`
-            particle.style.animationDelay = `${Math.random() * 0.8}s`
-            particle.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 60%)`
-            confettiContainer.appendChild(particle)
+        } else if (mode === 'signup') {
+          const { error } = await signUp(email, password, fullName)
+          if (error) {
+            setLoginStatus('failed')
+            setFormError(error.message || 'Registration failed.')
+            triggerSpeech("Handshake failed. Try again. 🚫")
+          } else {
+            setLoginStatus('success')
+            triggerSpeech("Workspace created! Let's start the analysis... 🚀", 3500)
+            setTimeout(() => {
+              setZoomActive(true)
+            }, 1100)
+            setTimeout(() => {
+              navigate('/analyze')
+            }, 3100)
           }
-          setTimeout(() => confettiContainer.remove(), 2500)
-
-          // Camera zoom into monitor transition
-          setTimeout(() => {
-            setZoomActive(true)
-          }, 1100)
-
-          setTimeout(() => {
-            navigate('/dashboard')
-          }, 3100)
+        } else if (mode === 'forgot') {
+          const { error } = await resetPassword(email)
+          if (error) {
+            setLoginStatus('failed')
+            setFormError(error.message || 'Failed to dispatch reset link.')
+            triggerSpeech("Handshake failed. Try again. 🚫")
+          } else {
+            setLoginStatus('success')
+            setSuccessMessage('Check your email for a password reset link.')
+            triggerSpeech("Reset packet dispatched! Check mail. 📬", 4000)
+            setTimeout(() => {
+              setMode('signin')
+              setLoginStatus('idle')
+              setSuccessMessage('')
+            }, 4000)
+          }
+        } else if (mode === 'reset') {
+          const { error } = await updatePassword(password)
+          if (error) {
+            setLoginStatus('failed')
+            setFormError(error.message || 'Failed to re-hash credentials.')
+            triggerSpeech("Update failed. Try again. 🚫")
+          } else {
+            setLoginStatus('success')
+            setSuccessMessage('Password has been updated. Redirecting to login...')
+            triggerSpeech("Credentials re-hashed successfully! 🔐", 3000)
+            setTimeout(() => {
+              setMode('signin')
+              setLoginStatus('idle')
+              setSuccessMessage('')
+            }, 3500)
+          }
         }
       } catch (err) {
         console.error(err)
         setLoginStatus('failed')
         setFormError('Authentication failed.')
-        triggerSpeech("Login system timeout.")
+        triggerSpeech("Security system timeout.")
       }
     }, 1500)
   }
@@ -811,9 +930,39 @@ export default function LoginPage() {
                   <span className="login-card__logo-text">Career Guide <span className="text-gradient">AI</span></span>
                 </div>
 
+                {/* Mode Tabs */}
+                {(mode === 'signin' || mode === 'signup') && (
+                  <div className="login-card__tabs">
+                    <button 
+                      type="button"
+                      className={`login-card__tab ${mode === 'signin' ? 'active' : ''}`}
+                      onClick={() => { setMode('signin'); setFormError(''); setSuccessMessage(''); }}
+                    >
+                      Sign In
+                    </button>
+                    <button 
+                      type="button"
+                      className={`login-card__tab ${mode === 'signup' ? 'active' : ''}`}
+                      onClick={() => { setMode('signup'); setFormError(''); setSuccessMessage(''); }}
+                    >
+                      Create Account
+                    </button>
+                  </div>
+                )}
+
                 {/* Headers */}
-                <h1 className="login-card__title">Welcome Back</h1>
-                <p className="login-card__tagline">Learn Smarter. Build Faster. Become Unstoppable.</p>
+                <h1 className="login-card__title">
+                  {mode === 'signin' && 'Welcome Back'}
+                  {mode === 'signup' && 'Create Account'}
+                  {mode === 'forgot' && 'Reset Password'}
+                  {mode === 'reset' && 'Set New Password'}
+                </h1>
+                <p className="login-card__tagline">
+                  {mode === 'signin' && 'Learn Smarter. Build Faster. Become Unstoppable.'}
+                  {mode === 'signup' && 'Start your career journey with AI today.'}
+                  {mode === 'forgot' && 'Enter your email to receive a reset link.'}
+                  {mode === 'reset' && 'Enter your new password below.'}
+                </p>
 
                 {formError && (
                   <div className="error-banner">
@@ -822,134 +971,229 @@ export default function LoginPage() {
                   </div>
                 )}
 
+                {successMessage && (
+                  <div className="success-banner">
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
                 {/* Form fields */}
                 <form onSubmit={handleSubmit} className="login-card__form">
                   
-                  {/* Email address field */}
-                  <div className="input-field-group">
-                    <span className="input-field-label">Email Address</span>
-                    <div className={`input-wrapper ${emailFocused ? 'focused' : ''}`}>
-                      <Mail size={18} className="input-icon" />
-                      <input 
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={handleEmailChange}
-                        onFocus={() => setEmailFocused(true)}
-                        onBlur={() => setEmailFocused(false)}
-                        className="styled-input"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password field */}
-                  <div className="input-field-group">
-                    <span className="input-field-label">Password</span>
-                    <div className={`input-wrapper ${passwordFocused ? 'focused' : ''}`}>
-                      <Lock size={18} className="input-icon" />
-                      <div className="password-wrapper">
+                  {/* Full Name field (SignUp only) */}
+                  {mode === 'signup' && (
+                    <div className="input-field-group">
+                      <span className="input-field-label">Full Name</span>
+                      <div className={`input-wrapper ${fullNameFocused ? 'focused' : ''}`}>
+                        <User size={18} className="input-icon" />
                         <input 
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="••••••••"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          onFocus={() => setPasswordFocused(true)}
-                          onBlur={() => setPasswordFocused(false)}
+                          type="text"
+                          placeholder="John Doe"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          onFocus={() => setFullNameFocused(true)}
+                          onBlur={() => setFullNameFocused(false)}
                           className="styled-input"
                           required
                         />
-                        <button 
-                          type="button" 
-                          className="password-toggle"
-                          onClick={() => {
-                            setShowPassword(!showPassword)
-                            if (!showPassword) {
-                              triggerSpeech("I'll respect your privacy 😊", 3500)
-                            }
-                          }}
-                          title={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Options */}
-                  <div className="options-row">
-                    <label className="checkbox-label">
-                      <input 
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                      />
-                      <span className="checkbox-custom" />
-                      <span>Remember Me</span>
-                    </label>
-                    <a href="#" className="forgot-pwd-link" onClick={(e) => { e.preventDefault(); triggerSpeech("No worries! Verification link sent to your host.") }}>Forgot Password?</a>
-                  </div>
+                  {/* Email address field (All modes except reset) */}
+                  {mode !== 'reset' && (
+                    <div className="input-field-group">
+                      <span className="input-field-label">Email Address</span>
+                      <div className={`input-wrapper ${emailFocused ? 'focused' : ''}`}>
+                        <Mail size={18} className="input-icon" />
+                        <input 
+                          type="email"
+                          placeholder="Enter your email"
+                          value={email}
+                          onChange={handleEmailChange}
+                          onFocus={() => setEmailFocused(true)}
+                          onBlur={() => setEmailFocused(false)}
+                          className="styled-input"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Login Submit */}
+                  {/* Password field */}
+                  {mode !== 'forgot' && (
+                    <div className="input-field-group">
+                      <span className="input-field-label">Password</span>
+                      <div className={`input-wrapper ${passwordFocused ? 'focused' : ''}`}>
+                        <Lock size={18} className="input-icon" />
+                        <div className="password-wrapper">
+                          <input 
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            onFocus={() => setPasswordFocused(true)}
+                            onBlur={() => setPasswordFocused(false)}
+                            className="styled-input"
+                            required
+                          />
+                          <button 
+                            type="button" 
+                            className="password-toggle"
+                            onClick={() => {
+                              setShowPassword(!showPassword)
+                              if (!showPassword) {
+                                triggerSpeech("I'll respect your privacy 😊", 3500)
+                              }
+                            }}
+                            title={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Confirm Password field (SignUp only) */}
+                  {mode === 'signup' && (
+                    <div className="input-field-group">
+                      <span className="input-field-label">Confirm Password</span>
+                      <div className={`input-wrapper ${confirmPasswordFocused ? 'focused' : ''}`}>
+                        <Lock size={18} className="input-icon" />
+                        <input 
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onFocus={() => setConfirmPasswordFocused(true)}
+                          onBlur={() => setConfirmPasswordFocused(false)}
+                          className="styled-input"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Options / Remember Me (SignIn only) */}
+                  {mode === 'signin' && (
+                    <div className="options-row">
+                      <label className="checkbox-label">
+                        <input 
+                          type="checkbox"
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                        />
+                        <span className="checkbox-custom" />
+                        <span>Remember Me</span>
+                      </label>
+                      <a href="#" className="forgot-pwd-link" onClick={(e) => { e.preventDefault(); setMode('forgot'); setFormError(''); setSuccessMessage(''); }}>Forgot Password?</a>
+                    </div>
+                  )}
+
+                  {/* Terms & Conditions (SignUp only) */}
+                  {mode === 'signup' && (
+                    <div className="options-row">
+                      <label className="checkbox-label">
+                        <input 
+                          type="checkbox"
+                          checked={termsAccepted}
+                          onChange={(e) => setTermsAccepted(e.target.checked)}
+                        />
+                        <span className="checkbox-custom" />
+                        <span className="terms-text">I agree to the <a href="#" onClick={(e) => e.preventDefault()}>Terms</a> & <a href="#" onClick={(e) => e.preventDefault()}>Privacy</a></span>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
                   <button 
                     type="submit" 
                     className="submit-btn"
                     onMouseEnter={() => {
                       setHoveredElement('login')
-                      triggerSpeech("Ready to establish connection? Click below! 🔑")
+                      if (mode === 'signin') triggerSpeech("Ready to establish connection? Click below! 🔑")
+                      else if (mode === 'signup') triggerSpeech("Establish a brand new profile! 🚀")
                     }}
                     onMouseLeave={() => setHoveredElement(null)}
                   >
-                    <span>Login</span>
+                    <span>
+                      {mode === 'signin' && 'Login'}
+                      {mode === 'signup' && 'Create Account'}
+                      {mode === 'forgot' && 'Send Reset Link'}
+                      {mode === 'reset' && 'Update Password'}
+                    </span>
                     <div className="btn-glow" />
                   </button>
+
+                  {/* Back to Sign In Link */}
+                  {(mode === 'forgot' || mode === 'reset') && (
+                    <button 
+                      type="button" 
+                      className="back-to-signin-btn"
+                      onClick={() => { setMode('signin'); setFormError(''); setSuccessMessage(''); }}
+                    >
+                      <ArrowLeft size={16} /> Back to Sign In
+                    </button>
+                  )}
                 </form>
 
-                <div className="divider">
-                  <span className="divider-line" />
-                  <span className="divider-text">OR CONTINUE WITH</span>
-                  <span className="divider-line" />
-                </div>
+                {/* Social Login Section (Only for SignIn / SignUp) */}
+                {(mode === 'signin' || mode === 'signup') && (
+                  <>
+                    <div className="divider">
+                      <span className="divider-line" />
+                      <span className="divider-text">OR CONTINUE WITH</span>
+                      <span className="divider-line" />
+                    </div>
 
-                {/* Social Login buttons */}
-                <div className="social-row">
-                  <button 
-                    className="social-btn glass"
-                    onMouseEnter={() => {
-                      setHoveredElement('google')
-                      triggerSpeech("Sign in using Google Secure Authentication.", 2000)
-                    }}
-                    onMouseLeave={() => setHoveredElement(null)}
-                    onClick={handleGoogleClick}
-                  >
-                    <svg className="social-svg" viewBox="0 0 24 24">
-                      <path fill="#EA4335" d="M12 5.04c1.62 0 3.08.56 4.22 1.65l3.15-3.15C17.45 1.74 14.92 1 12 1 7.35 1 3.39 3.67 1.48 7.57l3.69 2.87C6.05 7.37 8.78 5.04 12 5.04z"/>
-                      <path fill="#4285F4" d="M23.49 12.27c0-.82-.07-1.6-.21-2.36H12v4.47h6.46c-.28 1.47-1.11 2.72-2.36 3.56l3.66 2.84c2.14-1.97 3.38-4.88 3.38-8.51z"/>
-                      <path fill="#FBBC05" d="M5.17 10.44c-.24-.72-.38-1.5-.38-2.3s.14-1.58.38-2.3L1.48 2.97C.54 4.88 0 7.02 0 9.26s.54 4.38 1.48 6.29l3.69-2.87c-.24-.72-.38-1.5-.38-2.3z"/>
-                      <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.66-2.84c-1.1.74-2.5 1.18-4.3 1.18-3.22 0-5.95-2.33-6.83-5.43L1.48 15.87C3.39 20.33 7.35 23 12 23z"/>
-                    </svg>
-                    <span>Google</span>
-                  </button>
-                  
-                  <button 
-                    className="social-btn glass"
-                    onMouseEnter={() => {
-                      setHoveredElement('github')
-                      triggerSpeech("Check GitHub build status configuration.", 2000)
-                    }}
-                    onMouseLeave={() => setHoveredElement(null)}
-                    onClick={() => {
-                      setLoginStatus('loading')
-                      setTimeout(() => navigate('/dashboard'), 1500)
-                    }}
-                  >
-                    <Github size={18} />
-                    <span>GitHub</span>
-                  </button>
-                </div>
+                    {/* Social Login buttons */}
+                    <div className="social-row">
+                      <button 
+                        className="social-btn glass"
+                        onMouseEnter={() => {
+                          setHoveredElement('google')
+                          triggerSpeech("Sign in using Google Secure Authentication.", 2000)
+                        }}
+                        onMouseLeave={() => setHoveredElement(null)}
+                        onClick={handleGoogleClick}
+                      >
+                        <svg className="social-svg" viewBox="0 0 24 24">
+                          <path fill="#EA4335" d="M12 5.04c1.62 0 3.08.56 4.22 1.65l3.15-3.15C17.45 1.74 14.92 1 12 1 7.35 1 3.39 3.67 1.48 7.57l3.69 2.87C6.05 7.37 8.78 5.04 12 5.04z"/>
+                          <path fill="#4285F4" d="M23.49 12.27c0-.82-.07-1.6-.21-2.36H12v4.47h6.46c-.28 1.47-1.11 2.72-2.36 3.56l3.66 2.84c2.14-1.97 3.38-4.88 3.38-8.51z"/>
+                          <path fill="#FBBC05" d="M5.17 10.44c-.24-.72-.38-1.5-.38-2.3s.14-1.58.38-2.3L1.48 2.97C.54 4.88 0 7.02 0 9.26s.54 4.38 1.48 6.29l3.69-2.87c-.24-.72-.38-1.5-.38-2.3z"/>
+                          <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.66-2.84c-1.1.74-2.5 1.18-4.3 1.18-3.22 0-5.95-2.33-6.83-5.43L1.48 15.87C3.39 20.33 7.35 23 12 23z"/>
+                        </svg>
+                        <span>Google</span>
+                      </button>
+                      
+                      <button 
+                        className="social-btn glass"
+                        onMouseEnter={() => {
+                          setHoveredElement('github')
+                          triggerSpeech("Check GitHub build status configuration.", 2000)
+                        }}
+                        onMouseLeave={() => setHoveredElement(null)}
+                        onClick={() => {
+                          setLoginStatus('loading')
+                          setTimeout(() => navigate('/dashboard'), 1500)
+                        }}
+                      >
+                        <Github size={18} />
+                        <span>GitHub</span>
+                      </button>
+                    </div>
+                  </>
+                )}
 
+                {/* Bottom Toggle prompts */}
                 <p className="signup-prompt">
-                  New to the platform? <a href="#" className="signup-link" onClick={(e) => { e.preventDefault(); navigate('/auth') }}>Create Account</a>
+                  {mode === 'signin' && (
+                    <>New to the platform? <a href="#" className="signup-link" onClick={(e) => { e.preventDefault(); setMode('signup'); setFormError(''); setSuccessMessage(''); }}>Create Account</a></>
+                  )}
+                  {mode === 'signup' && (
+                    <>Already have an account? <a href="#" className="signup-link" onClick={(e) => { e.preventDefault(); setMode('signin'); setFormError(''); setSuccessMessage(''); }}>Sign In</a></>
+                  )}
                 </p>
           </motion.div>
         </div>

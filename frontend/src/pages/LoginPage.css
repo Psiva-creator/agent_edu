@@ -671,6 +671,97 @@
   flex-shrink: 0;
 }
 
+/* Mode tabs in the card */
+.login-card__tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+  gap: 4px;
+  position: relative;
+  z-index: 10;
+}
+
+.login-card__tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.login-card__tab:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.login-card__tab.active {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+/* Success banner */
+.success-banner {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  color: #34d399;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.05);
+}
+
+/* Back to sign in button */
+.back-to-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #818cf8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 16px;
+  gap: 8px;
+  transition: color 0.18s ease;
+}
+
+.back-to-signin-btn:hover {
+  color: #a5b4fc;
+  text-decoration: underline;
+}
+
+/* Terms text checkbox label */
+.terms-text {
+  font-size: 0.8125rem !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.terms-text a {
+  color: #818cf8;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.terms-text a:hover {
+  color: #a5b4fc;
+  text-decoration: underline;
+}
+
 .signup-prompt {
   text-align: center;
   font-size: 0.8125rem;

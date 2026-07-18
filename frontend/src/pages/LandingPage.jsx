@@ -1,11 +1,13 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, ArrowRight, Target, Briefcase, Map,
   FileText, TrendingUp, MessageCircle, Zap, Shield, Globe,
   ShieldCheck, Brain
 } from 'lucide-react'
 import Button from '../components/ui/Button'
+import PremiumGetStartedButton from '../components/ui/PremiumGetStartedButton'
 import ThemeSwitcher from '../components/ui/ThemeSwitcher'
 import './LandingPage.css'
 
@@ -55,6 +57,17 @@ const BENEFITS = [
 
 export default function LandingPage() {
   const navigate = useNavigate()
+  const [showLoader, setShowLoader] = useState(false)
+
+  const handleGetStartedClick = () => {
+    const timer = setTimeout(() => {
+      setShowLoader(true)
+    }, 300)
+    
+    navigate('/login')
+    
+    return () => clearTimeout(timer)
+  }
 
   return (
     <div className="landing">
@@ -70,8 +83,9 @@ export default function LandingPage() {
             <a href="#how-it-works">How It Works</a>
             <a href="#ai-agents">AI Agents</a>
             <a href="#benefits">Benefits</a>
-            <a href="#" className="landing__signin-link" onClick={(e) => { e.preventDefault(); navigate('/login') }}>Sign In</a>
-            <Button id="nav-get-started" variant="primary" size="sm" onClick={() => navigate('/auth')}>Get Started</Button>
+            <PremiumGetStartedButton onClick={handleGetStartedClick} className="nav-get-started-btn">
+              Get Started
+            </PremiumGetStartedButton>
             <ThemeSwitcher />
           </div>
         </div>
@@ -98,9 +112,9 @@ export default function LandingPage() {
             Discover your strengths, explore career paths, improve your resume, and receive personalized guidance from six intelligent AI agents.
           </motion.p>
           <motion.div className="landing__hero-actions" {...fadeUp(0.3)}>
-            <Button id="hero-start-analysis" variant="primary" size="xl" iconRight={ArrowRight} onClick={() => navigate('/auth')} className="btn-hero-primary">
+            <PremiumGetStartedButton onClick={handleGetStartedClick} className="hero-start-analysis-btn">
               Start AI Analysis
-            </Button>
+            </PremiumGetStartedButton>
             <Button id="hero-explore-dashboard" variant="secondary" size="xl" onClick={() => navigate('/dashboard')} className="btn-hero-secondary">
               Explore Dashboard
             </Button>
@@ -210,9 +224,9 @@ export default function LandingPage() {
           <motion.div className="landing__cta-inner" {...fadeUp()}>
             <h2>Ready to shape your career?</h2>
             <p>Start your free AI-powered career analysis today.</p>
-            <Button variant="primary" size="lg" className="hero-cta" onClick={() => navigate('/auth')}>
-              Get Started Now <ArrowRight size={20} />
-            </Button>
+            <PremiumGetStartedButton onClick={handleGetStartedClick} className="cta-get-started-btn">
+              Get Started Now
+            </PremiumGetStartedButton>
           </motion.div>
         </div>
       </section>
@@ -233,6 +247,29 @@ export default function LandingPage() {
           <p className="landing__footer-copy">© 2026 Career Guide AI. Built with ❤️ and AI.</p>
         </div>
       </footer>
+
+      <AnimatePresence>
+        {showLoader && (
+          <motion.div 
+            className="premium-route-loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="premium-route-loader__content">
+              <div className="premium-route-loader__orb">
+                <div className="premium-route-loader__orb-core" />
+                <div className="premium-route-loader__orb-glow" />
+              </div>
+              <p className="premium-route-loader__text">Establishing secure gateway...</p>
+              <div className="premium-route-loader__shimmer-bar">
+                <div className="premium-route-loader__shimmer-progress" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
