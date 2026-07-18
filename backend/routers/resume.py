@@ -84,6 +84,10 @@ async def upload_resume(
         content = await file.read()
         extractor = ResumeExtractionService()
         result = await extractor.extract(content, file.filename)
+        
+        if result.text and not result.structured:
+            result.structured = await extractor.extract_structured(result.text)
+            
         return result
     except Exception as e:
         return Response(content=f'{{"error": "Failed to parse file: {str(e)}"}}', status_code=400, media_type="application/json")
