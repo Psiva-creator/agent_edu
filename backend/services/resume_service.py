@@ -6,10 +6,10 @@ from services.llm_service import LLMService
 from services.resume_extraction import ResumeExtractionService
 
 class ResumeService:
-    def __init__(self, llm_service: LLMService):
+    def __init__(self, llm_service=None):
         self.db = ResumeDB()
-        self.agent = ResumeAgent(llm_service=llm_service)
-        self.extractor = ResumeExtractionService(llm_service=llm_service)
+        self.agent = ResumeAgent()
+        self.extractor = ResumeExtractionService()
 
     async def handle_upload(self, filename: str, content_bytes: bytes) -> Dict[str, Any]:
         # Call layered ResumeExtractionService (supports OCR fallbacks for scanned / image PDFs)
