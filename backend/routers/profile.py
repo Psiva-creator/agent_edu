@@ -327,7 +327,23 @@ async def run_analysis_pipeline(job_id: str, user_id: str, mode: str, resume_tex
         target_role = form.get("target_role", "Software Engineer")
         skills = form.get("skills", [])
         experience_years = int(form.get("experience_years", 0))
-        education = form.get("education", "Not specified")
+        
+        education_raw = form.get("education", "Not specified")
+        if isinstance(education_raw, list):
+            edu_strs = []
+            for edu in education_raw:
+                if isinstance(edu, dict):
+                    deg = edu.get("degree", "")
+                    inst = edu.get("institution", "")
+                    s = f"{deg} at {inst}".strip()
+                    if s and s != "at":
+                        edu_strs.append(s)
+                elif isinstance(edu, str):
+                    edu_strs.append(edu)
+            education = ", ".join(edu_strs) if edu_strs else "Not specified"
+        else:
+            education = str(education_raw)
+            
         location = form.get("location", "India")
         
         llm = get_llm()
