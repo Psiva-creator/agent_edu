@@ -538,6 +538,9 @@ async def run_analysis_pipeline(job_id: str, user_id: str, mode: str, resume_tex
             "source": "ai",
             "roadmap": roadmap,
             "jobs": jobs,
+            "resume_analysis": resume_analysis,
+            "resume_score": resume_analysis.get("score", 85) if resume_analysis else 85,
+            "ats_score": resume_analysis.get("score", 85) if resume_analysis else 85,
             "mentor_context": mentor_advice
         }
         
